@@ -1,0 +1,6 @@
+./src/features/example/components
+./src/features/example/hooks
+./src/features/example/services
+./src/features/example/types
+./src/shared/components
+./src/shared/types

@@ -1,0 +1,14 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+stages:
+  - deploy
+
+deploy-railway:
+  stage: deploy
+  image: ghcr.io/railwayapp/cli:latest
+  script:
+    - railway up --service=$SVC_ID
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
