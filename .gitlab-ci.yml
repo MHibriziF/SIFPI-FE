@@ -8,6 +8,8 @@ stages:
 deploy-production:
   stage: deploy
   image: ghcr.io/railwayapp/cli:latest
+  variables:
+    RAILWAY_TOKEN: $RAILWAY_TOKEN_PROD
   script:
     - railway up --service=$SVC_ID --environment=production
   rules:
@@ -16,6 +18,8 @@ deploy-production:
 deploy-staging:
   stage: deploy
   image: ghcr.io/railwayapp/cli:latest
+  variables:
+    RAILWAY_TOKEN: $RAILWAY_TOKEN_STAGING
   script:
     - railway up --service=$SVC_ID --environment=staging
   rules:
