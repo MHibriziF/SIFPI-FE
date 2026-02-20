@@ -69,6 +69,36 @@ export async function apiPatch<T>(
   return res.data;
 }
 
+export async function apiPostFile<T>(
+  url: string,
+  body: FormData,
+): Promise<BaseResponse<T>> {
+  const res = await api.post<BaseResponse<T>>(url, body, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
+export async function apiPutFile<T>(
+  url: string,
+  body: FormData,
+): Promise<BaseResponse<T>> {
+  const res = await api.put<BaseResponse<T>>(url, body, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
+export async function apiPatchFile<T>(
+  url: string,
+  body: FormData,
+): Promise<BaseResponse<T>> {
+  const res = await api.patch<BaseResponse<T>>(url, body, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
 export async function apiDelete<T>(url: string): Promise<BaseResponse<T>> {
   const res = await api.delete<BaseResponse<T>>(url);
   return res.data;
