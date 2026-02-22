@@ -1,112 +1,159 @@
-"use client"
+'use client';
 
-import { useState, useId } from "react"
-import { toast as sonnerToast } from "sonner"
-import { Button, SubmitProjectButton, VerifyProjectButton } from "@/shared/components/button"
-import { Toast } from "@/shared/components/toast"
-import { TextInput, Textarea, FileInput, Select } from "@/shared/components/form-fields"
-import type { ToastVariant } from "@/shared/components/toast"
+import { useState, useId } from 'react';
+import { Button, SubmitProjectButton, VerifyProjectButton } from '@/shared/components/button';
+import { showToast, Toast } from '@/shared/components/toast';
+import { TextInput, Textarea, FileInput, Select } from '@/shared/components/form-fields';
+import type { ToastVariant } from '@/shared/components/toast';
+import StatusBadge from '@/shared/components/status-badge';
+import Navbar from '@/shared/components/layout/navbar';
 
 // ---------------------------------------------------------------------------
 // Color / typography data (unchanged)
 // ---------------------------------------------------------------------------
 const BRAND_COLORS = [
-  { name: "Primary",         variable: "--brand-primary",         hex: "#002855", bg: "bg-primary",         text: "text-white" },
-  { name: "Secondary",       variable: "--brand-secondary",       hex: "#F59E0B", bg: "bg-secondary",       text: "text-white" },
-  { name: "Primary Light",   variable: "--brand-primary-light",   hex: "#DBEAFE", bg: "bg-primary-light",   text: "text-primary" },
-  { name: "Secondary Light", variable: "--brand-secondary-light", hex: "#F59E0B", bg: "bg-secondary-light", text: "text-primary" },
-]
+  {
+    name: 'Primary',
+    variable: '--brand-primary',
+    hex: '#002855',
+    bg: 'bg-primary',
+    text: 'text-white',
+  },
+  {
+    name: 'Secondary',
+    variable: '--brand-secondary',
+    hex: '#F59E0B',
+    bg: 'bg-secondary',
+    text: 'text-white',
+  },
+  {
+    name: 'Primary Light',
+    variable: '--brand-primary-light',
+    hex: '#DBEAFE',
+    bg: 'bg-primary-light',
+    text: 'text-primary',
+  },
+  {
+    name: 'Secondary Light',
+    variable: '--brand-secondary-light',
+    hex: '#F59E0B',
+    bg: 'bg-secondary-light',
+    text: 'text-primary',
+  },
+];
 
 const STATE_COLORS = [
-  { name: "Draft",   base: { bg: "bg-draft",   hex: "#4B5563" }, light: { bg: "bg-draft-light",   hex: "#4B5563" } },
-  { name: "Info",    base: { bg: "bg-info",    hex: "#2859A9" }, light: { bg: "bg-info-light",    hex: "#DBEAFE" } },
-  { name: "Warning", base: { bg: "bg-warning", hex: "#EA580C" }, light: { bg: "bg-warning-light", hex: "#FED7AA" } },
-  { name: "Success", base: { bg: "bg-success", hex: "#16A34A" }, light: { bg: "bg-success-light", hex: "#DCFCE7" } },
-  { name: "Danger",  base: { bg: "bg-danger",  hex: "#DC2626" }, light: { bg: "bg-danger-light",  hex: "#FEE2E2" } },
-]
+  {
+    name: 'Draft',
+    base: { bg: 'bg-draft', hex: '#4B5563' },
+    light: { bg: 'bg-draft-light', hex: '#4B5563' },
+  },
+  {
+    name: 'Info',
+    base: { bg: 'bg-info', hex: '#2859A9' },
+    light: { bg: 'bg-info-light', hex: '#DBEAFE' },
+  },
+  {
+    name: 'Warning',
+    base: { bg: 'bg-warning', hex: '#EA580C' },
+    light: { bg: 'bg-warning-light', hex: '#FED7AA' },
+  },
+  {
+    name: 'Success',
+    base: { bg: 'bg-success', hex: '#16A34A' },
+    light: { bg: 'bg-success-light', hex: '#DCFCE7' },
+  },
+  {
+    name: 'Danger',
+    base: { bg: 'bg-danger', hex: '#DC2626' },
+    light: { bg: 'bg-danger-light', hex: '#FEE2E2' },
+  },
+];
 
 const TYPE_SCALE = [
-  { label: "4xl / 36px",  className: "text-4xl" },
-  { label: "3xl / 30px",  className: "text-3xl" },
-  { label: "2xl / 24px",  className: "text-2xl" },
-  { label: "xl / 20px",   className: "text-xl" },
-  { label: "lg / 18px",   className: "text-lg" },
-  { label: "base / 16px", className: "text-base" },
-  { label: "sm / 14px",   className: "text-sm" },
-  { label: "xs / 12px",   className: "text-xs" },
-]
+  { label: '4xl / 36px', className: 'text-4xl' },
+  { label: '3xl / 30px', className: 'text-3xl' },
+  { label: '2xl / 24px', className: 'text-2xl' },
+  { label: 'xl / 20px', className: 'text-xl' },
+  { label: 'lg / 18px', className: 'text-lg' },
+  { label: 'base / 16px', className: 'text-base' },
+  { label: 'sm / 14px', className: 'text-sm' },
+  { label: 'xs / 12px', className: 'text-xs' },
+];
 
 const TYPE_WEIGHTS = [
-  { label: "Light 300",    className: "font-light" },
-  { label: "Regular 400",  className: "font-normal" },
-  { label: "Medium 500",   className: "font-medium" },
-  { label: "Semibold 600", className: "font-semibold" },
-  { label: "Bold 700",     className: "font-bold" },
-]
+  { label: 'Light 300', className: 'font-light' },
+  { label: 'Regular 400', className: 'font-normal' },
+  { label: 'Medium 500', className: 'font-medium' },
+  { label: 'Semibold 600', className: 'font-semibold' },
+  { label: 'Bold 700', className: 'font-bold' },
+];
 
-const ALERT_DEMOS: { variant: ToastVariant; label: string; title: string; description: string }[] = [
-  { variant: "info",    label: "Info",    title: "Kebijaksanaan Privasi",  description: "Kamu bisa melihat Kebijaksanaan Privasi, Syarat & Ketentuan, dan lainnya di sini." },
-  { variant: "warning", label: "Warning", title: "Perhatian",              description: "Pastikan semua data yang diisi sudah benar sebelum melanjutkan pengajuan." },
-  { variant: "success", label: "Success", title: "Berhasil Disimpan",      description: "Data proyek berhasil disimpan dan sedang menunggu verifikasi." },
-  { variant: "danger",  label: "Danger",  title: "Terjadi Kesalahan",      description: "Gagal mengirim data. Periksa koneksi internet Anda dan coba lagi." },
-]
+const ALERT_DEMOS: { variant: ToastVariant; label: string; title: string; description: string }[] =
+  [
+    {
+      variant: 'info',
+      label: 'Info',
+      title: 'Kebijaksanaan Privasi',
+      description:
+        'Kamu bisa melihat Kebijaksanaan Privasi, Syarat & Ketentuan, dan lainnya di sini.',
+    },
+    {
+      variant: 'warning',
+      label: 'Warning',
+      title: 'Perhatian',
+      description: 'Pastikan semua data yang diisi sudah benar sebelum melanjutkan pengajuan.',
+    },
+    {
+      variant: 'success',
+      label: 'Success',
+      title: 'Berhasil Disimpan',
+      description: 'Data proyek berhasil disimpan dan sedang menunggu verifikasi.',
+    },
+    {
+      variant: 'danger',
+      label: 'Danger',
+      title: 'Terjadi Kesalahan',
+      description: 'Gagal mengirim data. Periksa koneksi internet Anda dan coba lagi.',
+    },
+  ];
 
 const SELECT_OPTIONS = [
-  { value: "jalan",  label: "Jalan & Jembatan" },
-  { value: "air",    label: "Sumber Daya Air" },
-  { value: "energi", label: "Energi" },
-  { value: "disabled-opt", label: "Belum Tersedia", disabled: true },
-]
-
-// ---------------------------------------------------------------------------
-// Toast helper — renders our custom Toast component via sonner
-// ---------------------------------------------------------------------------
-function showToast(variant: ToastVariant, title: string, description: string) {
-  sonnerToast.custom((id) => (
-    <Toast
-      variant={variant}
-      title={title}
-      description={description}
-      onClose={() => sonnerToast.dismiss(id)}
-      className="shadow-lg"
-    />
-  ), { duration: 4000 })
-}
+  { value: 'jalan', label: 'Jalan & Jembatan' },
+  { value: 'air', label: 'Sumber Daya Air' },
+  { value: 'energi', label: 'Energi' },
+  { value: 'disabled-opt', label: 'Belum Tersedia', disabled: true },
+];
 
 // ---------------------------------------------------------------------------
 // Form validation helpers
 // ---------------------------------------------------------------------------
 interface FormValues {
-  name: string
-  email: string
-  description: string
-  category: string
+  name: string;
+  email: string;
+  description: string;
+  category: string;
 }
 
-type FormErrors = Partial<Record<keyof FormValues, string>>
+type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 function validate(values: FormValues): FormErrors {
-  const errors: FormErrors = {}
+  const errors: FormErrors = {};
 
-  if (!values.name.trim())
-    errors.name = "Nama tidak boleh kosong"
-  else if (values.name.trim().length < 3)
-    errors.name = "Nama minimal 3 karakter"
+  if (!values.name.trim()) errors.name = 'Nama tidak boleh kosong';
+  else if (values.name.trim().length < 3) errors.name = 'Nama minimal 3 karakter';
 
-  if (!values.email.trim())
-    errors.email = "Email tidak boleh kosong"
+  if (!values.email.trim()) errors.email = 'Email tidak boleh kosong';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email))
-    errors.email = "Format email tidak valid"
+    errors.email = 'Format email tidak valid';
 
-  if (!values.description.trim())
-    errors.description = "Deskripsi tidak boleh kosong"
+  if (!values.description.trim()) errors.description = 'Deskripsi tidak boleh kosong';
   else if (values.description.trim().length < 20)
-    errors.description = `Minimal 20 karakter (saat ini ${values.description.trim().length})`
+    errors.description = `Minimal 20 karakter (saat ini ${values.description.trim().length})`;
 
-  if (!values.category)
-    errors.category = "Pilih salah satu kategori"
+  if (!values.category) errors.category = 'Pilih salah satu kategori';
 
-  return errors
+  return errors;
 }
 
 // ---------------------------------------------------------------------------
@@ -121,7 +168,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       </div>
       {children}
     </section>
-  )
+  );
 }
 
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -130,15 +177,15 @@ function SubSection({ title, children }: { title: string; children: React.ReactN
       <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">{title}</h3>
       {children}
     </div>
-  )
+  );
 }
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-gray-100 bg-gray-50 p-6 ${className ?? ""}`}>
+    <div className={`rounded-xl border border-gray-100 bg-gray-50 p-6 ${className ?? ''}`}>
       {children}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -146,47 +193,59 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 // ---------------------------------------------------------------------------
 export default function DesignSystemPage() {
   // ── Form state ───────────────────────────────────────────────────────────
-  const uid = useId()
-  const [values, setValues] = useState<FormValues>({ name: "", email: "", description: "", category: "" })
-  const [errors, setErrors]   = useState<FormErrors>({})
-  const [touched, setTouched] = useState<Partial<Record<keyof FormValues, boolean>>>({})
+  const uid = useId();
+  const [values, setValues] = useState<FormValues>({
+    name: '',
+    email: '',
+    description: '',
+    category: '',
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof FormValues, boolean>>>({});
 
   const handleChange = (field: keyof FormValues, value: string) => {
-    const next = { ...values, [field]: value }
-    setValues(next)
+    const next = { ...values, [field]: value };
+    setValues(next);
     if (touched[field]) {
-      const fieldError = validate(next)[field]
-      setErrors(prev => ({ ...prev, [field]: fieldError }))
+      const fieldError = validate(next)[field];
+      setErrors(prev => ({ ...prev, [field]: fieldError }));
     }
-  }
+  };
 
   const handleBlur = (field: keyof FormValues) => {
-    setTouched(prev => ({ ...prev, [field]: true }))
-    const fieldError = validate(values)[field]
-    setErrors(prev => ({ ...prev, [field]: fieldError }))
-  }
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const fieldError = validate(values)[field];
+    setErrors(prev => ({ ...prev, [field]: fieldError }));
+  };
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const allTouched = { name: true, email: true, description: true, category: true }
-    setTouched(allTouched)
-    const errs = validate(values)
-    setErrors(errs)
+    e.preventDefault();
+    const allTouched = { name: true, email: true, description: true, category: true };
+    setTouched(allTouched);
+    const errs = validate(values);
+    setErrors(errs);
 
     if (Object.keys(errs).length === 0) {
-      showToast("success", "Form valid!", "Semua field terisi dengan benar.")
-      setValues({ name: "", email: "", description: "", category: "" })
-      setTouched({})
-      setErrors({})
+      showToast(
+        'success',
+        'Form valid!',
+        'Data proyek berhasil disimpan dan sedang menunggu verifikasi.'
+      );
+      setValues({ name: '', email: '', description: '', category: '' });
+      setTouched({});
+      setErrors({});
     } else {
-      showToast("danger", "Ada kesalahan", "Periksa kembali form di bawah.")
+      showToast(
+        'danger',
+        'Ada kesalahan',
+        'Pastikan data telah tersisi dengan benar kemudian submit kembali.'
+      );
     }
-  }
+  };
 
   // ────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white">
-
       {/* Header */}
       <div className="border-b border-gray-100 bg-primary px-10 py-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-1">SIFPI</p>
@@ -195,8 +254,23 @@ export default function DesignSystemPage() {
           Sistem Informasi Fasilitasi Proyek Infrastruktur — component reference
         </p>
       </div>
-
+      
       <div className="mx-auto max-w-5xl px-10 py-12 flex flex-col gap-16">
+        {/* ---------------------------------------------------------------- */}
+        {/* NAVBAR (preview)                                                   */}
+        {/* ---------------------------------------------------------------- */}
+        <Section title="Navbar">
+          <SubSection title="Public (unauthenticated)">
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <Navbar variant="public" skipHide />
+            </div>
+          </SubSection>
+          <SubSection title="Authenticated">
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <Navbar variant="authenticated" skipHide />
+            </div>
+          </SubSection>
+        </Section>
 
         {/* ---------------------------------------------------------------- */}
         {/* TYPOGRAPHY                                                        */}
@@ -242,7 +316,10 @@ export default function DesignSystemPage() {
           <SubSection title="Brand">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {BRAND_COLORS.map(({ name, variable, hex, bg }) => (
-                <div key={name} className="flex flex-col overflow-hidden rounded-xl border border-gray-100">
+                <div
+                  key={name}
+                  className="flex flex-col overflow-hidden rounded-xl border border-gray-100"
+                >
                   <div className={`${bg} h-20`} />
                   <div className="p-3 bg-white">
                     <p className="text-sm font-medium text-primary">{name}</p>
@@ -277,6 +354,15 @@ export default function DesignSystemPage() {
           </SubSection>
         </Section>
 
+        <Section title="Status Badge">
+          <div className="flex flex-wrap items-center gap-3 gap-y-4">
+            <StatusBadge variant="draft">Draft</StatusBadge>
+            <StatusBadge variant="submitted">Submitted</StatusBadge>
+            <StatusBadge variant="in-review">In review</StatusBadge>
+            <StatusBadge variant="approved">Approved</StatusBadge>
+            <StatusBadge variant="rejected">Rejected</StatusBadge>
+          </div>
+        </Section>
         {/* ---------------------------------------------------------------- */}
         {/* BUTTONS                                                           */}
         {/* ---------------------------------------------------------------- */}
@@ -291,17 +377,31 @@ export default function DesignSystemPage() {
             </SubSection>
             <SubSection title="Disabled">
               <div className="flex flex-wrap gap-3 items-center">
-                <Button variant="filled" disabled>Filled</Button>
-                <Button variant="outlined" disabled>Outlined</Button>
-                <Button variant="ghost" disabled>Ghost</Button>
+                <Button variant="filled" disabled>
+                  Filled
+                </Button>
+                <Button variant="outlined" disabled>
+                  Outlined
+                </Button>
+                <Button variant="ghost" disabled>
+                  Ghost
+                </Button>
               </div>
             </SubSection>
             <SubSection title="Sizes (filled)">
               <div className="flex flex-wrap gap-3 items-end">
-                <Button variant="filled" size="xs">Extra Small</Button>
-                <Button variant="filled" size="sm">Small</Button>
-                <Button variant="filled" size="default">Default</Button>
-                <Button variant="filled" size="lg">Large</Button>
+                <Button variant="filled" size="xs">
+                  Extra Small
+                </Button>
+                <Button variant="filled" size="sm">
+                  Small
+                </Button>
+                <Button variant="filled" size="default">
+                  Default
+                </Button>
+                <Button variant="filled" size="lg">
+                  Large
+                </Button>
               </div>
             </SubSection>
             <SubSection title="Special Actions">
@@ -351,14 +451,9 @@ export default function DesignSystemPage() {
         {/* ---------------------------------------------------------------- */}
         <Section title="Form Fields">
           <Card className="flex flex-col gap-8">
-
             <SubSection title="Static states reference">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <TextInput
-                  id="ref-default"
-                  label="Default"
-                  placeholder="Type something..."
-                />
+                <TextInput id="ref-default" label="Default" placeholder="Type something..." />
                 <TextInput
                   id="ref-hint"
                   label="With hint"
@@ -396,8 +491,8 @@ export default function DesignSystemPage() {
                     hint="Gunakan nama sesuai identitas resmi"
                     value={values.name}
                     error={errors.name}
-                    onChange={e => handleChange("name", e.target.value)}
-                    onBlur={() => handleBlur("name")}
+                    onChange={e => handleChange('name', e.target.value)}
+                    onBlur={() => handleBlur('name')}
                   />
                   <TextInput
                     id={`${uid}-email`}
@@ -407,8 +502,8 @@ export default function DesignSystemPage() {
                     required
                     value={values.email}
                     error={errors.email}
-                    onChange={e => handleChange("email", e.target.value)}
-                    onBlur={() => handleBlur("email")}
+                    onChange={e => handleChange('email', e.target.value)}
+                    onBlur={() => handleBlur('email')}
                   />
                 </div>
 
@@ -420,8 +515,8 @@ export default function DesignSystemPage() {
                   hint={`${values.description.trim().length} / 20 karakter minimum`}
                   value={values.description}
                   error={errors.description}
-                  onChange={e => handleChange("description", e.target.value)}
-                  onBlur={() => handleBlur("description")}
+                  onChange={e => handleChange('description', e.target.value)}
+                  onBlur={() => handleBlur('description')}
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -435,8 +530,8 @@ export default function DesignSystemPage() {
                     value={values.category}
                     error={errors.category}
                     onValueChange={v => {
-                      handleChange("category", v)
-                      handleBlur("category")
+                      handleChange('category', v);
+                      handleBlur('category');
                     }}
                   />
                   <FileInput
@@ -448,14 +543,16 @@ export default function DesignSystemPage() {
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <Button type="submit" variant="filled">Validasi & Kirim</Button>
+                  <Button type="submit" variant="filled">
+                    Validasi & Kirim
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => {
-                      setValues({ name: "", email: "", description: "", category: "" })
-                      setErrors({})
-                      setTouched({})
+                      setValues({ name: '', email: '', description: '', category: '' });
+                      setErrors({});
+                      setTouched({});
                     }}
                   >
                     Reset
@@ -463,10 +560,8 @@ export default function DesignSystemPage() {
                 </div>
               </form>
             </SubSection>
-
           </Card>
         </Section>
-
       </div>
 
       {/* Footer */}
@@ -476,5 +571,5 @@ export default function DesignSystemPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

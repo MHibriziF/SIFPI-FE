@@ -1,45 +1,41 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Info, AlertTriangle, CheckCircle, XCircle, X } from "lucide-react"
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { Info, AlertTriangle, CheckCircle, XCircle, X } from 'lucide-react';
+import { toast as sonnerToast } from 'sonner';
+import { cn } from '@/shared/lib/utils';
 
-import { cn } from "@/shared/lib/utils"
-
-const toastVariants = cva(
-  "flex items-start gap-4 rounded-[20px] border px-6 py-5 w-full",
-  {
-    variants: {
-      variant: {
-        info: "bg-info-light border-info text-info",
-        warning: "bg-warning-light border-warning text-warning",
-        success: "bg-success-light border-success text-success",
-        danger: "bg-danger-light border-danger text-danger",
-      },
+const toastVariants = cva('flex items-start gap-4 rounded-[20px] border px-6 py-5 w-full', {
+  variants: {
+    variant: {
+      info: 'bg-info-light border-info text-info',
+      warning: 'bg-warning-light border-warning text-warning',
+      success: 'bg-success-light border-success text-success',
+      danger: 'bg-danger-light border-danger text-danger',
     },
-    defaultVariants: {
-      variant: "info",
-    },
-  }
-)
+  },
+  defaultVariants: {
+    variant: 'info',
+  },
+});
 
 const icons = {
   info: Info,
   warning: AlertTriangle,
   success: CheckCircle,
   danger: XCircle,
-} as const
+} as const;
 
-type ToastVariant = NonNullable<VariantProps<typeof toastVariants>["variant"]>
+type ToastVariant = NonNullable<VariantProps<typeof toastVariants>['variant']>;
 
 interface ToastProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof toastVariants> {
-  title: string
-  description?: string
-  onClose?: () => void
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof toastVariants> {
+  title: string;
+  description?: string;
+  onClose?: () => void;
 }
 
-function Toast({ className, variant = "info", title, description, onClose, ...props }: ToastProps) {
-  const Icon = icons[variant as ToastVariant]
+function Toast({ className, variant = 'info', title, description, onClose, ...props }: ToastProps) {
+  const Icon = icons[variant as ToastVariant];
 
   return (
     <div
@@ -51,9 +47,7 @@ function Toast({ className, variant = "info", title, description, onClose, ...pr
       <Icon className="size-5 shrink-0 mt-0.5" />
       <div className="flex flex-col gap-0.5 flex-1">
         <p className="text-sm font-semibold leading-snug">{title}</p>
-        {description && (
-          <p className="text-sm leading-snug">{description}</p>
-        )}
+        {description && <p className="text-sm leading-snug">{description}</p>}
       </div>
       {onClose && (
         <button
@@ -65,8 +59,23 @@ function Toast({ className, variant = "info", title, description, onClose, ...pr
         </button>
       )}
     </div>
-  )
+  );
 }
 
-export { Toast, toastVariants }
-export type { ToastVariant }
+export { Toast, toastVariants };
+export type { ToastVariant };
+
+export function showToast(variant: ToastVariant, title: string, description: string) {
+  sonnerToast.custom(
+    id => (
+      <Toast
+        variant={variant}
+        title={title}
+        description={description}
+        onClose={() => sonnerToast.dismiss(id)}
+        className="shadow-lg"
+      />
+    ),
+    { duration: 4000 }
+  );
+}

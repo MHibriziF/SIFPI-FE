@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ============================================================
    Design Tokens
@@ -12,27 +12,29 @@
 
   /* Brand */
   --brand-primary: #002855;
-  --brand-secondary: #F59E0B;
-  --brand-primary-light: #DBEAFE;
-  --brand-secondary-light: #F59E0B;
+  --brand-secondary: #f59e0b;
+  --brand-primary-light: #dbeafe;
+  --brand-secondary-light: #f59e0b;
 
   /* State */
-  --state-draft: #4B5563;
-  --state-info: #2859A9;
-  --state-warning: #EA580C;
-  --state-success: #16A34A;
-  --state-danger: #DC2626;
+  --state-draft: #4b5563;
+  --state-info: #2859a9;
+  --state-warning: #ea580c;
+  --state-success: #16a34a;
+  --state-danger: #dc2626;
 
   /* State Light */
-  --state-draft-light: #4B5563;
-  --state-info-light: #DBEAFE;
-  --state-warning-light: #FED7AA;
-  --state-success-light: #DCFCE7;
-  --state-danger-light: #FEE2E2;
+  --state-draft-light: #f3f4f6;
+  --state-info-light: #dbeafe;
+  --state-warning-light: #fed7aa;
+  --state-success-light: #dcfce7;
+  --state-danger-light: #fee2e2;
 
   /* Action (special buttons) */
-  --action-submit: #1BA64F;
-  --action-verify: #E84D0E;
+  --action-submit: #1ba64f;
+  --action-verify: #e84d0e;
+
+  --grey: #E5E5E5;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -49,10 +51,9 @@
    ============================================================ */
 @theme inline {
   /* Typography */
-  --font-sans: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system,
-    BlinkMacSystemFont, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
-    Consolas, monospace;
+  --font-sans:
+    'Segoe UI', 'Segoe UI Variable', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
 
   /* System */
   --color-background: var(--background);
@@ -77,15 +78,28 @@
   --color-warning-light: var(--state-warning-light);
   --color-success-light: var(--state-success-light);
   --color-danger-light: var(--state-danger-light);
+
+  --color-grey: var(--grey);
 }
 
 /* Action colors — owned by Tailwind so opacity modifiers (bg-action-submit/85) work */
 @theme {
-  --color-action-submit: #1BA64F;
-  --color-action-verify: #E84D0E;
+  --color-action-submit: #1ba64f;
+  --color-action-verify: #e84d0e;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
