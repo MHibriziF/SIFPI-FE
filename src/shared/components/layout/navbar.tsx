@@ -20,14 +20,11 @@ const NAV_LINKS = [
   { href: '/resources', label: 'Resources' },
 ];
 
-const EXCLUDED_ROUTES = ['/admin', '/dashboard', '/design-system'];
 
 export default function Navbar({ variant = 'public', skipHide = false }: NavbarProps) {
   const pathname = usePathname() ?? '/';
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const isExcluded = EXCLUDED_ROUTES.some(p => pathname.startsWith(p));
-  if (!skipHide && isExcluded) return null;
 
   const navLinkClass = (href: string) =>
     `text-sm font-medium px-2 py-1 rounded-md transition-colors duration-200 ${

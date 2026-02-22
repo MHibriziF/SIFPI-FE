@@ -93,7 +93,7 @@ import { motion } from 'motion/react';
   transition={{ duration: 0.6 }}
 >
   content
-</motion.div>
+</motion.div>;
 ```
 
 - `whileInView` triggers the animation when the element scrolls into view.
@@ -107,3 +107,120 @@ import { motion } from 'motion/react';
 A design system page is available at **`/design-system`** (dev only). It showcases all shared UI components — buttons, form fields, badges, toasts, and both navbar variants — so you can develop and review components in isolation without navigating the full app.
 
 To add a new component to the design system, edit `src/app/design-system/page.tsx`.
+
+## Sidebar & Dashboard Layout
+
+Some pages use a sidebar layout instead of the public Navbar + Footer. The sidebar system lives in `src/shared/components/sidebar/`.
+
+### Key files
+
+| File                          | Purpose                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `sidebar/sidebar.tsx`         | shadcn primitive — do not edit                                            |
+| `sidebar/nav-configs.ts`      | Nav item definitions per role (`ADMIN_NAV`, `OWNER_NAV`, `EXECUTIVE_NAV`) |
+| `sidebar/app-sidebar.tsx`     | Renders the sidebar from a `navKey` prop                                  |
+| `sidebar/dashboard-shell.tsx` | Full shell: `SidebarProvider` + `AppSidebar` + `SidebarInset` header      |
+
+### Adding a new role
+
+1. Add a nav array in `nav-configs.ts`:
+
+```ts
+export const MY_ROLE_NAV: NavGroup[] = [
+  {
+    label: 'Section',
+    items: [
+      { title: 'Page', href: '/myrole/page', icon: SomeIcon },
+    ],
+  },
+];
+
+// Also add to NAV_CONFIGS and NavKey:
+export type NavKey = 'admin' | 'owner' | 'executive' | 'myrole';
+export const NAV_CONFIGS: Record<NavKey, NavGroup[]> = { ..., myrole: MY_ROLE_NAV };
+```
+
+2. Create a route and layout:
+
+```
+src/app/role/
+├── layout.tsx
+└── some-page/page.tsx
+```
+
+```tsx
+// role/layout.tsx
+import DashboardShell from '@/shared/components/sidebar/dashboard-shell';
+
+export default function MyRoleLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <DashboardShell navKey="myrole" user={{ name: 'User Name', role: 'My Role' }}>
+      {children}
+    </DashboardShell>
+  );
+}
+```
+
+That's it — the sidebar, mobile drawer, colors, and toggle are all handled by `DashboardShell`.
+
+### Adding pages to a role (sitemap)
+
+**You never touch the layout again.** Every `page.tsx` you create inside the route folder automatically gets the sidebar — no imports needed in the page file.
+
+```
+src/app/example/
+├── layout.tsx                        ← sidebar defined here ONCE
+├── dashboard/
+│   └── page.tsx                      → /dashboard
+├── projects/
+│   ├── page.tsx                      → /dashboard/projects
+│   ├── pending/
+│   │   └── page.tsx                  → /dashboard/projects/pending
+│   └── [id]/
+│       └── page.tsx                  → /dashboard/projects/[id]
+├── users/
+│   └── page.tsx                      → /dashboard/users
+└── settings/
+    └── page.tsx                      → /dashboard/settings
+```
+
+Each page is just a plain component:
+
+```tsx
+// src/app/role/projects/page.tsx
+export default function ProjectsPage() {
+  return (
+    <div className="p-6">
+      <h1>Projects</h1>
+    </div>
+  );
+}
+```
+
+Next.js automatically wraps it with the nearest parent `layout.tsx`. The sidebar stays mounted and does **not** re-render when navigating between pages in the same route group.
+
+> When a new page is added to the sidebar nav, add its href to `nav-configs.ts` and create the matching `page.tsx` inside the route group. The two must be kept in sync manually.
+
+### Adding a dropdown (collapsible) nav item
+
+Add `subItems` to any `NavItem` in `nav-configs.ts`:
+
+```ts
+{
+  title: 'Projects',
+  href: '/dashboard/projects',
+  icon: FolderKanban,
+  subItems: [
+    { title: 'All Projects', href: '/dashboard/projects' },
+    { title: 'Pending Review', href: '/dashboard/projects/pending' },
+  ],
+},
+```
+
+`AppSidebar` automatically renders it as a collapsible group. Items without `subItems` render as a flat link.
+
+### Notes
+
+- Pass only `navKey` (a string) from server layouts — never pass nav arrays directly, as Lucide icon components cannot be serialized across the server/client boundary.
+- The sidebar color theme is defined in `SIDEBAR_THEME` inside `dashboard-shell.tsx`.
+- The public Navbar and Footer are automatically hidden on `/dashboard` and `/admin` routes via `FooterWrapper` and Navbar's `EXCLUDED_ROUTES`.

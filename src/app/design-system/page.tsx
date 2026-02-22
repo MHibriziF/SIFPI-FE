@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useId } from 'react';
 import { Button, SubmitProjectButton, VerifyProjectButton } from '@/shared/components/button';
 import { showToast, Toast } from '@/shared/components/toast';
@@ -270,6 +271,23 @@ export default function DesignSystemPage() {
               <Navbar variant="authenticated" skipHide />
             </div>
           </SubSection>
+        </Section>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* SIDEBAR / DASHBOARD LAYOUT                                        */}
+        {/* ---------------------------------------------------------------- */}
+        <Section title="Sidebar & Dashboard Layout">
+          <p className="text-sm text-gray-500 mb-3">
+            The sidebar layout is used for authenticated dashboard pages. It cannot be embedded
+            inline — open the live page to see it in context.
+          </p>
+          <Link
+            href="/example/dashboard"
+            target="_blank"
+            className="inline-flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5 transition-colors"
+          >
+            Open /dashboard →
+          </Link>
         </Section>
 
         {/* ---------------------------------------------------------------- */}

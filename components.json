@@ -17,7 +17,7 @@
     "utils": "@/shared/lib/utils",
     "ui": "@/shared/components",
     "lib": "@/shared/lib",
-    "hooks": "@/hooks"
+    "hooks": "@/shared/hooks"
   },
   "registries": {}
 }
