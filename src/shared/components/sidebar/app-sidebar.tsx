@@ -31,7 +31,8 @@ interface AppSidebarProps {
 }
 
 function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
-  const isActive = pathname === item.href || item.subItems?.some(s => s.href === pathname);
+  const href = item.href ?? '';
+  const isActive = pathname === href || item.subItems?.some(s => s.href === pathname);
 
   if (item.subItems) {
     return (
@@ -66,8 +67,8 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title}>
-        <Link href={item.href}>
+      <SidebarMenuButton asChild isActive={pathname === href} tooltip={item.title}>
+        <Link href={href}>
           <item.icon />
           <span>{item.title}</span>
         </Link>

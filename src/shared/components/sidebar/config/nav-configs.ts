@@ -17,7 +17,7 @@ export interface NavSubItem {
 
 export interface NavItem {
   title: string;
-  href?: string;
+  href?: string; // defaults to empty string
   icon: LucideIcon;
   subItems?: NavSubItem[];
 }
