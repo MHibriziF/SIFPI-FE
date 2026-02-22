@@ -1,15 +1,38 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Design Tokens
+   Override these CSS variables to customize the theme.
+   E.g. in a [data-theme="dark"] selector or media query.
+   ============================================================ */
 :root {
+  /* Layout */
   --background: #ffffff;
   --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Brand */
+  --brand-primary: #002855;
+  --brand-secondary: #F59E0B;
+  --brand-primary-light: #DBEAFE;
+  --brand-secondary-light: #F59E0B;
+
+  /* State */
+  --state-draft: #4B5563;
+  --state-info: #2859A9;
+  --state-warning: #EA580C;
+  --state-success: #16A34A;
+  --state-danger: #DC2626;
+
+  /* State Light */
+  --state-draft-light: #4B5563;
+  --state-info-light: #DBEAFE;
+  --state-warning-light: #FED7AA;
+  --state-success-light: #DCFCE7;
+  --state-danger-light: #FEE2E2;
+
+  /* Action (special buttons) */
+  --action-submit: #1BA64F;
+  --action-verify: #E84D0E;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +42,50 @@
   }
 }
 
+/* ============================================================
+   Tailwind Theme
+   Maps design tokens → Tailwind utility classes.
+   Results: bg-primary, text-secondary, border-success-light, etc.
+   ============================================================ */
+@theme inline {
+  /* Typography */
+  --font-sans: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system,
+    BlinkMacSystemFont, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
+    Consolas, monospace;
+
+  /* System */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Brand */
+  --color-primary: var(--brand-primary);
+  --color-secondary: var(--brand-secondary);
+  --color-primary-light: var(--brand-primary-light);
+  --color-secondary-light: var(--brand-secondary-light);
+
+  /* State */
+  --color-draft: var(--state-draft);
+  --color-info: var(--state-info);
+  --color-warning: var(--state-warning);
+  --color-success: var(--state-success);
+  --color-danger: var(--state-danger);
+
+  /* State Light */
+  --color-draft-light: var(--state-draft-light);
+  --color-info-light: var(--state-info-light);
+  --color-warning-light: var(--state-warning-light);
+  --color-success-light: var(--state-success-light);
+  --color-danger-light: var(--state-danger-light);
+}
+
+/* Action colors — owned by Tailwind so opacity modifiers (bg-action-submit/85) work */
+@theme {
+  --color-action-submit: #1BA64F;
+  --color-action-verify: #E84D0E;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
