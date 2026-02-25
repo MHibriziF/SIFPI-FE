@@ -20,7 +20,7 @@ export default function Hero() {
       />
 
       {/* Dark gradient overlay — heavier on the left where text sits */}
-      <div className="absolute inset-0 bg-linear-to-r from-primary/80 via-primary/70 to-primary/30" />
+      <div className="absolute inset-0 bg-linear-to-r from-black/50 to-black/50" />
 
       {/* Content — top padding accounts for the fixed navbar height */}
       <div className="relative mx-auto max-w-6xl px-6 py-16">
@@ -46,14 +46,14 @@ export default function Hero() {
             equitable growth.
           </p>
           <div
-            className="mt-10 flex flex-wrap gap-4"
+            className="mt-10 flex flex-wrap justify-center gap-4"
             style={{ animation: 'fade-in-up 0.6s ease-out 0.36s both' }}
           >
             <Button
               asChild
               size="lg"
               variant="filled"
-              className="bg-secondary text-primary hover:bg-secondary/85 focus-visible:ring-secondary/40"
+              className="bg-primary/90 text-white hover:bg-secondary/85 focus-visible:ring-secondary/40"
             >
               <Link href="/contact">Contact Us</Link>
             </Button>
@@ -61,7 +61,7 @@ export default function Hero() {
               asChild
               size="lg"
               variant="outlined"
-              className="border-white/40 text-white hover:bg-white/10 focus-visible:ring-white/30"
+              className="bg-primary/90 text-white hover:bg-secondary focus-visible:ring-white/30"
             >
               <Link href="/projects">Project Catalogue</Link>
             </Button>
