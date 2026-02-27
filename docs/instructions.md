@@ -102,6 +102,26 @@ import { motion } from 'motion/react';
 - Use `transition={{ delay: 0.1 }}` etc. for staggered effects.
 - Any component using `motion` must have `'use client'` at the top.
 
+## Public Pages (Route Group)
+
+All public-facing pages live inside the `(public)` route group at `src/app/(public)/`. This route group provides the shared public layout (Navbar + Footer) automatically.
+
+To add a new public page, create a folder inside `(public)/`:
+
+```
+src/app/(public)/
+├── layout.tsx          ← public layout (Navbar + Footer) — do not duplicate
+├── page.tsx            ← Home page (/)
+├── login/
+│   └── page.tsx        ← /login
+├── register/
+│   └── page.tsx        ← /register
+└── your-page/
+    └── page.tsx        ← /your-page
+```
+
+The layout reads the `SIFPI_TOKEN` cookie on the server and switches the Navbar between `public` (Login/Register links) and `authenticated` (Inquiries/Profile/Logout) variants automatically.
+
 ## Design System
 
 A design system page is available at **`/design-system`** (dev only). It showcases all shared UI components — buttons, form fields, badges, toasts, and both navbar variants — so you can develop and review components in isolation without navigating the full app.
