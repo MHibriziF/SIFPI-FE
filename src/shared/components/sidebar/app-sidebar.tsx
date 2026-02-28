@@ -109,7 +109,7 @@ export default function AppSidebar({ navKey, user }: AppSidebarProps) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map(item => (
-                  <NavItemRow key={item.href} item={item} pathname={pathname} />
+                  <NavItemRow key={item.title} item={item} pathname={pathname} />
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
