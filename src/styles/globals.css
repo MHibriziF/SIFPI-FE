@@ -122,6 +122,10 @@
   --color-action-verify: #e84d0e;
 }
 
+html {
+  background: var(--brand-primary);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

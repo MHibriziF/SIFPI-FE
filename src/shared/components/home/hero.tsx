@@ -42,15 +42,15 @@ export default function Hero({
       >
         <h1
           className={cn(
-            'font-bold text-white leading-tight text-center text-[clamp(1rem,3vw,2.5rem)]',
-            side && 'lg:text-[clamp(1rem,1.5vw,2rem)]'
+            'font-bold text-white text-center text-[clamp(2rem,3vw,2.5rem)]',
+            side && 'lg:text-[clamp(2rem,1.5vw,2rem)]'
           )}
           style={{ animation: 'fade-in-up 0.6s ease-out 0.12s both' }}
         >
           INFRASTRUCTURE PROJECT FACILITATION OFFICE
         </h1>
         <p
-          className="mt-6 text-lg text-white/75 leading-relaxed text-center"
+          className="mt-6 text-lg text-white/95 leading-relaxed text-center"
           style={{ animation: 'fade-in-up 0.6s ease-out 0.24s both' }}
         >
           Facilitating Indonesia infrastructure project investment to support sustainable and
