@@ -25,7 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="antialiased font-sans">
         {children}
-        <Toaster position="top-center" style={{ '--width': '480px' } as React.CSSProperties} />
+        <Toaster
+          position="top-center"
+          style={{ '--width': '480px' } as React.CSSProperties}
+          toastOptions={{ style: { width: '480px' } }}
+        />
       </body>
     </html>
   );

@@ -2,7 +2,7 @@ import axios, { AxiosError, type AxiosResponse } from 'axios';
 import { ApiError, type BaseResponse } from '@/shared/types/api';
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: '',
   headers: {
     'Content-Type': 'application/json',
   },
