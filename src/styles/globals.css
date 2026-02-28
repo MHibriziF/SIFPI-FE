@@ -122,6 +122,10 @@
   --color-action-verify: #e84d0e;
 }
 
+html {
+  background: var(--brand-primary);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -137,6 +141,7 @@ body {
     transform: translateY(0);
   }
 }
+
 
 .dark {
   --sidebar: hsl(240 5.9% 10%);

@@ -10,7 +10,7 @@ import type { NextRequest } from 'next/server';
  * @returns {NextResponse} - The response to be sent back to the client.
  */
 export function proxy(request: NextRequest) {
-  const token = request.cookies.get('token');
+  const token = request.cookies.get('SIFPI_TOKEN');
 
   if (!token) {
     return NextResponse.redirect(new URL('/', request.url));

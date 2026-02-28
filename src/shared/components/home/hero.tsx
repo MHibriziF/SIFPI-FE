@@ -1,71 +1,81 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/shared/components/button';
+import { cn } from '@/shared/lib/utils';
 
-export default function Hero() {
+export default function Hero({
+  side = false,
+  className,
+}: {
+  side?: boolean;
+  className?: string;
+}) {
   return (
     <section
       id="home"
-      className="relative flex items-center overflow-hidden"
-      style={{ minHeight: 'calc(100dvh - 60px)' }}
+      className={cn(
+        'relative flex items-center overflow-hidden',
+        side && 'flex-1 self-stretch',
+        className
+      )}
+      style={{ minHeight: side ? '50dvh' : 'calc(100dvh - 60px)' }}
     >
-      {/* Background image — sits behind the fixed navbar thanks to z-index */}
+      {/* Background image */}
       <Image
         src="/png/home-bg-banner.jpeg"
         alt=""
         fill
         priority
         className="object-cover object-top"
-        sizes="100vw"
+        sizes={side ? '50vw' : '100vw'}
       />
 
-      {/* Dark gradient overlay — heavier on the left where text sits */}
-      <div className="absolute inset-0 bg-linear-to-r from-black/50 to-black/50" />
+      {/* Dark gradient overlay */}
+      <div className="absolute inset-0 bg-linear-to-r from-black/60 to-black/40" />
 
-      {/* Content — top padding accounts for the fixed navbar height */}
-      <div className="relative mx-auto max-w-6xl px-6 py-16">
-        <div className="max-w-2xl">
-          <p
-            className="text-secondary text-sm font-semibold uppercase tracking-widest mb-4"
-            style={{ animation: 'fade-in-up 0.6s ease-out both' }}
+      {/* Content */}
+      <div
+        className={cn(
+          'relative py-16',
+          side ? 'hidden lg:block w-full px-6' : 'mx-auto max-w-6xl px-6'
+        )}
+      >
+        <h1
+          className={cn(
+            'font-bold text-white text-center text-[clamp(2rem,3vw,2.5rem)]',
+            side && 'lg:text-[clamp(2rem,1.5vw,2rem)]'
+          )}
+          style={{ animation: 'fade-in-up 0.6s ease-out 0.12s both' }}
+        >
+          INFRASTRUCTURE PROJECT FACILITATION OFFICE
+        </h1>
+        <p
+          className="mt-6 text-lg text-white/95 leading-relaxed text-center"
+          style={{ animation: 'fade-in-up 0.6s ease-out 0.24s both' }}
+        >
+          Facilitating Indonesia infrastructure project investment to support sustainable and
+          equitable growth.
+        </p>
+        <div
+          className="mt-10 flex flex-wrap gap-4 justify-center"
+          style={{ animation: 'fade-in-up 0.6s ease-out 0.36s both' }}
+        >
+          <Button
+            asChild
+            size="xl"
+            variant="filled"
+            className="bg-primary/90 text-white hover:bg-secondary/85 focus-visible:ring-secondary/40"
           >
-            Indonesia Project Facilitation Office
-          </p>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight"
-            style={{ animation: 'fade-in-up 0.6s ease-out 0.12s both' }}
+            <Link href="/contact">Contact Us</Link>
+          </Button>
+          <Button
+            asChild
+            size="xl"
+            variant="outlined"
+            className="bg-primary/90 text-white hover:bg-secondary focus-visible:ring-white/30"
           >
-            Infrastructure Project{' '}
-            <span className="text-secondary">Facilitation</span> Office
-          </h1>
-          <p
-            className="mt-6 text-lg text-white/75 leading-relaxed"
-            style={{ animation: 'fade-in-up 0.6s ease-out 0.24s both' }}
-          >
-            Facilitating Indonesia infrastructure project investment to support sustainable and
-            equitable growth.
-          </p>
-          <div
-            className="mt-10 flex flex-wrap justify-center gap-4"
-            style={{ animation: 'fade-in-up 0.6s ease-out 0.36s both' }}
-          >
-            <Button
-              asChild
-              size="lg"
-              variant="filled"
-              className="bg-primary/90 text-white hover:bg-secondary/85 focus-visible:ring-secondary/40"
-            >
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outlined"
-              className="bg-primary/90 text-white hover:bg-secondary focus-visible:ring-white/30"
-            >
-              <Link href="/projects">Project Catalogue</Link>
-            </Button>
-          </div>
+            <Link href="/projects">Project Catalogue</Link>
+          </Button>
         </div>
       </div>
     </section>
