@@ -7,7 +7,15 @@ import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { login } from '@/features/auth/service';
+import type { UserRole } from '@/features/auth/types';
 import { ApiError } from '@/shared/types/api';
+
+const ROLE_REDIRECT: Record<UserRole, string> = {
+  ADMIN: '/admin/dashboard',
+  OWNER: '/owner/dashboard',
+  INVESTOR: '/catalogue',
+  EXECUTIVE: '/admin/insights',
+};
 
 export default function LoginForm() {
   const router = useRouter();
@@ -30,9 +38,9 @@ export default function LoginForm() {
 
     setLoading(true);
     try {
-      await login({ email, password });
+      const { data: { role } } = await login({ email, password });
       showToast('success', 'Login berhasil', 'Selamat datang kembali!');
-      router.push('/');
+      router.push(ROLE_REDIRECT[role] ?? '/');
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : 'Terjadi kesalahan. Silakan coba lagi.';
