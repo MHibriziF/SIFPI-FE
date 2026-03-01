@@ -57,10 +57,18 @@ api.interceptors.response.use(
 
     const { status, data } = error.response;
 
-    // If a mutating request gets a 401, the CSRF token may have gone stale.
-    // Reset so the next request re-bootstraps rather than failing silently.
-    if (status === 401 && MUTATING.has(error.config?.method?.toLowerCase() ?? '')) {
+    // 403 on a mutating request may mean a stale CSRF token — reset so the next
+    // request re-bootstraps. Harmless if the 403 was actually a permission denial.
+    if (status === 403 && MUTATING.has(error.config?.method?.toLowerCase() ?? '')) {
       csrfReady = false;
+    }
+
+    // 401 means the session has expired. Redirect to root so the proxy enforces
+    // the login wall. Skip auth endpoints — wrong credentials also produce 401
+    // and should be handled by the form instead.
+    const url = error.config?.url ?? '';
+    if (status === 401 && typeof window !== 'undefined' && !url.includes('auth/')) {
+      window.location.href = '/login';
     }
 
     return Promise.reject(
