@@ -244,3 +244,103 @@ Add `subItems` to any `NavItem` in `nav-configs.ts`:
 - Pass only `navKey` (a string) from server layouts — never pass nav arrays directly, as Lucide icon components cannot be serialized across the server/client boundary.
 - The sidebar color theme is defined in `SIDEBAR_THEME` inside `dashboard-shell.tsx`.
 - The public Navbar and Footer are automatically hidden on `/dashboard` and `/admin` routes via `FooterWrapper` and Navbar's `EXCLUDED_ROUTES`.
+
+## Authorization & Permissions
+
+The backend uses a **role + permission matrix** model. The login response includes both:
+
+```json
+{
+  "role": "ADMIN",
+  "permissions": {
+    "PROJECT": ["CREATE", "READ", "UPDATE", "DELETE"],
+    "NEWS": ["CREATE", "READ", "UPDATE", "DELETE"],
+    "INQUIRY": ["CREATE", "READ", "UPDATE", "DELETE"],
+    "USER": ["CREATE", "READ", "UPDATE", "DELETE"],
+    "VERIFICATION": ["CREATE", "READ", "UPDATE", "DELETE"]
+  }
+}
+```
+
+- **`role`** identifies the user type and determines where they land after login.
+- **`permissions`** determines what they can see and do in the UI.
+
+### Rule: never gate UI by role
+
+Do not conditionally render UI based on `role`. Always check **permissions** instead. This ensures custom roles created by admins (e.g. a `VERIFICATOR` with a limited permission set) work correctly without any code changes.
+
+```ts
+// WRONG
+if (session.role === 'ADMIN') showDeleteButton();
+
+// CORRECT
+if (hasPermission(session, 'PROJECT', 'DELETE')) showDeleteButton();
+```
+
+### `hasPermission` utility
+
+```ts
+import { hasPermission } from '@/shared/lib/permissions';
+import type { Resource, Action } from '@/shared/lib/permissions';
+```
+
+```ts
+hasPermission(session, resource, action): boolean
+```
+
+| Parameter  | Type                                                           |
+| ---------- | -------------------------------------------------------------- |
+| `session`  | `AuthResponse \| null \| undefined`                           |
+| `resource` | `'PROJECT' \| 'NEWS' \| 'INQUIRY' \| 'USER' \| 'VERIFICATION'` |
+| `action`   | `'CREATE' \| 'READ' \| 'UPDATE' \| 'DELETE'`                  |
+
+Returns `false` if session is `null`/`undefined` — safe to call without a null check.
+
+#### In server components (pass session from `getSession()`)
+
+```tsx
+import { getSession } from '@/shared/lib/session';
+import { hasPermission } from '@/shared/lib/permissions';
+
+export default async function ProjectsPage() {
+  const session = await getSession();
+
+  return (
+    <div>
+      {hasPermission(session, 'PROJECT', 'CREATE') && <CreateProjectButton />}
+    </div>
+  );
+}
+```
+
+#### In client components (receive session as a prop)
+
+```tsx
+'use client';
+
+import { hasPermission } from '@/shared/lib/permissions';
+import type { AuthResponse } from '@/features/auth/types';
+
+export default function ProjectActions({ session }: { session: AuthResponse | null }) {
+  return (
+    <div>
+      {hasPermission(session, 'PROJECT', 'UPDATE') && <EditButton />}
+      {hasPermission(session, 'PROJECT', 'DELETE') && <DeleteButton />}
+    </div>
+  );
+}
+```
+
+### Post-login redirect
+
+After login, users are redirected based on their `role`:
+
+| Role        | Redirect             |
+| ----------- | -------------------- |
+| `ADMIN`     | `/admin/dashboard`   |
+| `OWNER`     | `/owner/dashboard`   |
+| `INVESTOR`  | `/catalogue`         |
+| `EXECUTIVE` | `/admin/insights`    |
+| _(custom)_  | `/dashboard`         |
+
+Custom roles fall back to `/dashboard`. That page should render based on permissions, not role.
