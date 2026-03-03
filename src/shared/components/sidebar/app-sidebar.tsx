@@ -24,6 +24,7 @@ import {
   SidebarSeparator,
 } from '@/shared/components/sidebar/sidebar';
 import { NAV_CONFIGS, type NavItem, type NavKey } from '@/shared/components/sidebar/config/nav-configs';
+import { logout } from '@/features/auth/service';
 
 interface AppSidebarProps {
   navKey: NavKey;
@@ -134,6 +135,7 @@ export default function AppSidebar({ navKey, user }: AppSidebarProps) {
             <SidebarMenuButton
               tooltip="Logout"
               className="text-danger hover:bg-danger/15 hover:text-danger"
+              onClick={logout}
             >
               <LogOut />
               <span>Logout</span>
