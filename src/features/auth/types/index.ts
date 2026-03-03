@@ -9,6 +9,6 @@ export interface AuthResponse {
   id: string;
   email: string;
   name: string;
-  role: UserRole;
+  role: string;
   permissions: Record<string, string[]>;
 }

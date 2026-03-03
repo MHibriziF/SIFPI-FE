@@ -1,5 +1,6 @@
 import axios, { AxiosError, type AxiosResponse } from 'axios';
 import { ApiError, type BaseResponse } from '@/shared/types/api';
+import { setFlashToast } from '../hooks/use-flash-toast';
 
 export const api = axios.create({
   baseURL: '',
@@ -68,7 +69,16 @@ api.interceptors.response.use(
     // the login wall. Skip auth endpoints — wrong credentials also produce 401
     // and should be handled by the form instead.
     const url = error.config?.url ?? '';
-    if (status === 401 && typeof window !== 'undefined' && !url.includes('auth/')) {
+    if (
+      status === 401 &&
+      typeof window !== 'undefined' &&
+      !url.includes(['/login', '/register', '/forgot-password'].join('|'))
+    ) {
+      setFlashToast({
+        type: 'info',
+        title: 'Session expired',
+        description: 'Please log in again.',
+      });
       window.location.href = '/login';
     }
 

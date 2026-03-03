@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-grey text-primary">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-65">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
           {/* Our Office */}
           <div>
             <h3 className="text-xl font-semibold uppercase tracking-widest text-primary mb-4">

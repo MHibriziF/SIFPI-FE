@@ -1,14 +1,16 @@
-import { cookies } from 'next/headers';
 import Navbar from '@/shared/components/layout/navbar';
 import Footer from '@/shared/components/layout/footer';
+import { getRole, getRoleHome } from '@/shared/lib/auth-guard';
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const hasToken = cookieStore.has('SIFPI_TOKEN');
+  const role = await getRole();
 
   return (
     <>
-      <Navbar variant={hasToken ? 'authenticated' : 'public'} />
+      <Navbar
+        variant={role ? 'authenticated' : 'public'}
+        dashboardHref={getRoleHome(role)}
+      />
       {children}
       <Footer />
     </>
