@@ -1,8 +1,9 @@
 import 'server-only';
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import { getSession } from './session';
 import type { AuthResponse } from '@/features/auth/types';
 import { cache } from 'react';
+import type { ReactNode } from 'react';
 
 export type Resource = 'PROJECT' | 'NEWS' | 'INQUIRY' | 'USER' | 'VERIFICATION';
 export type Action = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
@@ -58,4 +59,30 @@ export function hasPermission(
   action: Action
 ): boolean {
   return session?.permissions[resource]?.includes(action) ?? false;
+}
+
+/**
+ * Wraps a server page component with a permission check — the Next.js equivalent
+ * of Spring Boot's @PreAuthorize.
+ *
+ * Redirects to /login if unauthenticated.
+ * Returns 404 if the user lacks the required permission.
+ * Injects `session` as the second argument to the page on success.
+ *
+ * @example
+ * export default withPermission('PROJECT', 'READ')(async (props, session) => {
+ *   return <ProjectList />;
+ * });
+ */
+export function withPermission(resource: Resource, action: Action) {
+  return function <P extends object>(
+    Page: (props: P, session: AuthResponse) => Promise<ReactNode>
+  ) {
+    return async function (props: P): Promise<ReactNode> {
+      const session = await getSession();
+      if (!session) redirect('/login');
+      if (!hasPermission(session, resource, action)) notFound();
+      return Page(props, session);
+    };
+  };
 }

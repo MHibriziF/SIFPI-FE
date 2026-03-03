@@ -263,12 +263,12 @@ export default function DesignSystemPage() {
         <Section title="Navbar">
           <SubSection title="Public (unauthenticated)">
             <div className="rounded-xl overflow-hidden border border-gray-200">
-              <Navbar variant="public" skipHide />
+              <Navbar variant="public" />
             </div>
           </SubSection>
           <SubSection title="Authenticated">
             <div className="rounded-xl overflow-hidden border border-gray-200">
-              <Navbar variant="authenticated" skipHide />
+              <Navbar variant="authenticated" />
             </div>
           </SubSection>
         </Section>

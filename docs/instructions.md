@@ -262,12 +262,12 @@ The backend uses a **role + permission matrix** model. The login response includ
 }
 ```
 
-- **`role`** identifies the user type and determines where they land after login.
-- **`permissions`** determines what they can see and do in the UI.
+- **`role`** is a `string`. The four built-in values are `ADMIN`, `OWNER`, `INVESTOR`, and `EXECUTIVE`. Admins can create custom roles with arbitrary names — those fall back to `/dashboard`.
+- **`permissions`** determines what a user can see and do in the UI.
 
 ### Rule: never gate UI by role
 
-Do not conditionally render UI based on `role`. Always check **permissions** instead. This ensures custom roles created by admins (e.g. a `VERIFICATOR` with a limited permission set) work correctly without any code changes.
+Do not conditionally render UI based on `role`. Always check **permissions** instead. This ensures custom roles work correctly without code changes.
 
 ```ts
 // WRONG
@@ -277,70 +277,244 @@ if (session.role === 'ADMIN') showDeleteButton();
 if (hasPermission(session, 'PROJECT', 'DELETE')) showDeleteButton();
 ```
 
+### Route guards
+
+All auth utilities live in `src/shared/lib/auth-guard.ts`. This file is **server-only** — never import it from a client component.
+
+#### Two-layer protection
+
+| Layer | File | What it does |
+| ----- | ---- | ------------ |
+| Middleware | `src/proxy.ts` | Fast edge check — redirects to `/login` if no token |
+| Layout guard | `src/app/<role>/layout.tsx` | Calls `requireRole()` — redirects wrong-role users to their own home |
+
+The middleware covers all protected route prefixes. The layout does the real role check via `getSession()`.
+
+#### `requireRole(...allowed)`
+
+Use in **server layouts** for routes that belong to specific known roles.
+
+```tsx
+// src/app/admin/layout.tsx
+import { requireRole } from '@/shared/lib/auth-guard';
+
+export default async function AdminLayout({ children }) {
+  const session = await requireRole('ADMIN', 'EXECUTIVE');
+  // session is AuthResponse — redirects to /login or the user's own home if role doesn't match
+  ...
+}
+```
+
+#### `requireCustomRole()`
+
+Use in **`/dashboard/layout.tsx`** for custom (non-built-in) roles. Redirects the four known roles to their own home.
+
+```tsx
+// src/app/dashboard/layout.tsx
+import { requireCustomRole } from '@/shared/lib/auth-guard';
+
+export default async function DashboardLayout({ children }) {
+  const session = await requireCustomRole();
+  ...
+}
+```
+
+#### `getRoleHome(role)`
+
+Maps a role string to its home page. Returns `/dashboard` for unknown roles, `/login` for `null`.
+
+```ts
+import { getRoleHome } from '@/shared/lib/auth-guard';
+
+getRoleHome('ADMIN')     // '/admin/dashboard'
+getRoleHome('OWNER')     // '/owner/dashboard'
+getRoleHome('INVESTOR')  // '/catalogue'
+getRoleHome('EXECUTIVE') // '/admin/insights'
+getRoleHome('CUSTOM')    // '/dashboard'
+getRoleHome(null)        // '/login'
+```
+
+#### `getRole()`
+
+Cached async helper that returns the current user's role string (or `null`). Safe to call in server components without worrying about duplicate `/api/me` calls.
+
+```ts
+import { getRole } from '@/shared/lib/auth-guard';
+
+const role = await getRole(); // string | null
+```
+
 ### `hasPermission` utility
 
 ```ts
-import { hasPermission } from '@/shared/lib/permissions';
-import type { Resource, Action } from '@/shared/lib/permissions';
+import { hasPermission } from '@/shared/lib/auth-guard';
+import type { Resource, Action } from '@/shared/lib/auth-guard';
 ```
 
 ```ts
 hasPermission(session, resource, action): boolean
 ```
 
-| Parameter  | Type                                                           |
-| ---------- | -------------------------------------------------------------- |
-| `session`  | `AuthResponse \| null \| undefined`                           |
+| Parameter  | Type                                                            |
+| ---------- | --------------------------------------------------------------- |
+| `session`  | `AuthResponse \| null \| undefined`                            |
 | `resource` | `'PROJECT' \| 'NEWS' \| 'INQUIRY' \| 'USER' \| 'VERIFICATION'` |
-| `action`   | `'CREATE' \| 'READ' \| 'UPDATE' \| 'DELETE'`                  |
+| `action`   | `'CREATE' \| 'READ' \| 'UPDATE' \| 'DELETE'`                   |
 
 Returns `false` if session is `null`/`undefined` — safe to call without a null check.
 
-#### In server components (pass session from `getSession()`)
+`auth-guard` is **server-only**. `hasPermission` can only be called in server components. Client components must receive the pre-computed boolean (or the session) as a prop.
+
+### `withPermission` — page-level guard (like `@PreAuthorize`)
+
+For gating an entire page, use `withPermission` instead of calling `hasPermission` manually. It wraps the page component, checks auth + permission, and injects `session` as the second argument.
+
+```tsx
+import { withPermission } from '@/shared/lib/auth-guard';
+
+export default withPermission('PROJECT', 'READ')(async (props, session) => {
+  return <ProjectList />;
+});
+```
+
+Compared to the manual approach:
+
+```tsx
+// Without withPermission — verbose
+export default async function ProjectsPage() {
+  const session = await getSession();
+  if (!session) redirect('/login');
+  if (!hasPermission(session, 'PROJECT', 'READ')) notFound();
+  return <ProjectList />;
+}
+
+// With withPermission — clean
+export default withPermission('PROJECT', 'READ')(async (props, session) => {
+  return <ProjectList />;
+});
+```
+
+`props` is the standard Next.js page props (`params`, `searchParams`). Use them normally:
+
+```tsx
+export default withPermission('PROJECT', 'READ')(async ({ params }, session) => {
+  const { id } = await params;
+  const project = await getProject(id);
+  return <ProjectDetail project={project} canEdit={hasPermission(session, 'PROJECT', 'UPDATE')} />;
+});
+```
+
+Behaviour:
+- Unauthenticated → redirect to `/login`
+- Authenticated but missing permission → `notFound()` (404)
+- Authenticated with permission → page renders, `session` is injected
+
+#### Hiding / showing UI elements
+
+The most common pattern — render an action only when the user has the matching permission:
 
 ```tsx
 import { getSession } from '@/shared/lib/session';
-import { hasPermission } from '@/shared/lib/permissions';
+import { hasPermission } from '@/shared/lib/auth-guard';
 
 export default async function ProjectsPage() {
   const session = await getSession();
 
+  const canCreate = hasPermission(session, 'PROJECT', 'CREATE');
+  const canDelete = hasPermission(session, 'PROJECT', 'DELETE');
+
   return (
     <div>
-      {hasPermission(session, 'PROJECT', 'CREATE') && <CreateProjectButton />}
+      {canCreate && <CreateProjectButton />}
+
+      <ProjectList>
+        {/* pass the flag down to a client component */}
+        <ProjectRow canDelete={canDelete} />
+      </ProjectList>
     </div>
   );
 }
 ```
 
-#### In client components (receive session as a prop)
+Never show a button (e.g. Delete) and then disable it — just don't render it at all.
+
+#### Blocking an entire page section
+
+Use `notFound()` or a redirect when the user has no read access to the resource:
 
 ```tsx
+import { notFound } from 'next/navigation';
+import { getSession } from '@/shared/lib/session';
+import { hasPermission } from '@/shared/lib/auth-guard';
+
+export default async function UsersPage() {
+  const session = await getSession();
+
+  if (!hasPermission(session, 'USER', 'READ')) notFound();
+
+  return <UserTable />;
+}
+```
+
+#### Passing flags to client components
+
+`hasPermission` cannot be called inside a client component. Compute the booleans on the server and pass them as props:
+
+```tsx
+// server page — compute all flags here
+export default async function ProjectDetailPage() {
+  const session = await getSession();
+
+  return (
+    <ProjectActions
+      canEdit={hasPermission(session, 'PROJECT', 'UPDATE')}
+      canDelete={hasPermission(session, 'PROJECT', 'DELETE')}
+    />
+  );
+}
+
+// client component — receives pre-computed flags, no auth-guard import needed
 'use client';
 
-import { hasPermission } from '@/shared/lib/permissions';
-import type { AuthResponse } from '@/features/auth/types';
+interface Props {
+  canEdit: boolean;
+  canDelete: boolean;
+}
 
-export default function ProjectActions({ session }: { session: AuthResponse | null }) {
+export function ProjectActions({ canEdit, canDelete }: Props) {
   return (
     <div>
-      {hasPermission(session, 'PROJECT', 'UPDATE') && <EditButton />}
-      {hasPermission(session, 'PROJECT', 'DELETE') && <DeleteButton />}
+      {canEdit && <EditButton />}
+      {canDelete && <DeleteButton />}
     </div>
   );
 }
+```
+
+#### What not to do
+
+```tsx
+// ✗ importing auth-guard in a client component — build error
+'use client';
+import { hasPermission } from '@/shared/lib/auth-guard';
+
+// ✗ gating by role instead of permission
+if (session.role === 'ADMIN') { ... }
+
+// ✗ showing a disabled button instead of hiding it
+<Button disabled={!canDelete}>Delete</Button>
 ```
 
 ### Post-login redirect
 
-After login, users are redirected based on their `role`:
+After login, users are redirected via `ROLE_REDIRECT` in `login-form.tsx`:
 
-| Role        | Redirect             |
-| ----------- | -------------------- |
-| `ADMIN`     | `/admin/dashboard`   |
-| `OWNER`     | `/owner/dashboard`   |
-| `INVESTOR`  | `/catalogue`         |
-| `EXECUTIVE` | `/admin/insights`    |
-| _(custom)_  | `/dashboard`         |
+| Role        | Redirect          |
+| ----------- | ----------------- |
+| `ADMIN`     | `/admin/dashboard`  |
+| `OWNER`     | `/owner/dashboard`  |
+| `INVESTOR`  | `/catalogue`        |
+| `EXECUTIVE` | `/admin/insights`   |
+| _(custom)_  | `/dashboard`        |
 
-Custom roles fall back to `/dashboard`. That page should render based on permissions, not role.
+Custom roles fall back to `/dashboard`. That layout calls `requireCustomRole()` and the pages themselves should gate content with `hasPermission`.
