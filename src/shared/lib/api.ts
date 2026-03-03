@@ -68,11 +68,12 @@ api.interceptors.response.use(
     // 401 means the session has expired. Redirect to root so the proxy enforces
     // the login wall. Skip auth endpoints — wrong credentials also produce 401
     // and should be handled by the form instead.
+    const AUTH_ENDPOINTS = ['/api/auth/login', '/api/auth/register', '/api/auth/forgot-password'];
     const url = error.config?.url ?? '';
     if (
       status === 401 &&
       typeof window !== 'undefined' &&
-      !url.includes(['/login', '/register', '/forgot-password'].join('|'))
+      !AUTH_ENDPOINTS.some(path => url.includes(path))
     ) {
       setFlashToast({
         type: 'info',
