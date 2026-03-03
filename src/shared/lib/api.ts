@@ -27,6 +27,7 @@ let csrfReady = false;
 let csrfInit: Promise<void> | null = null;
 
 api.interceptors.request.use(async config => {
+  config.url = normalizeApiUrl(config.url);
   if (csrfReady || !MUTATING.has(config.method?.toLowerCase() ?? '')) return config;
 
   if (document.cookie.split(';').some(c => c.trim().startsWith('XSRF-TOKEN='))) {
@@ -80,45 +81,49 @@ api.interceptors.response.use(
 // ---------------------------------------------------------------------------
 // Typed helpers – every call returns BaseResponse<T> directly
 // ---------------------------------------------------------------------------
+function normalizeApiUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  return url.startsWith('/') ? url : `/${url}`;
+}
 export async function apiGet<T>(
   url: string,
   params?: Record<string, unknown>
 ): Promise<BaseResponse<T>> {
-  const res = await api.get<BaseResponse<T>>(url, { params });
+  const res = await api.get<BaseResponse<T>>(normalizeApiUrl(url) ?? url, { params });
   return res.data;
 }
 
 export async function apiPost<T>(url: string, body?: unknown): Promise<BaseResponse<T>> {
-  const res = await api.post<BaseResponse<T>>(url, body);
+  const res = await api.post<BaseResponse<T>>(normalizeApiUrl(url) ?? url, body);
   return res.data;
 }
 
 export async function apiPut<T>(url: string, body?: unknown): Promise<BaseResponse<T>> {
-  const res = await api.put<BaseResponse<T>>(url, body);
+  const res = await api.put<BaseResponse<T>>(normalizeApiUrl(url) ?? url, body);
   return res.data;
 }
 
 export async function apiPatch<T>(url: string, body?: unknown): Promise<BaseResponse<T>> {
-  const res = await api.patch<BaseResponse<T>>(url, body);
+  const res = await api.patch<BaseResponse<T>>(normalizeApiUrl(url) ?? url, body);
   return res.data;
 }
 
 export async function apiPostFile<T>(url: string, body: FormData): Promise<BaseResponse<T>> {
-  const res = await api.post<BaseResponse<T>>(url, body, {
+  const res = await api.post<BaseResponse<T>>(normalizeApiUrl(url) ?? url, body, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return res.data;
 }
 
 export async function apiPutFile<T>(url: string, body: FormData): Promise<BaseResponse<T>> {
-  const res = await api.put<BaseResponse<T>>(url, body, {
+  const res = await api.put<BaseResponse<T>>(normalizeApiUrl(url) ?? url, body, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return res.data;
 }
 
 export async function apiPatchFile<T>(url: string, body: FormData): Promise<BaseResponse<T>> {
-  const res = await api.patch<BaseResponse<T>>(url, body, {
+  const res = await api.patch<BaseResponse<T>>(normalizeApiUrl(url) ?? url, body, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return res.data;
