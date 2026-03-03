@@ -63,11 +63,11 @@ export const ADMIN_NAV: NavGroup[] = [
     label: 'Main',
     items: [
       { title: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-      { title: 'User Management', href: '/admin/dashboard/users', icon: Users },
-      { title: 'Inquiry Management', href: '/admin/dashboard/inquiries', icon: CheckCircleIcon },
-      { title: 'Project Management', href: '/admin/dashhboard/projects', icon: FolderKanban },
-      { title: 'News Management', href: '/admin/dashboard/news', icon: FileText },
-      { title: 'Portfolios', href: '/admin/dashboard/portfolios', icon: BarChart3 },
+      { title: 'User Management', href: '/admin/users', icon: Users },
+      { title: 'Inquiry Management', href: '/admin/inquiries', icon: CheckCircleIcon },
+      { title: 'Project Management', href: '/admin/projects', icon: FolderKanban },
+      { title: 'News Management', href: '/admin/news', icon: FileText },
+      { title: 'Portfolios', href: '/admin/portfolios', icon: BarChart3 },
     ],
   },
 ];
