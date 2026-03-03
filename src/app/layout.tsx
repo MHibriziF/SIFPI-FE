@@ -27,8 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Toaster
           position="top-center"
-          style={{ '--width': '480px' } as React.CSSProperties}
-          toastOptions={{ style: { width: '480px' } }}
+          style={{ '--width': 'min(480px, calc(100vw - 32px))' } as React.CSSProperties}
+          toastOptions={{ style: { width: 'min(480px, calc(100vw - 32px))' } }}
         />
       </body>
     </html>

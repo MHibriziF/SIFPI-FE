@@ -30,10 +30,10 @@ export default function DashboardShell({
     <SidebarProvider style={SIDEBAR_THEME}>
       <AppSidebar navKey={navKey} user={user} />
       <SidebarInset>
-        <header className="flex h-14 items-center gap-3 border-b px-4 sticky top-0 bg-background z-10">
+        <header className="flex h-14 items-center gap-3 border-b px-4 sticky top-0 bg-grey z-10">
           <SidebarTrigger />
           <div className="h-4 w-px bg-border" />
-          <span className="text-sm font-medium text-muted-foreground">{heading}</span>
+          <span className="text-sm font-medium text-primary">{heading}</span>
         </header>
         {children}
       </SidebarInset>

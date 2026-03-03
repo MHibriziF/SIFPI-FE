@@ -13,7 +13,7 @@ export type NavbarVariant = 'public' | 'authenticated';
 
 interface NavbarProps {
   variant?: NavbarVariant;
-  skipHide?: boolean;
+  dashboardHref?: string;
 }
 
 const NAV_LINKS = [
@@ -23,13 +23,11 @@ const NAV_LINKS = [
   { href: '/resources', label: 'Resources' },
 ];
 
-
-export default function Navbar({ variant = 'public', skipHide = false }: NavbarProps) {
+export default function Navbar({ variant = 'public', dashboardHref }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname() ?? '/';
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
 
   const navLinkClass = (href: string) =>
     `text-sm font-medium px-2 py-1 rounded-md transition-colors duration-200 ${
@@ -96,6 +94,13 @@ export default function Navbar({ variant = 'public', skipHide = false }: NavbarP
                   <Link href="/inquiries" className={navLinkClass('/inquiries')}>
                     Inquiries
                   </Link>
+                </li>
+                <li>
+                  {dashboardHref && (
+                    <Link href={dashboardHref} className={navLinkClass(dashboardHref)}>
+                      Dashboard
+                    </Link> 
+                  )}
                 </li>
                 <li>
                   <Link href="/profile" className={navLinkClass('/profile')}>

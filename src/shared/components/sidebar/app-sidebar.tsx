@@ -84,23 +84,23 @@ export default function AppSidebar({ navKey, user }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       {/* Logo — stacked */}
-      <SidebarHeader className="items-center py-5">
-        <Link href="/" className="flex flex-col items-center gap-2">
+      <SidebarHeader className="py-5 px-8">
+        <Link href="/" className="flex flex-col items-start gap-2">
           <Image
             src="/png/ipfo-logo.png"
             alt="IPFO"
-            width={128}
-            height={128}
+            width={100}
+            height={100}
             className="shrink-0"
           />
-          <div className="text-center group-data-[collapsible=icon]:hidden">
-            <p className="font-semibold text-sm leading-tight">IPFO SIFPI</p>
+          <div className="flex text-center group-data-[collapsible=icon]:hidden">
+            <p className="font-semibold text-sm leading-tight mr-4">SIFPI</p>
             <p className="text-xs opacity-60 mt-0.5">Admin Panel</p>
           </div>
         </Link>
       </SidebarHeader>
 
-      <SidebarSeparator />
+      <div aria-hidden className="h-px bg-sidebar-border mx-2" />
 
       <SidebarContent>
         {navGroups.map(group => (

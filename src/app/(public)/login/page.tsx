@@ -2,10 +2,12 @@ import Hero from '@/shared/components/home/hero';
 import BackgroundSection from '@/shared/components/home/background-section';
 import AboutSection from '@/shared/components/home/about-section';
 import LoginForm from '@/features/auth/components/login-form';
+import { FlashToast } from '@/shared/hooks/use-flash-toast';
 
 export default function LoginPage() {
   return (
     <>
+      <FlashToast />
       <div
         className="relative lg:flex"
         style={{ minHeight: 'calc(100dvh - 60px)' }}

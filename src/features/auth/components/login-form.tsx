@@ -6,41 +6,48 @@ import { useRouter } from 'next/navigation';
 import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
+import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { login } from '@/features/auth/service';
-import type { UserRole } from '@/features/auth/types';
 import { ApiError } from '@/shared/types/api';
 
-const ROLE_REDIRECT: Record<UserRole, string> = {
+const ROLE_REDIRECT: Record<string, string> = {
   ADMIN: '/admin/dashboard',
   OWNER: '/owner/dashboard',
   INVESTOR: '/catalogue',
   EXECUTIVE: '/admin/insights',
 };
 
+function validateEmailValue(value: string): string | undefined {
+  if (!value.trim()) return 'Email wajib diisi';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
+}
+
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [emailTouched, setEmailTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
   function validate() {
     const next: typeof errors = {};
-    if (!email.trim()) next.email = 'Email wajib diisi';
+    const emailError = validateEmailValue(email);
+    if (emailError) next.email = emailError;
     if (!password) next.password = 'Password wajib diisi';
     setErrors(next);
     return Object.keys(next).length === 0;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
     try {
       const { data: { role } } = await login({ email, password });
-      showToast('success', 'Login berhasil', 'Selamat datang kembali!');
-      router.push(ROLE_REDIRECT[role] ?? '/');
+      setFlashToast({ type: 'success', title: 'Login berhasil', description: 'Selamat datang kembali!' });
+      router.push(ROLE_REDIRECT[role] ?? '/dashboard');
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : 'Terjadi kesalahan. Silakan coba lagi.';
@@ -69,7 +76,17 @@ export default function LoginForm() {
           placeholder="nama@email.com"
           required
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={e => {
+            const val = e.target.value;
+            setEmail(val);
+            if (emailTouched) {
+              setErrors(prev => ({ ...prev, email: validateEmailValue(val) }));
+            }
+          }}
+          onBlur={() => {
+            setEmailTouched(true);
+            setErrors(prev => ({ ...prev, email: validateEmailValue(email) }));
+          }}
           error={errors.email}
         />
 
@@ -88,7 +105,7 @@ export default function LoginForm() {
           {loading ? 'Memproses...' : 'Login'}
         </Button>
 
-        <div className="space-y-2 text-sm text-center text-gray-600">
+        <div className="space-y-1 text-sm text-center text-gray-600">
           <p>
             Belum punya akun?{' '}
             <Link href="/register" className="text-primary font-medium hover:underline">

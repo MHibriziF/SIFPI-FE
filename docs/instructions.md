@@ -243,7 +243,7 @@ Add `subItems` to any `NavItem` in `nav-configs.ts`:
 
 - Pass only `navKey` (a string) from server layouts — never pass nav arrays directly, as Lucide icon components cannot be serialized across the server/client boundary.
 - The sidebar color theme is defined in `SIDEBAR_THEME` inside `dashboard-shell.tsx`.
-- The public Navbar and Footer are automatically hidden on `/dashboard` and `/admin` routes via `FooterWrapper` and Navbar's `EXCLUDED_ROUTES`.
+- The public Navbar and Footer only appear on pages inside the `(public)` route group — they are inherited from `(public)/layout.tsx`. Pages outside that group (e.g. `/admin`, `/owner`) have no Navbar or Footer by default; they use `DashboardShell` via their own `layout.tsx` instead.
 
 ## Authorization & Permissions
 

@@ -7,6 +7,7 @@ import {
   BarChart3,
   ClipboardList,
   Building2,
+  CheckCircleIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -61,25 +62,13 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     label: 'Main',
     items: [
-      { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      {
-        title: 'Projects',
-        href: '/dashboard/projects',
-        icon: FolderKanban,
-        subItems: [
-          { title: 'All Projects', href: '/dashboard/projects' },
-          { title: 'Pending Review', href: '/dashboard/projects/pending' },
-          { title: 'Approved', href: '/dashboard/projects/approved' },
-          { title: 'Rejected', href: '/dashboard/projects/rejected' },
-        ],
-      },
-      { title: 'Users', href: '/dashboard/users', icon: Users },
-      { title: 'Reports', href: '/dashboard/reports', icon: FileText },
+      { title: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
+      { title: 'User Management', href: '/admin/dashboard/users', icon: Users },
+      { title: 'Inquiry Management', href: '/admin/dashboard/inquiries', icon: CheckCircleIcon },
+      { title: 'Project Management', href: '/admin/dashhboard/projects', icon: FolderKanban },
+      { title: 'News Management', href: '/admin/dashboard/news', icon: FileText },
+      { title: 'Portfolios', href: '/admin/dashboard/portfolios', icon: BarChart3 },
     ],
-  },
-  {
-    label: 'System',
-    items: [{ title: 'Settings', href: '/dashboard/settings', icon: Settings }],
   },
 ];
 
@@ -105,11 +94,20 @@ export const EXECUTIVE_NAV: NavGroup[] = [
   },
 ];
 
-export type NavKey = 'admin' | 'owner' | 'executive' | 'example';
+// Nav for custom roles — items here should be gated by hasPermission() in each page.
+export const DASHBOARD_NAV: NavGroup[] = [
+  {
+    label: 'Overview',
+    items: [{ title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }],
+  },
+];
+
+export type NavKey = 'admin' | 'owner' | 'executive' | 'example' | 'dashboard';
 
 export const NAV_CONFIGS: Record<NavKey, NavGroup[]> = {
   admin: ADMIN_NAV,
   owner: OWNER_NAV,
   executive: EXECUTIVE_NAV,
   example: EXAMPLE_NAV,
+  dashboard: DASHBOARD_NAV,
 };
