@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { LogOut, ChevronRight } from 'lucide-react';
 import { Collapsible } from 'radix-ui';
 
@@ -25,6 +26,9 @@ import {
 } from '@/shared/components/sidebar/sidebar';
 import { NAV_CONFIGS, type NavItem, type NavKey } from '@/shared/components/sidebar/config/nav-configs';
 import { logout } from '@/features/auth/service';
+import { showToast } from '@/shared/components/toast';
+import { setFlashToast } from '@/shared/hooks/use-flash-toast';
+import { ApiError } from '@/shared/types/api';
 
 interface AppSidebarProps {
   navKey: NavKey;
@@ -81,6 +85,26 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
 export default function AppSidebar({ navKey, user }: AppSidebarProps) {
   const navGroups = NAV_CONFIGS[navKey];
   const pathname = usePathname() ?? '/';
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      setFlashToast({ type: 'success', title: 'Logout berhasil', description: 'Sampai jumpa lagi!' });
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : 'Terjadi kesalahan. Silakan coba lagi.';
+      showToast('danger', 'Logout gagal', message);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -135,10 +159,11 @@ export default function AppSidebar({ navKey, user }: AppSidebarProps) {
             <SidebarMenuButton
               tooltip="Logout"
               className="text-danger hover:bg-danger/15 hover:text-danger"
-              onClick={logout}
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
               <LogOut />
-              <span>Logout</span>
+              <span>{isLoggingOut ? 'Memproses...' : 'Logout'}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
