@@ -1,9 +1,9 @@
-import axios, { AxiosError, type AxiosResponse } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { ApiError, type BaseResponse } from '@/shared/types/api';
 import { setFlashToast } from '../hooks/use-flash-toast';
 
 export const api = axios.create({
-  baseURL: '',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '',
   headers: {
     'Content-Type': 'application/json',
   },
