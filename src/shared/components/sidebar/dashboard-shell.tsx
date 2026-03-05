@@ -29,7 +29,7 @@ export default function DashboardShell({
   return (
     <SidebarProvider style={SIDEBAR_THEME}>
       <AppSidebar navKey={navKey} user={user} />
-      <SidebarInset>
+      <SidebarInset className="bg-white">
         <header className="flex h-14 items-center gap-3 border-b px-4 sticky top-0 bg-grey z-10">
           <SidebarTrigger />
           <div className="h-4 w-px bg-border" />

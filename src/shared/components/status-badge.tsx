@@ -27,7 +27,7 @@ export function StatusBadge({ variant, children, className = '' }: StatusBadgePr
       role="status"
       className={`inline-flex items-center gap-3 px-3 py-1 rounded-full ${classes.lightBg} ${className}`.trim()}
     >
-      <Circle className={`size-4 ${classes.color}`} strokeWidth={2} />
+      <Circle className={`size-4 ${classes.color}`} strokeWidth={4} />
       <span className={`text-sm font-medium ${classes.color}`}>{children}</span>
     </span>
   );
