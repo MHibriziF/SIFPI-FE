@@ -114,6 +114,18 @@ function getFileExtension(fileName: string): string {
   return parts.length > 1 ? parts[parts.length - 1] : '';
 }
 
+function escapeCsvCell(value: unknown): string {
+  const raw = value == null ? '' : String(value);
+  if (raw.includes('"') || raw.includes(',') || raw.includes('\n') || raw.includes('\r')) {
+    return `"${raw.replace(/"/g, '""')}"`;
+  }
+  return raw;
+}
+
+function rowsToCsvText(rows: unknown[][]): string {
+  return rows.map(row => row.map(cell => escapeCsvCell(cell)).join(',')).join('\n');
+}
+
 export function parseAndValidateBulkUserCsv(csvText: string): { rows: ParsedBulkUserRow[]; globalErrors: string[] } {
   const rows = parseCsvRows(csvText);
   if (rows.length === 0) {
@@ -224,16 +236,10 @@ export async function parseAndValidateBulkUserFile(
   }
 
   if (extension === 'xlsx') {
-    const { read, utils } = await import('xlsx');
-    const buffer = await file.arrayBuffer();
-    const workbook = read(new Uint8Array(buffer), { type: 'array' });
-    const firstSheetName = workbook.SheetNames[0];
-    if (!firstSheetName) {
-      return { rows: [], globalErrors: ['File XLSX tidak memiliki sheet data.'] };
-    }
-
-    const firstSheet = workbook.Sheets[firstSheetName];
-    const csvText = utils.sheet_to_csv(firstSheet, { blankrows: false });
+    const { default: readXlsxFile } = await import('read-excel-file/browser');
+    const rows = await readXlsxFile(file);
+    if (rows.length === 0) return { rows: [], globalErrors: ['File XLSX tidak memiliki data.'] };
+    const csvText = rowsToCsvText(rows);
     return parseAndValidateBulkUserCsv(csvText);
   }
 
