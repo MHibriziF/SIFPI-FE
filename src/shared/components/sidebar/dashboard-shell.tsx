@@ -31,7 +31,7 @@ export default function DashboardShell({
   return (
     <SidebarProvider style={SIDEBAR_THEME}>
       <AppSidebar navKey={navKey} user={user} />
-      <SidebarInset>
+      <SidebarInset className="bg-white">
         <header className="sticky top-0 z-10 flex min-h-14 items-center gap-3 border-b bg-grey px-4 py-2">
           <SidebarTrigger />
           <div className="h-4 w-px bg-border" />

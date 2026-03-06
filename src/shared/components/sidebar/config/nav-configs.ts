@@ -6,6 +6,7 @@ import {
   Settings,
   BarChart3,
   CheckCircleIcon,
+  ShieldCheck,
   FilePlus2,
   Newspaper,
   UserCog,
@@ -64,7 +65,7 @@ export const ADMIN_NAV: NavGroup[] = [
     label: 'Main',
     items: [
       { title: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-      { title: 'User Management', href: '/admin/users', icon: Users },
+      { title: 'User Management', href: '/admin/access', icon: Users },
       { title: 'Inquiry Management', href: '/admin/inquiries', icon: CheckCircleIcon },
       { title: 'Project Management', href: '/admin/projects', icon: FolderKanban },
       { title: 'News Management', href: '/admin/news', icon: FileText },
