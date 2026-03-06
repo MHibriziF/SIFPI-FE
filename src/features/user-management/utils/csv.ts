@@ -264,7 +264,7 @@ export function clearBulkImportDraft(): void {
 export function buildTemplateCsv(): string {
   return [
     'email,nama,role,organisasi,phone,is_active,keterangan',
-    'budi.santoso@example.com,Budi Santoso,INVESTOR,PT Infrastructure Development,+6281248724912,true,"Role valid: ADMIN, OWNER, INVESTOR, EXECUTIVE"',
+    'budi.santoso@example.com,Budi Santoso,INVESTOR,PT Infrastructure Development,+6281248724912,true,"Role valid: ADMIN, PROJECT_OWNER, INVESTOR, EXECUTIVE"',
     'siti.rahma@example.com,Siti Rahma,,PT Infrastruktur Nusantara,+6281332211000,false,"Jika is_active=false, role dan organisasi boleh kosong"',
   ].join('\n');
 }

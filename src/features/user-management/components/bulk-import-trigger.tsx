@@ -171,7 +171,7 @@ export function BulkImportTrigger({
                       Pastikan bahwa baris pertama adalah nama kolom sesuai dengan format berikut ...
                     </p>
                     <p className="mt-1 text-sm">
-                      Role yang valid pada template: ADMIN, OWNER, INVESTOR, EXECUTIVE.
+                      Role yang valid pada template: ADMIN, PROJECT_OWNER, INVESTOR, EXECUTIVE.
                     </p>
                     <button
                       type="button"
