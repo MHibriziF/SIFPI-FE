@@ -3,12 +3,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CircleAlert, Upload } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import type { BulkImportDraft } from '@/features/user-management/types';
 import {
   buildTemplateCsv,
-  parseAndValidateBulkUserCsv,
+  parseAndValidateBulkUserFile,
   saveBulkImportDraft,
 } from '@/features/user-management/utils/csv';
 import { cn } from '@/shared/lib/utils';
@@ -64,8 +65,10 @@ export function BulkImportTrigger({
       return;
     }
 
-    if (!selectedFile.name.toLowerCase().endsWith('.csv')) {
-      showToast('warning', 'Format file tidak sesuai', 'File harus berformat .csv');
+    const isCsv = selectedFile.name.toLowerCase().endsWith('.csv');
+    const isXlsx = selectedFile.name.toLowerCase().endsWith('.xlsx');
+    if (!isCsv && !isXlsx) {
+      showToast('warning', 'Format file tidak sesuai', 'File harus berformat .csv atau .xlsx');
       return;
     }
 
@@ -77,8 +80,7 @@ export function BulkImportTrigger({
     setIsParsing(true);
 
     try {
-      const text = await selectedFile.text();
-      const parsed = parseAndValidateBulkUserCsv(text);
+      const parsed = await parseAndValidateBulkUserFile(selectedFile);
 
       if (parsed.globalErrors.length > 0) {
         showToast('danger', 'Gagal membaca CSV', parsed.globalErrors.join(' '));
@@ -113,14 +115,22 @@ export function BulkImportTrigger({
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button
+          <motion.button
             type="button"
             aria-label="Tutup modal"
             className="absolute inset-0 bg-primary/30"
             onClick={closeModal}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
           />
 
-          <div className="relative z-10 w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <motion.div
+            className="relative z-10 w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+          >
             <div className="bg-primary px-6 py-4 text-center">
               <h2 className="text-2xl font-semibold text-white">Pilih file CSV</h2>
             </div>
@@ -136,7 +146,7 @@ export function BulkImportTrigger({
                     ref={fileInputRef}
                     id="bulk-import-file"
                     type="file"
-                    accept=".csv,text/csv"
+                    accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     onChange={event => {
                       const file = event.target.files?.[0] ?? null;
                       setSelectedFile(file);
@@ -148,7 +158,7 @@ export function BulkImportTrigger({
                     )}
                   />
                 </div>
-                <p className="mt-2 text-sm text-gray-500">Upload CSV files (max 10MB)</p>
+                <p className="mt-2 text-sm text-gray-500">Upload CSV/XLSX files (max 10MB)</p>
                 <p className="mt-1 text-sm text-gray-500">{selectedFileLabel}</p>
               </div>
 
@@ -159,6 +169,9 @@ export function BulkImportTrigger({
                     <p className="text-lg font-semibold">Informasi</p>
                     <p className="mt-2 text-sm">
                       Pastikan bahwa baris pertama adalah nama kolom sesuai dengan format berikut ...
+                    </p>
+                    <p className="mt-1 text-sm">
+                      Role yang valid pada template: ADMIN, OWNER, INVESTOR, EXECUTIVE.
                     </p>
                     <button
                       type="button"
@@ -188,7 +201,7 @@ export function BulkImportTrigger({
                 </Button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </>

@@ -109,6 +109,11 @@ function isRowEmpty(row: string[]): boolean {
   return row.every(cell => normalizeValue(cell) === '');
 }
 
+function getFileExtension(fileName: string): string {
+  const parts = fileName.toLowerCase().split('.');
+  return parts.length > 1 ? parts[parts.length - 1] : '';
+}
+
 export function parseAndValidateBulkUserCsv(csvText: string): { rows: ParsedBulkUserRow[]; globalErrors: string[] } {
   const rows = parseCsvRows(csvText);
   if (rows.length === 0) {
@@ -208,6 +213,33 @@ export function parseAndValidateBulkUserCsv(csvText: string): { rows: ParsedBulk
   };
 }
 
+export async function parseAndValidateBulkUserFile(
+  file: File
+): Promise<{ rows: ParsedBulkUserRow[]; globalErrors: string[] }> {
+  const extension = getFileExtension(file.name);
+
+  if (extension === 'csv') {
+    const text = await file.text();
+    return parseAndValidateBulkUserCsv(text);
+  }
+
+  if (extension === 'xlsx') {
+    const { read, utils } = await import('xlsx');
+    const buffer = await file.arrayBuffer();
+    const workbook = read(new Uint8Array(buffer), { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) {
+      return { rows: [], globalErrors: ['File XLSX tidak memiliki sheet data.'] };
+    }
+
+    const firstSheet = workbook.Sheets[firstSheetName];
+    const csvText = utils.sheet_to_csv(firstSheet, { blankrows: false });
+    return parseAndValidateBulkUserCsv(csvText);
+  }
+
+  return { rows: [], globalErrors: ['Format file tidak didukung. Gunakan file .csv atau .xlsx.'] };
+}
+
 export function saveBulkImportDraft(draft: BulkImportDraft): void {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
 }
@@ -231,8 +263,8 @@ export function clearBulkImportDraft(): void {
 
 export function buildTemplateCsv(): string {
   return [
-    'email,nama,role,organisasi,phone,is_active',
-    'budi.santoso@example.com,Budi Santoso,INVESTOR,PT Infrastructure Development,+6281248724912,true',
-    'siti.rahma@example.com,Siti Rahma,,PT Infrastruktur Nusantara,+6281332211000,false',
+    'email,nama,role,organisasi,phone,is_active,keterangan',
+    'budi.santoso@example.com,Budi Santoso,INVESTOR,PT Infrastructure Development,+6281248724912,true,"Role valid: ADMIN, OWNER, INVESTOR, EXECUTIVE"',
+    'siti.rahma@example.com,Siti Rahma,,PT Infrastruktur Nusantara,+6281332211000,false,"Jika is_active=false, role dan organisasi boleh kosong"',
   ].join('\n');
 }
