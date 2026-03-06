@@ -14,11 +14,36 @@ interface StepSummaryProps {
   submitting: boolean;
 }
 
+const moneyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const numberFormatter = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+function formatCurrencyValue(value?: number | null) {
+  if (value === undefined || value === null) return '-';
+  return moneyFormatter.format(value);
+}
+
+function formatPercentValue(value?: number | null) {
+  if (value === undefined || value === null) return '-';
+  return `${numberFormatter.format(value)}%`;
+}
+
 function SummaryItem({ label, value }: { label: string; value?: string | number | null }) {
+  const displayValue =
+    value === undefined || value === null || value === '' ? '-' : value;
+
   return (
     <div className="grid gap-1">
       <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="text-sm text-primary">{value || '-'}</p>
+      <p className="text-sm text-primary">{displayValue}</p>
     </div>
   );
 }
@@ -99,48 +124,59 @@ function FileSummaryItem({ label, file: rawFile }: { label: string; file: unknow
   }
 
   const downloadHref = isImage ? imageDataUrl : objectUrl;
+  const resizablePreviewClass =
+    'block h-44 w-full max-w-full min-h-32 resize overflow-auto rounded-md border border-gray-200 bg-white';
+  const resizableFrameClass =
+    'h-44 w-full max-w-full min-h-32 resize overflow-hidden rounded-md border border-gray-200 bg-white';
+  const previewContentClass = 'h-full w-full';
 
   return (
     <div className="grid gap-2">
       <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
       <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
         {isImage && imageDataUrl ? (
-          <a href={imageDataUrl} target="_blank" rel="noreferrer" className="inline-block">
+          <a href={imageDataUrl} target="_blank" rel="noreferrer" className={resizablePreviewClass}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageDataUrl}
               alt={file.name}
-              className="h-28 w-56 rounded-md border border-gray-200 object-cover"
+              className={`${previewContentClass} object-contain`}
             />
           </a>
         ) : isImage ? (
-          <div className="flex h-28 w-56 items-center justify-center rounded-md border border-gray-200 bg-white text-xs text-gray-500">
+          <div className={`${resizablePreviewClass} flex items-center justify-center text-xs text-gray-500`}>
             Menyiapkan preview gambar...
           </div>
         ) : isPdf ? (
-          <iframe
-            src={objectUrl ?? undefined}
-            title={file.name}
-            className="h-32 w-full rounded-md border border-gray-200 bg-white"
-          />
+          <div className={resizableFrameClass}>
+            <iframe
+              src={objectUrl ?? undefined}
+              title={file.name}
+              className={`${previewContentClass} border-0`}
+            />
+          </div>
         ) : isVideo ? (
-          <video
-            src={objectUrl ?? undefined}
-            controls
-            className="h-32 w-full rounded-md border border-gray-200 bg-black/90"
-          />
+          <div className={resizableFrameClass}>
+            <video
+              src={objectUrl ?? undefined}
+              controls
+              className={`${previewContentClass} bg-black/90`}
+            />
+          </div>
         ) : isAudio ? (
           <audio src={objectUrl ?? undefined} controls className="w-full" />
         ) : (
-          <object
-            data={objectUrl ?? undefined}
-            className="h-32 w-full rounded-md border border-gray-200 bg-white"
-            aria-label={`Preview ${file.name}`}
-          >
-            <div className="flex h-full items-center justify-center px-3 text-xs text-gray-500">
-              Preview tidak tersedia untuk tipe ini di browser. Gunakan download.
-            </div>
-          </object>
+          <div className={resizableFrameClass}>
+            <object
+              data={objectUrl ?? undefined}
+              className={`${previewContentClass} border-0`}
+              aria-label={`Preview ${file.name}`}
+            >
+              <div className="flex h-full items-center justify-center px-3 text-xs text-gray-500">
+                Preview tidak tersedia untuk tipe ini di browser. Gunakan download.
+              </div>
+            </object>
+          </div>
         )}
       </div>
       {downloadHref ? (
@@ -225,10 +261,20 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
       <SummaryCard>
         <SummaryCard.Header title="Financials" onEdit={() => onEditStep(3)} />
         <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
-          <SummaryItem label="Total CAPEX" value={values.financial.totalCapex} />
-          <SummaryItem label="Total OPEX" value={values.financial.totalOpex} />
-          <SummaryItem label="NPV" value={values.financial.npv} />
-          <SummaryItem label="IRR" value={values.financial.irr} />
+          <p className="md:col-span-2 text-xs text-gray-500">
+            Keterangan: Total CAPEX, Total OPEX, dan NPV ditampilkan dalam million USD. IRR
+            ditampilkan dalam persen (%).
+          </p>
+          <SummaryItem
+            label="Total CAPEX (million USD)"
+            value={formatCurrencyValue(values.financial.totalCapex)}
+          />
+          <SummaryItem
+            label="Total OPEX (million USD)"
+            value={formatCurrencyValue(values.financial.totalOpex)}
+          />
+          <SummaryItem label="NPV (million USD)" value={formatCurrencyValue(values.financial.npv)} />
+          <SummaryItem label="IRR (%)" value={formatPercentValue(values.financial.irr)} />
         </SummaryCard.Body>
       </SummaryCard>
 
@@ -264,7 +310,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
           <label className="flex items-start gap-2 text-sm text-primary">
             <input
               type="checkbox"
-              className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.confirmDataAccuracy')}
             />
             Saya menyatakan bahwa seluruh informasi yang dimasukkan dalam formulir ini adalah
@@ -275,7 +321,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
           <label className="flex items-start gap-2 text-sm text-primary">
             <input
               type="checkbox"
-              className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.agreePublication')}
             />
             Saya menyetujui bahwa informasi naratif dan visual proyek yang saya berikan akan
@@ -284,7 +330,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
           <label className="flex items-start gap-2 text-sm text-primary">
             <input
               type="checkbox"
-              className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.acknowledgeVerification')}
             />
             Saya memahami bahwa proses verifikasi oleh Admin memiliki target waktu rata-rata 14
@@ -295,7 +341,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
           <label className="flex items-start gap-2 text-sm text-primary">
             <input
               type="checkbox"
-              className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.allowPromotion')}
             />
             Saya memberikan izin kepada IPFO untuk mempublikasikan data proyek ini ke kanal berita

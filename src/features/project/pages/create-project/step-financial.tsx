@@ -21,10 +21,11 @@ export function StepFinancial() {
         <SectionCard.Header title="Financials & Analytics" description="Komponen finansial utama proyek." />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
-            label="Total CAPEX"
+            label="Total CAPEX (million USD)"
             required={isFeasibilityStudy}
             type="number"
             step="any"
+            placeholder="Contoh: 125.5"
             hint={
               isFeasibilityStudy
                 ? 'Wajib diisi karena dokumen feasibility study dicentang.'
@@ -34,10 +35,11 @@ export function StepFinancial() {
             {...register('financial.totalCapex', { setValueAs: numberAsOptional })}
           />
           <TextInput
-            label="Total OPEX"
+            label="Total OPEX (million USD)"
             required={isFeasibilityStudy}
             type="number"
             step="any"
+            placeholder="Contoh: 18.75"
             hint={
               isFeasibilityStudy
                 ? 'Wajib diisi karena dokumen feasibility study dicentang.'
@@ -47,10 +49,11 @@ export function StepFinancial() {
             {...register('financial.totalOpex', { setValueAs: numberAsOptional })}
           />
           <TextInput
-            label="NPV"
+            label="NPV (million USD)"
             required={isFeasibilityStudy}
             type="number"
             step="any"
+            placeholder="Contoh: 42.3"
             hint={
               isFeasibilityStudy
                 ? 'Wajib diisi karena dokumen feasibility study dicentang.'
@@ -60,10 +63,12 @@ export function StepFinancial() {
             {...register('financial.npv', { setValueAs: numberAsOptional })}
           />
           <TextInput
-            label="IRR"
+            label="IRR (%)"
             required={isFeasibilityStudy}
             type="number"
             step="any"
+            max={100}
+            placeholder="Contoh: 14.2"
             hint={
               isFeasibilityStudy
                 ? 'Wajib diisi karena dokumen feasibility study dicentang.'

@@ -129,8 +129,8 @@ export default function CreateProjectPage() {
     <main className="min-h-full bg-gray-50 px-4 pt-6 pb-2 md:px-6 md:pb-3">
       <div className="mx-auto max-w-5xl space-y-6">
         <section className="flex items-start gap-3 px-1">
-          <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md border border-primary/15 bg-primary/8">
-            <FolderKanban className="size-4 text-primary" />
+          <div className="mt-0.5 flex size-13 shrink-0 items-center justify-center rounded-md border border-primary/15 bg-primary/8">
+            <FolderKanban className="size-8 text-primary" />
           </div>
           <div>
             <p className="text-2xl font-medium text-primary">Manajemen Proyek</p>

@@ -46,7 +46,10 @@ export const projectFormSchema = z
       totalCapex: optionalFiniteNumber('Total CAPEX'),
       totalOpex: optionalFiniteNumber('Total OPEX'),
       npv: optionalFiniteNumber('NPV'),
-      irr: optionalFiniteNumber('IRR'),
+      irr: optionalFiniteNumber('IRR').refine(
+        value => value === undefined || value <= 100,
+        'IRR maksimal 100%.'
+      ),
       additionalInfo: z.string().optional(),
     }),
     timelines: z
