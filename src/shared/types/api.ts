@@ -12,12 +12,14 @@ export interface BaseResponse<T = unknown> {
 export class ApiError extends Error {
   public readonly status: number;
   public readonly timestamp: string | null;
+  public readonly details: unknown;
 
-  constructor(status: number, message: string, timestamp?: string) {
+  constructor(status: number, message: string, timestamp?: string, details?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.timestamp = timestamp ?? null;
+    this.details = details ?? null;
   }
 
   get isUnauthorized(): boolean {
