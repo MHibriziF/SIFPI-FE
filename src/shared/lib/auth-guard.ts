@@ -11,7 +11,7 @@ const KNOWN_ROLES = new Set(['ADMIN', 'OWNER', 'INVESTOR', 'EXECUTIVE']);
 
 const ROLE_HOME: Record<string, string> = {
   ADMIN: '/admin/dashboard',
-  OWNER: '/owner/dashboard',
+  OWNER: '/project-owner/dashboard',
   INVESTOR: '/catalogue',
   EXECUTIVE: '/admin/insights',
 };

@@ -5,10 +5,11 @@ import {
   FileText,
   Settings,
   BarChart3,
-  ClipboardList,
-  Building2,
   CheckCircleIcon,
   ShieldCheck,
+  FilePlus2,
+  Newspaper,
+  UserCog,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -75,11 +76,13 @@ export const ADMIN_NAV: NavGroup[] = [
 
 export const OWNER_NAV: NavGroup[] = [
   {
-    label: 'My Projects',
+    label: 'Main',
     items: [
-      { title: 'Overview', href: '/owner/dashboard', icon: LayoutDashboard },
-      { title: 'My Projects', href: '/owner/projects', icon: Building2 },
-      { title: 'Submissions', href: '/owner/submissions', icon: ClipboardList },
+      { title: 'Dashboard', href: '/project-owner/dashboard', icon: LayoutDashboard },
+      { title: 'Proyek Saya', href: '/project-owner/projects', icon: FolderKanban },
+      { title: 'Pengajuan Proyek', href: '/project-owner/projects/create', icon: FilePlus2 },
+      { title: 'Berita', href: '/project-owner/news', icon: Newspaper },
+      { title: 'Update Profil', href: '/project-owner/profile', icon: UserCog },
     ],
   },
 ];

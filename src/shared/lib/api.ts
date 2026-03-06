@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosResponse } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { ApiError, type BaseResponse } from '@/shared/types/api';
 import { setFlashToast } from '../hooks/use-flash-toast';
 

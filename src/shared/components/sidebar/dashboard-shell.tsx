@@ -7,6 +7,7 @@ interface DashboardShellProps {
   navKey: NavKey;
   user?: { name: string; role: string };
   heading?: string;
+  subheading?: string;
 }
 
 const SIDEBAR_THEME = {
@@ -25,6 +26,7 @@ export default function DashboardShell({
   navKey,
   user,
   heading = 'IPFO Admin',
+  subheading,
 }: DashboardShellProps) {
   return (
     <SidebarProvider style={SIDEBAR_THEME}>
@@ -33,7 +35,12 @@ export default function DashboardShell({
         <header className="flex h-14 items-center gap-3 border-b px-4 sticky top-0 bg-grey z-10">
           <SidebarTrigger />
           <div className="h-4 w-px bg-border" />
-          <span className="text-sm font-medium text-primary">{heading}</span>
+          {(heading || subheading) && (
+            <div className="flex min-w-0 flex-col justify-center">
+              {heading ? <span className="truncate text-sm font-medium text-primary">{heading}</span> : null}
+              {subheading ? <span className="truncate text-xs text-gray-600">{subheading}</span> : null}
+            </div>
+          )}
         </header>
         {children}
       </SidebarInset>
