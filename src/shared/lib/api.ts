@@ -84,7 +84,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(
-      new ApiError(status, data?.message ?? 'Unexpected error', data?.timestamp)
+      new ApiError(status, data?.message ?? 'Unexpected error', data?.timestamp, data?.data ?? data)
     );
   }
 );
