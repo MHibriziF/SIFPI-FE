@@ -52,11 +52,7 @@ const USERS_PER_PAGE = 5;
 
 function buildInitialPermissions(): Record<string, PermissionState> {
   return Object.fromEntries(
-<<<<<<< HEAD
     PERMISSION_MODULES.map(m => [
-=======
-    PERMISSION_MODULES.map((m) => [
->>>>>>> 5dd761e (feat: implement access and create role page)
       m.module,
       { canAccess: false, canCreate: false, canUpdate: false, canDelete: false },
     ])
@@ -72,14 +68,8 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-<<<<<<< HEAD
   const [permissions, setPermissions] =
     useState<Record<string, PermissionState>>(buildInitialPermissions());
-=======
-  const [permissions, setPermissions] = useState<Record<string, PermissionState>>(
-    buildInitialPermissions()
-  );
->>>>>>> 5dd761e (feat: implement access and create role page)
 
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
@@ -87,11 +77,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
   const [userPage, setUserPage] = useState(1);
 
   function togglePermission(module: string, field: keyof PermissionState) {
-<<<<<<< HEAD
     setPermissions(prev => {
-=======
-    setPermissions((prev) => {
->>>>>>> 5dd761e (feat: implement access and create role page)
       const current = prev[module];
       const updated = { ...current, [field]: !current[field] };
       if (field === 'canAccess' && !updated.canAccess) {
@@ -107,11 +93,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
   }
 
   function toggleUserSelection(userId: string) {
-<<<<<<< HEAD
     setSelectedUserIds(prev => {
-=======
-    setSelectedUserIds((prev) => {
->>>>>>> 5dd761e (feat: implement access and create role page)
       const next = new Set(prev);
       if (next.has(userId)) next.delete(userId);
       else next.add(userId);
@@ -119,11 +101,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
     });
   }
 
-<<<<<<< HEAD
   const filteredUsers = availableUsers.filter(u => {
-=======
-  const filteredUsers = availableUsers.filter((u) => {
->>>>>>> 5dd761e (feat: implement access and create role page)
     const matchesSearch =
       !userSearch ||
       u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
@@ -138,16 +116,15 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
     userPage * USERS_PER_PAGE
   );
 
-<<<<<<< HEAD
   async function handleSubmit(e: React.SubmitEvent) {
-=======
-  async function handleSubmit(e: React.FormEvent) {
->>>>>>> 5dd761e (feat: implement access and create role page)
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = 'Nama role wajib diisi';
     if (!status) newErrors.status = 'Status role wajib dipilih';
+    if (!description.trim()) newErrors.description = 'Deskripsi role wajib diisi';
+    const hasAnyPermission = Object.values(permissions).some(p => p.canAccess);
+    if (!hasAnyPermission) newErrors.permissions = 'Minimal satu modul akses harus dipilih';
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -174,15 +151,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
         permissions: permPayload,
       });
 
-<<<<<<< HEAD
       showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat.`);
-=======
-      setFlashToast({
-        type: 'success',
-        title: 'Role berhasil dibuat',
-        description: `Role "${name.trim()}" berhasil ditambahkan.`,
-      });
->>>>>>> 5dd761e (feat: implement access and create role page)
       router.push('/admin/access');
     } catch (err) {
       if (err instanceof ApiError) {

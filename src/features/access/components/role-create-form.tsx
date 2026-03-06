@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Search, ChevronLeft as PrevIcon, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/components/button';
@@ -52,6 +52,18 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
     goBack,
   } = useCreateRoleForm(availableUsers);
 
+  const infoSectionRef = useRef<HTMLDivElement>(null);
+  const permissionsSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (Object.keys(errors).length === 0) return;
+    if (errors.name || errors.status || errors.description) {
+      infoSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (errors.permissions) {
+      permissionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [errors]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Back navigation */}
@@ -66,7 +78,7 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
       </div>
 
       {/* Section: Informasi Role */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div ref={infoSectionRef} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <h2 className="bg-primary text-white text-lg font-semibold px-6 py-3 text-center">Informasi Role</h2>
         <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -95,9 +107,11 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
           <Textarea
             label="Deskripsi Role"
             id="role-description"
+            required
             placeholder="Deskripsi role menjelaskan apa yang dilakukan oleh role ini"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            error={errors.description}
             hint="Deskripsi role menjelaskan apa yang dilakukan oleh role ini."
           />
         </div>
@@ -105,7 +119,7 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
       </div>
 
       {/* Section: Permission Matrix */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div ref={permissionsSectionRef} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <h2 className="bg-primary text-white text-lg font-semibold px-6 py-3 text-center">Matriks Kontrol Akses (Permissions)</h2>
         <div className="p-6">
         <div className="overflow-x-auto rounded-lg">
@@ -176,6 +190,9 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
             </tbody>
           </table>
         </div>
+        {errors.permissions && (
+          <p className="mt-3 text-xs text-danger">{errors.permissions}</p>
+        )}
       </div>
       </div>
 

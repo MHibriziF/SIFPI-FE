@@ -65,7 +65,7 @@ export const ADMIN_NAV: NavGroup[] = [
     label: 'Main',
     items: [
       { title: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-      { title: 'User Management', href: '/admin/access', icon: ShieldCheck },
+      { title: 'User Management', href: '/admin/access', icon: Users },
       { title: 'Inquiry Management', href: '/admin/inquiries', icon: CheckCircleIcon },
       { title: 'Project Management', href: '/admin/projects', icon: FolderKanban },
       { title: 'News Management', href: '/admin/news', icon: FileText },
