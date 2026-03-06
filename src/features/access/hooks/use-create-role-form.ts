@@ -52,7 +52,7 @@ const USERS_PER_PAGE = 5;
 
 function buildInitialPermissions(): Record<string, PermissionState> {
   return Object.fromEntries(
-    PERMISSION_MODULES.map((m) => [
+    PERMISSION_MODULES.map(m => [
       m.module,
       { canAccess: false, canCreate: false, canUpdate: false, canDelete: false },
     ])
@@ -68,9 +68,8 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const [permissions, setPermissions] = useState<Record<string, PermissionState>>(
-    buildInitialPermissions()
-  );
+  const [permissions, setPermissions] =
+    useState<Record<string, PermissionState>>(buildInitialPermissions());
 
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
@@ -78,7 +77,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
   const [userPage, setUserPage] = useState(1);
 
   function togglePermission(module: string, field: keyof PermissionState) {
-    setPermissions((prev) => {
+    setPermissions(prev => {
       const current = prev[module];
       const updated = { ...current, [field]: !current[field] };
       if (field === 'canAccess' && !updated.canAccess) {
@@ -94,7 +93,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
   }
 
   function toggleUserSelection(userId: string) {
-    setSelectedUserIds((prev) => {
+    setSelectedUserIds(prev => {
       const next = new Set(prev);
       if (next.has(userId)) next.delete(userId);
       else next.add(userId);
@@ -102,7 +101,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
     });
   }
 
-  const filteredUsers = availableUsers.filter((u) => {
+  const filteredUsers = availableUsers.filter(u => {
     const matchesSearch =
       !userSearch ||
       u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
@@ -117,7 +116,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
     userPage * USERS_PER_PAGE
   );
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
@@ -149,11 +148,7 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
         permissions: permPayload,
       });
 
-      setFlashToast({
-        type: 'success',
-        title: 'Role berhasil dibuat',
-        description: `Role "${name.trim()}" berhasil ditambahkan.`,
-      });
+      showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat.`);
       router.push('/admin/access');
     } catch (err) {
       if (err instanceof ApiError) {
