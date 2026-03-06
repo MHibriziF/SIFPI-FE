@@ -4,23 +4,13 @@ import { getSession } from './session';
 import type { AuthResponse } from '@/features/auth/types';
 import { cache } from 'react';
 import type { ReactNode } from 'react';
+import { getRoleHome } from './role-home';
 
 export type Resource = 'PROJECT' | 'NEWS' | 'INQUIRY' | 'USER' | 'VERIFICATION';
 export type Action = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
 const KNOWN_ROLES = new Set(['ADMIN', 'OWNER', 'INVESTOR', 'EXECUTIVE']);
 
-const ROLE_HOME: Record<string, string> = {
-  ADMIN: '/admin/dashboard',
-  OWNER: '/project-owner/dashboard',
-  INVESTOR: '/catalogue',
-  EXECUTIVE: '/admin/insights',
-};
-
-/** Maps a role to its home page. Custom roles fall back to /dashboard. */
-export function getRoleHome(role: string | null): string {
-  if (!role) return '/login';
-  return ROLE_HOME[role] ?? '/dashboard';
-}
+export { getRoleHome };
 
 /**
  * Server-side route guard for known roles.

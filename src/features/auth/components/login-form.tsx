@@ -9,13 +9,7 @@ import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { login } from '@/features/auth/service';
 import { ApiError } from '@/shared/types/api';
-
-const ROLE_REDIRECT: Record<string, string> = {
-  ADMIN: '/admin/dashboard',
-  OWNER: '/owner/dashboard',
-  INVESTOR: '/catalogue',
-  EXECUTIVE: '/admin/insights',
-};
+import { getRoleHome } from '@/shared/lib/role-home';
 
 function validateEmailValue(value: string): string | undefined {
   if (!value.trim()) return 'Email wajib diisi';
@@ -47,7 +41,7 @@ export default function LoginForm() {
     try {
       const { data: { role } } = await login({ email, password });
       setFlashToast({ type: 'success', title: 'Login berhasil', description: 'Selamat datang kembali!' });
-      router.push(ROLE_REDIRECT[role] ?? '/dashboard');
+      router.push(getRoleHome(role));
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : 'Terjadi kesalahan. Silakan coba lagi.';
