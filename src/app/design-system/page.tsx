@@ -8,6 +8,7 @@ import { TextInput, Textarea, FileInput, Select } from '@/shared/components/form
 import type { ToastVariant } from '@/shared/components/toast';
 import StatusBadge from '@/shared/components/status-badge';
 import { StatCard } from '@/shared/components/stat-card';
+import { ProjectCard } from '@/shared/components/project-card';
 import Navbar from '@/shared/components/layout/navbar';
 import { FileEdit, Clock, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 
@@ -420,6 +421,174 @@ export default function DesignSystemPage() {
             </SubSection>
           </Card>
         </Section>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* PROJECT CARDS                                                     */}
+        {/* ---------------------------------------------------------------- */}
+        <Section title="Project Cards">
+          <Card className="flex flex-col gap-8">
+            <SubSection title="With Image">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProjectCard
+                  project={{
+                    id: 1,
+                    name: "Proyek Pembangunan Jalan Tol Jakarta-Bandung",
+                    sector: "TOLL_ROAD",
+                    status: "DIAJUKAN",
+                    location: "Jawa Barat",
+                    description: "Proyek pembangunan infrastruktur jalan tol untuk meningkatkan konektivitas antar kota dengan target penyelesaian 2 tahun.",
+                    ownerName: "PT Jasa Marga",
+                    budget: "Rp 5.000.000.000",
+                    locationImageUrl: "https://images.unsplash.com/photo-1569163139394-de4798aa62b0?w=800&q=80"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 2,
+                    name: "Proyek MRT Jakarta Fase 3",
+                    sector: "PUBLIC_TRANSPORTATION",
+                    status: "TERVERIFIKASI",
+                    location: "DKI Jakarta",
+                    description: "Pengembangan jalur MRT Jakarta untuk melayani koridor Utara-Selatan dengan teknologi modern dan ramah lingkungan.",
+                    ownerName: "PT MRT Jakarta",
+                    budget: "Rp 15.000.000.000",
+                    locationImageUrl: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 3,
+                    name: "Pembangunan Bandara Internasional Baru",
+                    sector: "AVIATION",
+                    status: "IN_REVIEW",
+                    location: "Jawa Tengah",
+                    description: "Proyek pembangunan bandara internasional untuk mendukung pertumbuhan ekonomi dan pariwisata di Jawa Tengah.",
+                    ownerName: "Kementerian Perhubungan",
+                    budget: "Rp 25.000.000.000",
+                    locationImageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80"
+                  }}
+                />
+              </div>
+            </SubSection>
+            <SubSection title="Without Image (Placeholder)">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProjectCard
+                  project={{
+                    id: 4,
+                    name: "Proyek Perumahan Rakyat Subsidi",
+                    sector: "AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT",
+                    status: "DRAFT",
+                    location: "Banten",
+                    description: "Pembangunan perumahan subsidi untuk masyarakat berpenghasilan rendah dengan fasilitas lengkap dan akses transportasi mudah.",
+                    ownerName: "Kementerian PUPR",
+                    budget: "Rp 3.500.000.000"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 5,
+                    name: "Proyek Pembangkit Listrik Tenaga Surya",
+                    sector: "OIL_GAS_AND_ENERGY",
+                    status: "PERBAIKAN_DATA",
+                    location: "Nusa Tenggara Timur",
+                    description: "Pembangunan pembangkit listrik tenaga surya untuk meningkatkan akses listrik di daerah terpencil dengan energi terbarukan.",
+                    ownerName: "PT PLN",
+                    budget: "Rp 8.000.000.000"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 6,
+                    name: "Modernisasi Pelabuhan Tanjung Priok",
+                    sector: "MARITIME",
+                    status: "TERPUBLIKASI",
+                    location: "DKI Jakarta",
+                    description: "Modernisasi fasilitas pelabuhan untuk meningkatkan kapasitas bongkar muat dan efisiensi logistik nasional.",
+                    ownerName: "PT Pelindo",
+                    budget: "Rp 12.000.000.000"
+                  }}
+                />
+              </div>
+            </SubSection>
+            <SubSection title="All Status Variants">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProjectCard
+                  project={{
+                    id: 7,
+                    name: "Draft Project Example",
+                    sector: "WASTE_MANAGEMENT",
+                    status: "DRAFT",
+                    location: "Surabaya",
+                    description: "Example of a draft project card with all standard information displayed.",
+                    ownerName: "Example Owner",
+                    budget: "Rp 1.000.000.000"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 8,
+                    name: "Submitted Project Example",
+                    sector: "WATER_RESOURCE_DRINKING_WATER_AND_IRRIGATION",
+                    status: "DIAJUKAN",
+                    location: "Medan",
+                    description: "Example of a submitted project awaiting review from authorities.",
+                    ownerName: "Example Owner",
+                    budget: "Rp 2.000.000.000"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 9,
+                    name: "In Review Project Example",
+                    sector: "HEALTH",
+                    status: "IN_REVIEW",
+                    location: "Makassar",
+                    description: "Example of a project currently under review by the review team.",
+                    ownerName: "Example Owner",
+                    budget: "Rp 3.000.000.000"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 10,
+                    name: "Revision Needed Example",
+                    sector: "EDUCATION_RESEARCH_AND_DEVELOPMENT",
+                    status: "PERBAIKAN_DATA",
+                    location: "Yogyakarta",
+                    description: "Example of a project that needs data revision before approval.",
+                    ownerName: "Example Owner",
+                    budget: "Rp 4.000.000.000"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 11,
+                    name: "Verified Project Example",
+                    sector: "DIGITAL_AND_TELECOMMUNICATIONS",
+                    status: "TERVERIFIKASI",
+                    location: "Bandung",
+                    description: "Example of a verified project ready for publication.",
+                    ownerName: "Example Owner",
+                    budget: "Rp 5.000.000.000"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 12,
+                    name: "Published Project Example",
+                    sector: "LAND_BASED_TRANSPORT",
+                    status: "TERPUBLIKASI",
+                    location: "Semarang",
+                    description: "Example of a published project visible to all stakeholders.",
+                    ownerName: "Example Owner",
+                    budget: "Rp 6.000.000.000"
+                  }}
+                />
+              </div>
+            </SubSection>
+          </Card>
+        </Section>
+
         {/* ---------------------------------------------------------------- */}
         {/* BUTTONS                                                           */}
         {/* ---------------------------------------------------------------- */}
