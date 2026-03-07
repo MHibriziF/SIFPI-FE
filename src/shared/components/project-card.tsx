@@ -28,14 +28,19 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, viewDetailHref, className }: ProjectCardProps) {
   const detailLink = viewDetailHref || `/project-owner/projects/${project.id}`;
+  
+  // Check if image URL is valid (not null, not empty, not starting with "null/")
+  const hasValidImage = project.locationImageUrl && 
+                        project.locationImageUrl.trim() !== '' && 
+                        !project.locationImageUrl.startsWith('null/');
 
   return (
     <div className={cn('bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden', className)}>
       {/* Location Image */}
       <div className="relative w-full h-48 bg-gray-100">
-        {project.locationImageUrl ? (
+        {hasValidImage ? (
           <Image
-            src={project.locationImageUrl}
+            src={project.locationImageUrl!}
             alt={project.name}
             fill
             className="object-cover"
