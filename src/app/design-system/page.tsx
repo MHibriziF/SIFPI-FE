@@ -7,7 +7,9 @@ import { showToast, Toast } from '@/shared/components/toast';
 import { TextInput, Textarea, FileInput, Select } from '@/shared/components/form-fields';
 import type { ToastVariant } from '@/shared/components/toast';
 import StatusBadge from '@/shared/components/status-badge';
+import { StatCard } from '@/shared/components/stat-card';
 import Navbar from '@/shared/components/layout/navbar';
+import { FileEdit, Clock, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // Color / typography data (unchanged)
@@ -380,6 +382,43 @@ export default function DesignSystemPage() {
             <StatusBadge variant="approved">Approved</StatusBadge>
             <StatusBadge variant="rejected">Rejected</StatusBadge>
           </div>
+        </Section>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* STAT CARDS                                                        */}
+        {/* ---------------------------------------------------------------- */}
+        <Section title="Stat Cards">
+          <Card className="flex flex-col gap-8">
+            <SubSection title="Variants">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard icon={FileEdit} title="Draft Proyek" value={5} variant="draft" subtitle="Number" />
+                <StatCard icon={Clock} title="Sedang Direview" value={3} variant="info" subtitle="Number" />
+                <StatCard icon={CheckCircle} title="Telah Disetujui" value={12} variant="success" subtitle="Number" />
+                <StatCard icon={AlertTriangle} title="Butuh Revisi" value={2} variant="warning" subtitle="Number" />
+              </div>
+            </SubSection>
+            <SubSection title="Active State">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard icon={FileEdit} title="Draft Proyek" value={5} variant="draft" isActive />
+                <StatCard icon={Clock} title="Sedang Direview" value={3} variant="info" isActive />
+                <StatCard icon={CheckCircle} title="Telah Disetujui" value={12} variant="success" isActive />
+                <StatCard icon={AlertTriangle} title="Butuh Revisi" value={2} variant="warning" isActive />
+              </div>
+            </SubSection>
+            <SubSection title="Danger Variant">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <StatCard icon={AlertTriangle} title="Ditolak" value={1} variant="danger" />
+                <StatCard icon={AlertTriangle} title="Ditolak" value={1} variant="danger" isActive />
+              </div>
+            </SubSection>
+            <SubSection title="Custom Usage">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <StatCard icon={TrendingUp} title="Total Proyek" value={22} variant="info" subtitle="Semua proyek" />
+                <StatCard icon={CheckCircle} title="Proyek Aktif" value={15} variant="success" subtitle="Berjalan" />
+                <StatCard icon={Clock} title="Menunggu" value={7} variant="warning" subtitle="Pending" />
+              </div>
+            </SubSection>
+          </Card>
         </Section>
         {/* ---------------------------------------------------------------- */}
         {/* BUTTONS                                                           */}
