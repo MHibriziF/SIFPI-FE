@@ -7,7 +7,7 @@ import AboutSection from '@/shared/components/home/about-section';
 import { FlashToast } from '@/shared/hooks/use-flash-toast';
 import RegisterOwnerForm from '@/features/auth/components/register-owner-form';
 import RegisterInvestorForm from '@/features/auth/components/register-investor-form';
-import SuccessModal from '@/features/auth/components/success-modal';
+import SuccessModal from '@/features/auth/components/register-succes-modal';
 
 type RegisterType = 'owner' | 'investor';
 
