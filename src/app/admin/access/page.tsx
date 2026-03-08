@@ -1,6 +1,7 @@
 import { withPermission, hasPermission } from '@/shared/lib/auth-guard';
 import { UserTable } from '@/features/access/components/user-table';
 import { RoleTable } from '@/features/access/components/role-table';
+import { BulkImportTrigger } from '@/features/user-management/components/bulk-import-trigger';
 import type { User, Role } from '@/features/access/types';
 
 // TODO: Replace with real API calls once backend is ready
@@ -58,6 +59,13 @@ export default withPermission('USER', 'READ')(async (_props, session) => {
   return (
     <div className="p-6 space-y-8">
       {/* User Management Section */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-primary">User Management</h2>
+          <p className="text-sm text-gray-500">Kelola pengguna dan lakukan import user via CSV/XLSX.</p>
+        </div>
+        <BulkImportTrigger />
+      </div>
       <UserTable
         initialUsers={users}
         totalEntries={users.length}

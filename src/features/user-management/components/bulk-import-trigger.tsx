@@ -26,7 +26,7 @@ export function BulkImportTrigger({
   buttonLabel = 'Bulk Insert User',
   className,
   buttonVariant = 'filled',
-  redirectPath = '/admin/users/import',
+  redirectPath = '/admin/access/import',
   onDraftReady,
 }: BulkImportTriggerProps) {
   const router = useRouter();

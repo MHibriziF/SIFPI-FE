@@ -3,40 +3,10 @@
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { Select, TextInput, Textarea } from '@/shared/components/form-fields';
+import { SECTOR_OPTIONS } from '@/shared/enums';
 import { FileUploadField } from '@/features/project/components/file-upload-field';
 import { SectionCard } from '@/features/project/components/section-card';
 import type { ProjectFormValues } from '@/features/project/types/create-project-form';
-
-const SECTOR_OPTIONS = [
-  { value: 'PUBLIC_TRANSPORTATION', label: 'Public Transportation' },
-  {
-    value: 'LAND_BASED_TRANSPORT',
-    label: 'Land Based Transport (Rails and Road Transport)',
-  },
-  { value: 'WASTE_MANAGEMENT', label: 'Waste Management' },
-  { value: 'TOLL_ROAD', label: 'Toll Road' },
-  {
-    value: 'AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT',
-    label: 'Affordable Housing and Transit-oriented Development',
-  },
-  { value: 'HEALTH', label: 'Health' },
-  {
-    value: 'WATER_RESOURCE_DRINKING_WATER_AND_IRRIGATION',
-    label: 'Water Resource, Drinking Water, and Irrigation',
-  },
-  { value: 'MARITIME', label: 'Maritime' },
-  { value: 'OIL_GAS_AND_ENERGY', label: 'Oil & Gas, and Energy' },
-  { value: 'AVIATION', label: 'Aviation' },
-  { value: 'DIGITAL_AND_TELECOMMUNICATIONS', label: 'Digital & Telecommunications' },
-  {
-    value: 'EDUCATION_RESEARCH_AND_DEVELOPMENT',
-    label: 'Education, Research, and Development',
-  },
-  {
-    value: 'URBAN_ECONOMICS_INFRASTRUCTURE_FACILITIES',
-    label: 'Urban Economics Infrastructure Facilities',
-  },
-];
 
 export function StepGeneral() {
   const {
