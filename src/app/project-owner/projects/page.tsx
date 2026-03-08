@@ -7,6 +7,8 @@ import { Button } from '@/shared/components/button';
 import { ProjectCard, ProjectCardData } from '@/shared/components/project-card';
 import { StatCard } from '@/shared/components/stat-card';
 import { showToast } from '@/shared/components/toast';
+import { getMyProjects } from '@/features/project/service';
+import { ApiError } from '@/shared/types/api';
 
 type ProjectStatus = 'DRAFT' | 'DIAJUKAN' | 'IN_REVIEW' | 'PERBAIKAN_DATA' | 'TERVERIFIKASI' | 'TERPUBLIKASI' | '';
 
@@ -51,27 +53,15 @@ export default function ProjectOwnerProjectsPage() {
   const fetchProjects = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        size: pagination.size.toString(),
+      const response = await getMyProjects({
+        page: pagination.page,
+        size: pagination.size,
         sortBy: 'createdAt',
         sortDirection: 'desc',
+        status: filters.status || undefined,
       });
 
-      if (filters.status) {
-        params.append('status', filters.status);
-      }
-
-      const response = await fetch(`/api/projects/my-projects?${params}`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data proyek');
-      }
-
-      const result = await response.json();
-      const data = result.data;
+      const data = response.data;
 
       setProjects(data.content || []);
       setPagination({
@@ -85,10 +75,11 @@ export default function ProjectOwnerProjectsPage() {
       calculateStatusCounts(data.content || []);
     } catch (error) {
       console.error('Error fetching projects:', error);
+      const apiError = error as ApiError;
       showToast(
         'danger',
         'Gagal memuat proyek',
-        error instanceof Error ? error.message : 'Terjadi kesalahan'
+        apiError.message || 'Terjadi kesalahan'
       );
     } finally {
       setIsLoading(false);

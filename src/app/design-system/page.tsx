@@ -299,7 +299,7 @@ export default function DesignSystemPage() {
         <Section title="Typography">
           <Card>
             <p className="text-xs text-gray-400 mb-5 font-mono">
-              font-family: "Segoe UI", "Segoe UI Variable", system-ui, sans-serif
+              font-family: &quot;Segoe UI&quot;, &quot;Segoe UI Variable&quot;, system-ui, sans-serif
             </p>
             <SubSection title="Type scale">
               <div className="divide-y divide-gray-100">
