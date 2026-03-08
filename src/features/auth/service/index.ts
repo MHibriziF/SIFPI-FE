@@ -1,5 +1,5 @@
 import { apiPost, apiPatch } from '@/shared/lib/api';
-import type { LoginRequest, AuthResponse } from '@/features/auth/types';
+import type { LoginRequest, AuthResponse, CreateOwnerRequest, CreateInvestorRequest, OwnerDTO, InvestorDTO } from '@/features/auth/types';
 import type { BaseResponse } from '@/shared/types/api';
 
 export async function login(data: LoginRequest) {
@@ -8,6 +8,14 @@ export async function login(data: LoginRequest) {
 
 export async function logout() {
   return apiPost<null>('/api/auth/logout');
+}
+
+export async function registerOwner(data: CreateOwnerRequest) {
+  return apiPost<OwnerDTO>('/api/auth/register/owner', data);
+}
+
+export async function registerInvestor(data: CreateInvestorRequest) {
+  return apiPost<InvestorDTO>('/api/auth/register/investor', data);
 }
 
 // Password management

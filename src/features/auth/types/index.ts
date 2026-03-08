@@ -12,3 +12,5 @@ export interface AuthResponse {
   role: string;
   permissions: Record<string, string[]>;
 }
+
+export * from './register';
