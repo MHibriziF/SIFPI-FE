@@ -1,7 +1,18 @@
 import type { BulkImportDraft, BulkInsertUserRequest, ParsedBulkUserRow } from '@/features/user-management/types';
+import {
+  getCell,
+  mapHeadersByList,
+  normalizeValue,
+  parseBoolean,
+  parseFile,
+  preValidateCsv,
+  saveDraft,
+  getDraft,
+  clearDraft,
+  type ParseResult,
+} from '@/shared/lib/csv';
 
 const STORAGE_KEY = 'admin-bulk-user-import-draft';
-const MAX_ROWS = 500;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\+?[0-9]{8,15}$/;
@@ -17,140 +28,19 @@ const EXPECTED_HEADERS: Array<keyof BulkInsertUserRequest> = [
 
 const REQUIRED_FIELDS: Array<keyof BulkInsertUserRequest> = ['email', 'nama', 'is_active'];
 
-function normalizeHeader(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-function normalizeValue(value?: string): string {
-  return (value ?? '').trim();
-}
-
-function parseBoolean(value: string): boolean | null {
-  const v = value.trim().toLowerCase();
-  if (['true', '1', 'yes', 'y', 'aktif'].includes(v)) return true;
-  if (['false', '0', 'no', 'n', 'nonaktif', 'tidak aktif'].includes(v)) return false;
-  return null;
-}
-
 function sanitizePhone(value: string): string {
   return value.replace(/[\s()-]/g, '');
 }
 
-function parseCsvRows(csvText: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = '';
-  let inQuotes = false;
+export function parseAndValidateBulkUserCsv(csvText: string): ParseResult<ParsedBulkUserRow> {
+  const pre = preValidateCsv(
+    csvText,
+    REQUIRED_FIELDS,
+    headerRow => mapHeadersByList(headerRow, EXPECTED_HEADERS)
+  );
+  if (!pre.ok) return { rows: [], globalErrors: pre.globalErrors };
 
-  for (let i = 0; i < csvText.length; i += 1) {
-    const char = csvText[i];
-    const next = csvText[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && next === '"') {
-        cell += '"';
-        i += 1;
-      } else {
-        inQuotes = !inQuotes;
-      }
-      continue;
-    }
-
-    if (char === ',' && !inQuotes) {
-      row.push(cell);
-      cell = '';
-      continue;
-    }
-
-    if ((char === '\n' || char === '\r') && !inQuotes) {
-      if (char === '\r' && next === '\n') i += 1;
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = '';
-      continue;
-    }
-
-    cell += char;
-  }
-
-  if (cell.length > 0 || row.length > 0) {
-    row.push(cell);
-    rows.push(row);
-  }
-
-  return rows;
-}
-
-function mapHeaders(headerRow: string[]): Record<keyof BulkInsertUserRequest, number | null> {
-  const indexMap: Record<keyof BulkInsertUserRequest, number | null> = {
-    email: null,
-    nama: null,
-    role: null,
-    organisasi: null,
-    phone: null,
-    is_active: null,
-  };
-
-  EXPECTED_HEADERS.forEach(header => {
-    const idx = headerRow.findIndex(col => normalizeHeader(col) === header);
-    if (idx >= 0) indexMap[header] = idx;
-  });
-
-  return indexMap;
-}
-
-function getCell(row: string[], index: number | null): string {
-  if (index === null || index < 0 || index >= row.length) return '';
-  return normalizeValue(row[index]);
-}
-
-function isRowEmpty(row: string[]): boolean {
-  return row.every(cell => normalizeValue(cell) === '');
-}
-
-function getFileExtension(fileName: string): string {
-  const parts = fileName.toLowerCase().split('.');
-  return parts.length > 1 ? parts[parts.length - 1] : '';
-}
-
-function escapeCsvCell(value: unknown): string {
-  const raw = value == null ? '' : String(value);
-  if (raw.includes('"') || raw.includes(',') || raw.includes('\n') || raw.includes('\r')) {
-    return `"${raw.replace(/"/g, '""')}"`;
-  }
-  return raw;
-}
-
-function rowsToCsvText(rows: unknown[][]): string {
-  return rows.map(row => row.map(cell => escapeCsvCell(cell)).join(',')).join('\n');
-}
-
-export function parseAndValidateBulkUserCsv(csvText: string): { rows: ParsedBulkUserRow[]; globalErrors: string[] } {
-  const rows = parseCsvRows(csvText);
-  if (rows.length === 0) {
-    return { rows: [], globalErrors: ['File CSV kosong.'] };
-  }
-
-  const headerMap = mapHeaders(rows[0]);
-  const missingHeaders = REQUIRED_FIELDS.filter(field => headerMap[field] === null);
-  if (missingHeaders.length > 0) {
-    return {
-      rows: [],
-      globalErrors: [
-        `Header wajib tidak lengkap: ${missingHeaders.join(', ')}. Gunakan template CSV agar format sesuai.`,
-      ],
-    };
-  }
-
-  const dataRows = rows.slice(1).filter(row => !isRowEmpty(row));
-  if (dataRows.length === 0) {
-    return { rows: [], globalErrors: ['Tidak ada data baris untuk diimpor.'] };
-  }
-
-  if (dataRows.length > MAX_ROWS) {
-    return { rows: [], globalErrors: [`Maksimal ${MAX_ROWS} baris per upload.`] };
-  }
+  const { headerMap, dataRows } = pre;
 
   const parsed: ParsedBulkUserRow[] = dataRows.map((csvRow, idx) => {
     const rowNumber = idx + 2;
@@ -227,44 +117,20 @@ export function parseAndValidateBulkUserCsv(csvText: string): { rows: ParsedBulk
 
 export async function parseAndValidateBulkUserFile(
   file: File
-): Promise<{ rows: ParsedBulkUserRow[]; globalErrors: string[] }> {
-  const extension = getFileExtension(file.name);
-
-  if (extension === 'csv') {
-    const text = await file.text();
-    return parseAndValidateBulkUserCsv(text);
-  }
-
-  if (extension === 'xlsx') {
-    const { default: readXlsxFile } = await import('read-excel-file/browser');
-    const rows = await readXlsxFile(file);
-    if (rows.length === 0) return { rows: [], globalErrors: ['File XLSX tidak memiliki data.'] };
-    const csvText = rowsToCsvText(rows);
-    return parseAndValidateBulkUserCsv(csvText);
-  }
-
-  return { rows: [], globalErrors: ['Format file tidak didukung. Gunakan file .csv atau .xlsx.'] };
+): Promise<ParseResult<ParsedBulkUserRow>> {
+  return parseFile(file, parseAndValidateBulkUserCsv);
 }
 
 export function saveBulkImportDraft(draft: BulkImportDraft): void {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  saveDraft(STORAGE_KEY, draft);
 }
 
 export function getBulkImportDraft(): BulkImportDraft | null {
-  const raw = sessionStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw) as BulkImportDraft;
-    if (!parsed || !Array.isArray(parsed.rows)) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
+  return getDraft<BulkImportDraft>(STORAGE_KEY);
 }
 
 export function clearBulkImportDraft(): void {
-  sessionStorage.removeItem(STORAGE_KEY);
+  clearDraft(STORAGE_KEY);
 }
 
 export function buildTemplateCsv(): string {
