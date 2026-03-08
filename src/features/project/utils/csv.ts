@@ -141,10 +141,8 @@ export function formatFundingDisplay(value: number): string {
 }
 
 export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<ParsedBulkProjectRow> {
-  const pre = preValidateCsv(
-    csvText,
-    REQUIRED_FIELDS,
-    headerRow => mapHeadersWithAliases(headerRow, EXPECTED_HEADERS, HEADER_ALIASES)
+  const pre = preValidateCsv(csvText, REQUIRED_FIELDS, headerRow =>
+    mapHeadersWithAliases(headerRow, EXPECTED_HEADERS, HEADER_ALIASES)
   );
   if (!pre.ok) return { rows: [], globalErrors: pre.globalErrors };
 
@@ -236,7 +234,8 @@ export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<Par
     if (!cooperationModel) errors.push('Model kerjasama wajib diisi.');
 
     if (!concessionPeriodRaw) errors.push('Periode konsesi wajib diisi.');
-    else if (concessionPeriod === null) errors.push('Format periode konsesi tidak valid (harus angka).');
+    else if (concessionPeriod === null)
+      errors.push('Format periode konsesi tidak valid (harus angka).');
     else if (concessionPeriod <= 0) errors.push('Periode konsesi harus lebih dari 0.');
 
     if (!assetReadiness) errors.push('Kesiapan aset wajib diisi.');
@@ -266,7 +265,8 @@ export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<Par
     else if (!URL_REGEX.test(locationImageUrl)) errors.push('Format locationImageUrl tidak valid.');
 
     if (!projectStructureImageUrl) errors.push('URL gambar struktur proyek wajib diisi.');
-    else if (!URL_REGEX.test(projectStructureImageUrl)) errors.push('Format projectStructureImageUrl tidak valid.');
+    else if (!URL_REGEX.test(projectStructureImageUrl))
+      errors.push('Format projectStructureImageUrl tidak valid.');
 
     if (!projectFileUrl) errors.push('URL dokumen proyek wajib diisi.');
     else if (!URL_REGEX.test(projectFileUrl)) errors.push('Format projectFileUrl tidak valid.');
@@ -310,7 +310,7 @@ export function clearBulkProjectImportDraft(): void {
 }
 
 export function buildProjectTemplateCsv(): string {
-  const headers = [
+  return [
     'ownerEmail',
     'name',
     'description',
@@ -336,33 +336,4 @@ export function buildProjectTemplateCsv(): string {
     'projectStructureImageUrl',
     'projectFileUrl',
   ].join(',');
-
-  const row1 = [
-    'projectowner@sifpi.go.id',
-    'Proyek Jalan Tol Trans Jawa Segmen 5',
-    '"Pembangunan jalan tol sepanjang 45km menghubungkan Semarang-Solo"',
-    'TOLL_ROAD',
-    '"Jawa Tengah, Indonesia"',
-    '"Meningkatkan konektivitas dan mengurangi waktu tempuh antar kota di Jawa Tengah"',
-    'Kementerian PUPR',
-    'Budi Santoso',
-    'budi.santoso@example.com',
-    '+62-812-3456-7890',
-    'Build-Operate-Transfer (BOT)',
-    '30',
-    '"Pembebasan lahan 80% selesai, AMDAL telah disetujui"',
-    'Dukungan sebagian pembebasan lahan oleh pemerintah daerah',
-    '5000000000000',
-    '200000000000',
-    '1500000000000',
-    '14.5',
-    'Pendapatan tol dari kendaraan yang melintas',
-    'true',
-    'Proyek ini merupakan bagian dari program strategis nasional',
-    'https://picsum.photos/800/600',
-    'https://picsum.photos/800/600',
-    'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-  ].join(',');
-
-  return [headers, row1].join('\n');
 }
