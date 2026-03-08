@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/shared/components/button';
 import { TextInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
+import { setPassword } from '@/features/auth/service';
+import { ApiError } from '@/shared/types/api';
 import { LockKeyhole } from 'lucide-react';
 
 interface PasswordData {
@@ -81,21 +83,11 @@ function SetPasswordForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/set-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: token,
-          password: passwordData.newPassword,
-          confirmPassword: passwordData.confirmPassword,
-        }),
+      await setPassword({
+        token: token,
+        password: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Gagal mengatur password');
-      }
 
       showToast(
         'success',
@@ -118,7 +110,7 @@ function SetPasswordForm() {
       showToast(
         'danger',
         'Gagal mengatur password',
-        error instanceof Error ? error.message : 'Terjadi kesalahan, silakan coba lagi'
+        error instanceof ApiError ? error.message : 'Terjadi kesalahan, silakan coba lagi'
       );
     } finally {
       setIsLoading(false);

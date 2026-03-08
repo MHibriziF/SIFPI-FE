@@ -6,6 +6,8 @@ import { ChevronLeft, Plus, X } from 'lucide-react';
 import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
+import { createExecutive } from '@/features/user-management/service';
+import { ApiError } from '@/shared/types/api';
 
 interface ExecutiveAccountFormData {
   nama: string;
@@ -76,17 +78,7 @@ export default function CreateExecutiveAccountPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/register/executive', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Gagal membuat akun');
-      }
+      await createExecutive(formData);
 
       showToast(
         'success',
@@ -99,11 +91,11 @@ export default function CreateExecutiveAccountPage() {
         router.push('/admin/access');
       }, 2000);
     } catch (error) {
-      console.error('Error creating account:', error);
+      console.error('Error creating executive account:', error);
       showToast(
         'danger',
-        'Gagal membuat akun',
-        error instanceof Error ? error.message : 'Terjadi kesalahan. Silakan coba lagi.'
+        'Gagal membuat akun eksekutif',
+        error instanceof ApiError ? error.message : 'Terjadi kesalahan saat membuat akun'
       );
     } finally {
       setIsLoading(false);

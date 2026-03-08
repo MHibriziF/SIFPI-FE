@@ -6,6 +6,9 @@ import { Save, X } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { TextInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
+import { getCurrentUser } from '@/features/user-management/service';
+import { updatePassword } from '@/features/auth/service';
+import { ApiError } from '@/shared/types/api';
 
 interface ProfileData {
   name: string;
@@ -48,15 +51,7 @@ export default function UpdateProfilePage() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch('/api/auth/me', {
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          throw new Error('Gagal mengambil data profil');
-        }
-
-        const result = await response.json();
+        const result = await getCurrentUser();
         const userData = result.data;
 
         setProfileData({
@@ -69,7 +64,7 @@ export default function UpdateProfilePage() {
         showToast(
           'danger',
           'Gagal memuat profil',
-          'Tidak dapat mengambil data profil Anda.'
+          error instanceof ApiError ? error.message : 'Tidak dapat mengambil data profil Anda.'
         );
       }
     };
@@ -196,22 +191,11 @@ export default function UpdateProfilePage() {
     setIsLoadingPassword(true);
 
     try {
-      const response = await fetch('/api/users/password', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-          confirmPassword: passwordData.confirmPassword,
-        }),
+      await updatePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Gagal mengubah password');
-      }
 
       showToast(
         'success',
@@ -230,7 +214,7 @@ export default function UpdateProfilePage() {
       showToast(
         'danger',
         'Gagal mengubah password',
-        error instanceof Error ? error.message : 'Terjadi kesalahan. Silakan coba lagi.'
+        error instanceof ApiError ? error.message : 'Terjadi kesalahan. Silakan coba lagi.'
       );
     } finally {
       setIsLoadingPassword(false);
