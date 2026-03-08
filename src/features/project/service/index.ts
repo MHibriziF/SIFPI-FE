@@ -1,5 +1,9 @@
-import { apiPostFile } from '@/shared/lib/api';
+import { apiPost, apiPostFile } from '@/shared/lib/api';
 import type { CreateProjectRequest, ProjectResponseDTO } from '@/features/project/types';
+import type {
+  BatchUploadProjectRequest,
+  BatchUploadProjectResultDTO,
+} from '@/features/project/types/import-project';
 
 export interface CreateProjectPayload {
   data: CreateProjectRequest;
@@ -19,4 +23,8 @@ export async function createProject(payload: CreateProjectPayload) {
   formData.append('projectFile', payload.projectFile);
 
   return apiPostFile<ProjectResponseDTO>('/api/projects', formData);
+}
+
+export async function batchUploadProjects(payload: BatchUploadProjectRequest[]) {
+  return apiPost<BatchUploadProjectResultDTO>('/api/admin/projects/batch-upload', payload);
 }
