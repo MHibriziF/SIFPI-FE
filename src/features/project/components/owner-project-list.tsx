@@ -57,7 +57,55 @@ export default function OwnerReadAllProjects() {
     needsRevision: 0,
   });
 
-  // ── Fetch ───────────────────────────────────────────────────────────────
+  // ── Fetch Status Counts (independent of filters) ───────────────────────
+
+  const fetchStatusCounts = useCallback(async () => {
+    try {
+      // Fetch ALL projects without status filter to calculate accurate counts
+      const response = await getMyProjects({
+        page: 0,
+        size: 1000, // Large enough to get all projects for counting
+        sortBy: 'createdAt',
+        sortDirection: 'desc',
+        // NO status filter here - we want all projects
+      });
+
+      const allProjects = response.data.content || [];
+      const counts = { draft: 0, submitted: 0, approved: 0, needsRevision: 0 };
+      
+      // Debug: Log actual status values from backend
+      console.log('📊 Status values from backend:', allProjects.map(p => ({ id: p.id, status: p.status })));
+      
+      allProjects.forEach((p) => {
+        // Normalize status to uppercase for consistent comparison
+        const normalizedStatus = p.status?.toUpperCase();
+        
+        switch (normalizedStatus) {
+          case 'DRAFT':
+            counts.draft++;
+            break;
+          case 'DIAJUKAN':
+          case 'IN_REVIEW':
+            counts.submitted++;
+            break;
+          case 'TERVERIFIKASI':
+          case 'TERPUBLIKASI':
+            counts.approved++;
+            break;
+          case 'PERBAIKAN_DATA':
+            counts.needsRevision++;
+            break;
+        }
+      });
+      
+      setStatusCounts(counts);
+    } catch (error) {
+      console.error('Error fetching status counts:', error);
+      // Don't show toast for counts error, just log it
+    }
+  }, []);
+
+  // ── Fetch Projects (with filters) ──────────────────────────────────────
 
   const fetchProjects = useCallback(async () => {
     setIsLoading(true);
@@ -77,7 +125,6 @@ export default function OwnerReadAllProjects() {
         totalElements: data.totalElements,
         totalPages: data.totalPages,
       }));
-      calculateStatusCounts(data.content || []);
     } catch (error) {
       console.error('Error fetching projects:', error);
       const apiError = error as ApiError;
@@ -87,24 +134,14 @@ export default function OwnerReadAllProjects() {
     }
   }, [pagination.page, pagination.size, filters.status]);
 
-  const calculateStatusCounts = (list: ProjectCardData[]) => {
-    const counts = { draft: 0, submitted: 0, approved: 0, needsRevision: 0 };
-    list.forEach((p) => {
-      switch (p.status) {
-        case 'DRAFT':         counts.draft++; break;
-        case 'DIAJUKAN':
-        case 'IN_REVIEW':     counts.submitted++; break;
-        case 'TERVERIFIKASI':
-        case 'TERPUBLIKASI':  counts.approved++; break;
-        case 'PERBAIKAN_DATA': counts.needsRevision++; break;
-      }
-    });
-    setStatusCounts(counts);
-  };
-
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  useEffect(() => {
+    // Fetch status counts once on mount and whenever filters change
+    fetchStatusCounts();
+  }, [fetchStatusCounts]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
@@ -133,7 +170,7 @@ export default function OwnerReadAllProjects() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatCard
             icon={FileEdit}
-            title="Draft Proyek"
+            title="Draft"
             value={statusCounts.draft}
             variant="draft"
             isActive={filters.status === 'DRAFT'}
@@ -141,7 +178,7 @@ export default function OwnerReadAllProjects() {
           />
           <StatCard
             icon={Clock}
-            title="Sedang Direview"
+            title="In Review"
             value={statusCounts.submitted}
             variant="info"
             isActive={filters.status === 'IN_REVIEW' || filters.status === 'DIAJUKAN'}
@@ -149,7 +186,7 @@ export default function OwnerReadAllProjects() {
           />
           <StatCard
             icon={CheckCircle}
-            title="Telah Disetujui"
+            title="Terverifikasi"
             value={statusCounts.approved}
             variant="success"
             isActive={filters.status === 'TERVERIFIKASI' || filters.status === 'TERPUBLIKASI'}
@@ -157,7 +194,7 @@ export default function OwnerReadAllProjects() {
           />
           <StatCard
             icon={AlertTriangle}
-            title="Butuh Revisi"
+            title="Perbaikan Data"
             value={statusCounts.needsRevision}
             variant="warning"
             isActive={filters.status === 'PERBAIKAN_DATA'}
