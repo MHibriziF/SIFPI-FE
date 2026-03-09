@@ -66,3 +66,39 @@ export interface CreateRoleRequest {
     actions: string[];
   }[];
 }
+
+// ─── User Detail (GET /api/admin/users/{email}) ────────────────────────────
+
+export interface CompanyInfo {
+  name: string;
+  sector: string;
+  industry_type: string | null;
+}
+
+/**
+ * Shape returned by GET /api/admin/users/{email}.
+ * Role-specific fields are only present for the matching role (@JsonInclude NON_NULL).
+ */
+export interface AdminUserDetail {
+  id: string;
+  email: string;
+  nama: string;
+  phone: string;
+  role: string;
+  created_at: string;
+  last_login: string;
+  email_verified: boolean;
+
+  // PROJECT_OWNER & EXECUTIVE
+  jabatan?: string;
+
+  // PROJECT_OWNER only
+  organisasi?: string;
+  jumlah_proyek?: number;
+  inquiry_masuk?: number;
+
+  // INVESTOR only
+  company_info?: CompanyInfo;
+  sector_interest?: string[];
+  budget_range?: string;
+}
