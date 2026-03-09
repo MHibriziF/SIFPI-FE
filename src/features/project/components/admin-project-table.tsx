@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Eye, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/shared/components/button';
 import { StatCard } from '@/shared/components/stat-card';
 import { showToast } from '@/shared/components/toast';
@@ -50,6 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function AdminReadProjects() {
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,11 +72,6 @@ export default function AdminReadProjects() {
     totalProjects: 0,
     pendingApproval: 0,
     growthPercentage: 0,
-  });
-
-  const [exportParams, setExportParams] = useState({
-    quarter: 'Q1',
-    year: new Date().getFullYear().toString(),
   });
 
   // ── Fetch ───────────────────────────────────────────────────────────────
@@ -136,8 +133,7 @@ export default function AdminReadProjects() {
   };
 
   const handleExportPortfolio = () => {
-    showToast('info', 'Export Portfolio', `Exporting ${exportParams.quarter} ${exportParams.year}...`);
-    // TODO: Implement actual export logic
+    router.push('/projects/catalogue');
   };
 
   const handleArchiveProjects = () => {
@@ -158,7 +154,7 @@ export default function AdminReadProjects() {
 
   return (
     <div className="flex-1 bg-gray-50">
-      <div className="max-w-[1400px] mx-auto px-6 py-6">
+      <div className="max-w-350 mx-auto px-6 py-6">
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Manajemen Proyek</h1>
@@ -187,30 +183,9 @@ export default function AdminReadProjects() {
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Export Portofolio</h2>
           <p className="text-sm text-gray-600 mb-4">
-            Pilih kuarter yang ingin diekspor. Proyek yang dipublish pada kuarter ini akan dikompilasi dalam format pdf.
+            Export portofolio proyek yang sudah dipilih di halaman katalog.
           </p>
-          <div className="flex items-center gap-3">
-            <select
-              value={exportParams.quarter}
-              onChange={(e) => setExportParams((prev) => ({ ...prev, quarter: e.target.value }))}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="Q1">Q1</option>
-              <option value="Q2">Q2</option>
-              <option value="Q3">Q3</option>
-              <option value="Q4">Q4</option>
-            </select>
-            <select
-              value={exportParams.year}
-              onChange={(e) => setExportParams((prev) => ({ ...prev, year: e.target.value }))}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center">
             <Button onClick={handleExportPortfolio} variant="filled" className="px-6">
               Export Project
             </Button>
@@ -233,14 +208,14 @@ export default function AdminReadProjects() {
             />
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <select
               value={filters.sector}
               onChange={(e) => {
                 setFilters((prev) => ({ ...prev, sector: e.target.value }));
                 setPagination((prev) => ({ ...prev, page: 0 }));
               }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {SECTOR_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -255,7 +230,7 @@ export default function AdminReadProjects() {
                 setFilters((prev) => ({ ...prev, status: e.target.value as AdminStatus }));
                 setPagination((prev) => ({ ...prev, page: 0 }));
               }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Semua Status</option>
               <option value="DIAJUKAN">Diajukan</option>

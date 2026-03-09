@@ -1,3 +1,8 @@
+export interface ProjectTimeline {
+  timeRange: string;
+  phaseDescription: string;
+}
+
 export interface BatchUploadProjectRequest {
   ownerEmail: string;
   name: string;
@@ -18,8 +23,9 @@ export interface BatchUploadProjectRequest {
   npv: number;
   irr: number;
   revenueStream: string;
-  is_feasibility_study: boolean;
+  isFeasibilityStudy: boolean;
   additionalInfo?: string | null;
+  timelines?: ProjectTimeline[];
   locationImageUrl: string;
   projectStructureImageUrl: string;
   projectFileUrl: string;
