@@ -7,7 +7,10 @@ import { showToast, Toast } from '@/shared/components/toast';
 import { TextInput, Textarea, FileInput, Select } from '@/shared/components/form-fields';
 import type { ToastVariant } from '@/shared/components/toast';
 import StatusBadge from '@/shared/components/status-badge';
+import { StatCard } from '@/shared/components/stat-card';
+import { ProjectCard } from '@/shared/components/project-card';
 import Navbar from '@/shared/components/layout/navbar';
+import { FileEdit, Clock, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // Color / typography data (unchanged)
@@ -296,7 +299,7 @@ export default function DesignSystemPage() {
         <Section title="Typography">
           <Card>
             <p className="text-xs text-gray-400 mb-5 font-mono">
-              font-family: "Segoe UI", "Segoe UI Variable", system-ui, sans-serif
+              font-family: &quot;Segoe UI&quot;, &quot;Segoe UI Variable&quot;, system-ui, sans-serif
             </p>
             <SubSection title="Type scale">
               <div className="divide-y divide-gray-100">
@@ -381,6 +384,94 @@ export default function DesignSystemPage() {
             <StatusBadge variant="rejected">Rejected</StatusBadge>
           </div>
         </Section>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* STAT CARDS                                                        */}
+        {/* ---------------------------------------------------------------- */}
+        <Section title="Stat Cards">
+          <Card className="flex flex-col gap-8">
+            <SubSection title="Variants">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard icon={FileEdit} title="Draft Proyek" value={5} variant="draft" subtitle="Number" />
+                <StatCard icon={Clock} title="Sedang Direview" value={3} variant="info" subtitle="Number" />
+                <StatCard icon={CheckCircle} title="Telah Disetujui" value={12} variant="success" subtitle="Number" />
+                <StatCard icon={AlertTriangle} title="Butuh Revisi" value={2} variant="warning" subtitle="Number" />
+              </div>
+            </SubSection>
+            <SubSection title="Active State">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard icon={FileEdit} title="Draft Proyek" value={5} variant="draft" isActive />
+                <StatCard icon={Clock} title="Sedang Direview" value={3} variant="info" isActive />
+                <StatCard icon={CheckCircle} title="Telah Disetujui" value={12} variant="success" isActive />
+                <StatCard icon={AlertTriangle} title="Butuh Revisi" value={2} variant="warning" isActive />
+              </div>
+            </SubSection>
+            <SubSection title="Danger Variant">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <StatCard icon={AlertTriangle} title="Ditolak" value={1} variant="danger" />
+                <StatCard icon={AlertTriangle} title="Ditolak" value={1} variant="danger" isActive />
+              </div>
+            </SubSection>
+            <SubSection title="Custom Usage">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <StatCard icon={TrendingUp} title="Total Proyek" value={22} variant="info" subtitle="Semua proyek" />
+                <StatCard icon={CheckCircle} title="Proyek Aktif" value={15} variant="success" subtitle="Berjalan" />
+                <StatCard icon={Clock} title="Menunggu" value={7} variant="warning" subtitle="Pending" />
+              </div>
+            </SubSection>
+          </Card>
+        </Section>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* PROJECT CARDS                                                     */}
+        {/* ---------------------------------------------------------------- */}
+        <Section title="Project Cards">
+          <Card className="flex flex-col gap-8">
+            <SubSection title="Card Examples">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProjectCard
+                  project={{
+                    id: 1,
+                    name: "Proyek Pembangunan Jalan Tol Jakarta-Bandung",
+                    sector: "TOLL_ROAD",
+                    status: "DIAJUKAN",
+                    location: "Jawa Barat",
+                    description: "Proyek pembangunan infrastruktur jalan tol untuk meningkatkan konektivitas antar kota dengan target penyelesaian 2 tahun.",
+                    ownerName: "PT Jasa Marga",
+                    budget: "Rp 5.000.000.000",
+                    locationImageUrl: "https://images.unsplash.com/photo-1569163139394-de4798aa62b0?w=800&q=80"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 2,
+                    name: "Proyek MRT Jakarta Fase 3",
+                    sector: "PUBLIC_TRANSPORTATION",
+                    status: "TERVERIFIKASI",
+                    location: "DKI Jakarta",
+                    description: "Pengembangan jalur MRT Jakarta untuk melayani koridor Utara-Selatan dengan teknologi modern dan ramah lingkungan.",
+                    ownerName: "PT MRT Jakarta",
+                    budget: "Rp 15.000.000.000",
+                    locationImageUrl: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80"
+                  }}
+                />
+                <ProjectCard
+                  project={{
+                    id: 3,
+                    name: "Proyek Perumahan Rakyat Subsidi",
+                    sector: "AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT",
+                    status: "DRAFT",
+                    location: "Banten",
+                    description: "Pembangunan perumahan subsidi untuk masyarakat berpenghasilan rendah dengan fasilitas lengkap dan akses transportasi mudah.",
+                    ownerName: "Kementerian PUPR",
+                    budget: "Rp 3.500.000.000"
+                  }}
+                />
+              </div>
+            </SubSection>
+          </Card>
+        </Section>
+
         {/* ---------------------------------------------------------------- */}
         {/* BUTTONS                                                           */}
         {/* ---------------------------------------------------------------- */}
