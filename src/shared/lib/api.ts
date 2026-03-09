@@ -104,6 +104,15 @@ export async function apiGet<T>(
   return res.data;
 }
 
+export async function apiGetWithBody<T>(url: string, body?: unknown): Promise<BaseResponse<T>> {
+  const res = await api.request<BaseResponse<T>>({
+    method: 'GET',
+    url: normalizeApiUrl(url) ?? url,
+    data: body,
+  });
+  return res.data;
+}
+
 export async function apiPost<T>(url: string, body?: unknown): Promise<BaseResponse<T>> {
   const res = await api.post<BaseResponse<T>>(normalizeApiUrl(url) ?? url, body);
   return res.data;
