@@ -192,7 +192,7 @@ export default function ImportUsersPage() {
         'Bulk insert berhasil',
         `${response.data.imported} user berhasil diimpor.`
       );
-      router.push('/admin/users');
+      router.push('/admin/access');
     } catch (error) {
       if (error instanceof ApiError) {
         const backendErrors = parseBackendValidationErrors(error.details);
@@ -266,7 +266,7 @@ export default function ImportUsersPage() {
         <div>
           <h2 className="text-2xl font-semibold text-primary">Import Pengguna</h2>
           <Link
-            href="/admin/users"
+            href="/admin/access"
             className="mt-1 inline-flex items-center gap-1 text-sm text-primary hover:underline"
           >
             <ArrowLeft className="size-4" />

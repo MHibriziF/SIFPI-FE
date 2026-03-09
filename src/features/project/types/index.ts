@@ -1,3 +1,5 @@
+import type { ProjectStatus, Sector } from '@/shared/enums';
+
 export interface ProjectTimelineRequest {
   timeRange: string;
   phaseDescription: string;
@@ -6,8 +8,8 @@ export interface ProjectTimelineRequest {
 export interface CreateProjectRequest {
   name: string;
   description: string;
-  sector: string;
-  status?: string;
+  sector: Sector | string;
+  status?: ProjectStatus | string;
   location: string;
   valueProposition: string;
   ownerInstitution: string;
@@ -39,8 +41,8 @@ export interface ProjectResponseDTO {
   id: number;
   name: string;
   description: string;
-  sector: string;
-  status: string;
+  sector: Sector | string;
+  status: ProjectStatus | string;
   location: string;
   valueProposition: string;
   locationImageUrl: string | null;
@@ -63,4 +65,32 @@ export interface ProjectResponseDTO {
   additionalInfo: string | null;
   timelines: ProjectTimelineResponseDTO[];
   isSubmitted: boolean;
+}
+
+export interface ProjectListItemDTO {
+  id: number;
+  name: string;
+  sector: Sector | string;
+  status: ProjectStatus | string;
+  ownerId?: string | null;
+  ownerName?: string | null;
+  ownerOrganization?: string | null;
+  totalCapex?: number | null;
+  totalOpex?: number | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+// Legacy compatibility for endpoints that may still return these fields.
+export interface ProjectListItemLegacyDTO extends ProjectListItemDTO {
+  projectCode?: string | null;
+  ownerInstitution?: string | null;
+}
+
+export type CatalogueQuarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
+
+export interface CatalogueExportRequest {
+  projectIds: number[];
+  quarter: CatalogueQuarter;
+  year: number;
 }

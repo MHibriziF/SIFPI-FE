@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
-import { batchUploadProjects } from '@/features/project/service';
+import { batchUploadProjects } from '@/features/project/services';
 import { BulkImportProjectTrigger } from '@/features/project/components/bulk-import-project-trigger';
 import type {
   BulkProjectImportDraft,
