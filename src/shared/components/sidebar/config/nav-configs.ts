@@ -70,6 +70,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { title: 'Project Management', href: '/admin/projects', icon: FolderKanban },
       { title: 'News Management', href: '/admin/news', icon: FileText },
       { title: 'Portfolios', href: '/admin/portfolios', icon: BarChart3 },
+      { title: 'Update Profil', href: '/admin/profile', icon: UserCog },
     ],
   },
 ];
@@ -94,6 +95,7 @@ export const EXECUTIVE_NAV: NavGroup[] = [
       { title: 'Dashboard', href: '/executive/dashboard', icon: LayoutDashboard },
       { title: 'Analytics', href: '/executive/analytics', icon: BarChart3 },
       { title: 'Reports', href: '/executive/reports', icon: FileText },
+      { title: 'Update Profil', href: '/executive/profile', icon: UserCog },
     ],
   },
 ];
