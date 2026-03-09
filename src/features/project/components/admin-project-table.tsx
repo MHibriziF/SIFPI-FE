@@ -8,6 +8,7 @@ import { showToast } from '@/shared/components/toast';
 import { getAllProjects } from '@/features/project/services';
 import { ApiError } from '@/shared/types/api';
 import type { ProjectCardData } from '@/shared/components/project-card';
+import { BulkImportProjectTrigger } from './bulk-import-project-trigger';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -139,11 +140,6 @@ export default function AdminReadProjects() {
     // TODO: Implement actual export logic
   };
 
-  const handleBulkInsertCSV = () => {
-    showToast('info', 'Bulk Insert CSV', 'Feature coming soon...');
-    // TODO: Implement CSV upload
-  };
-
   const handleArchiveProjects = () => {
     showToast('info', 'Archive Projects', 'Feature coming soon...');
     // TODO: Implement archive
@@ -269,9 +265,7 @@ export default function AdminReadProjects() {
               <option value="TERPUBLIKASI">Terpublikasi</option>
             </select>
 
-            <Button onClick={handleBulkInsertCSV} variant="outlined" className="border-primary text-primary">
-              Bulk Insert (CSV)
-            </Button>
+            <BulkImportProjectTrigger/>
           </div>
 
           {/* Table */}
