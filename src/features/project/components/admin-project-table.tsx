@@ -158,7 +158,7 @@ export default function AdminReadProjects() {
 
   return (
     <div className="flex-1 bg-gray-50">
-      <div className="max-w-[1400px] mx-auto px-6 py-6">
+      <div className="max-w-350 mx-auto px-6 py-6">
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Manajemen Proyek</h1>
@@ -233,14 +233,14 @@ export default function AdminReadProjects() {
             />
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <select
               value={filters.sector}
               onChange={(e) => {
                 setFilters((prev) => ({ ...prev, sector: e.target.value }));
                 setPagination((prev) => ({ ...prev, page: 0 }));
               }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {SECTOR_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -255,7 +255,7 @@ export default function AdminReadProjects() {
                 setFilters((prev) => ({ ...prev, status: e.target.value as AdminStatus }));
                 setPagination((prev) => ({ ...prev, page: 0 }));
               }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Semua Status</option>
               <option value="DIAJUKAN">Diajukan</option>
