@@ -1,7 +1,16 @@
-import { apiPostFile, apiGet, apiPatch } from '@/shared/lib/api';
-import type { CreateProjectRequest, ProjectResponseDTO } from '@/features/project/types';
-import type { BaseResponse } from '@/shared/types/api';
+import { api, apiGet, apiPatch, apiPost, apiPostFile } from '@/shared/lib/api';
+import type {
+  CatalogueExportRequest,
+  CreateProjectRequest,
+  ProjectListItemDTO,
+  ProjectResponseDTO,
+} from '@/features/project/types';
+import type {
+  BatchUploadProjectRequest,
+  BatchUploadProjectResultDTO,
+} from '@/features/project/types/import-project';
 import type { ProjectCardData } from '@/shared/components/project-card';
+import { BaseResponse } from '@/shared/types/api';
 
 // ─── Shared pagination types ────────────────────────────────────────────────
 
@@ -37,6 +46,43 @@ export async function createProject(payload: CreateProjectPayload) {
   return apiPostFile<ProjectResponseDTO>('/api/projects', formData);
 }
 
+export async function getProjects() {
+  return apiGet<ProjectListItemDTO[] | { content?: ProjectListItemDTO[]; items?: ProjectListItemDTO[] }>(
+    '/api/admin/projects'
+  );
+}
+
+export interface CatalogueExportFile {
+  blob: Blob;
+  filename: string;
+}
+
+function extractFilename(contentDisposition?: string): string {
+  if (!contentDisposition) return 'project-catalogue.pdf';
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1]).replace(/["']/g, '');
+
+  const plainMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+  if (plainMatch?.[1]) return plainMatch[1].trim();
+
+  return 'project-catalogue.pdf';
+}
+
+export async function exportProjectCatalogue(payload: CatalogueExportRequest) {
+  const res = await api.post<Blob>('/api/projects/catalogue/export', payload, {
+    responseType: 'blob',
+  });
+
+  return {
+    blob: res.data,
+    filename: extractFilename(res.headers['content-disposition']),
+  } as CatalogueExportFile;
+}
+
+export async function batchUploadProjects(payload: BatchUploadProjectRequest[]) {
+  return apiPost<BatchUploadProjectResultDTO>('/api/admin/projects/batch-upload', payload);
+}
 // ─── Get My Projects (Project Owner) ────────────────────────────────────────
 
 export interface GetMyProjectsParams {

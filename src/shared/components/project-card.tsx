@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Building2, MapPin, DollarSign, ImageIcon, Briefcase } from 'lucide-react';
+import { Building2, MapPin, DollarSign, ImageIcon } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatusBadge } from '@/shared/components/status-badge';
 import { cn } from '@/shared/lib/utils';
@@ -33,14 +33,6 @@ export function ProjectCard({ project, viewDetailHref, className }: ProjectCardP
   const hasValidImage = project.locationImageUrl && 
                         project.locationImageUrl.trim() !== '' && 
                         !project.locationImageUrl.startsWith('null/');
-
-  // Format sector for display (convert SNAKE_CASE to Title Case)
-  const formatSector = (sector: string) => {
-    return sector
-      .split('_')
-      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-      .join(' ');
-  };
 
   return (
     <div className={cn('bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden', className)}>
@@ -74,30 +66,22 @@ export function ProjectCard({ project, viewDetailHref, className }: ProjectCardP
 
         {/* Metadata */}
         <div className="space-y-2 text-sm text-gray-600 mb-4">
-          {/* Sector - Always show */}
-          <div className="flex items-start gap-2">
-            <Briefcase className="size-4 shrink-0 mt-0.5" />
-            <span className="line-clamp-1">{formatSector(project.sector)}</span>
-          </div>
-          
+          {project.ownerName && (
+            <div className="flex items-start gap-2">
+              <Building2 className="size-4 shrink-0 mt-0.5" />
+              <span className="line-clamp-1">{project.ownerName}</span>
+            </div>
+          )}
           {project.location && (
             <div className="flex items-start gap-2">
               <MapPin className="size-4 shrink-0 mt-0.5" />
               <span className="line-clamp-1">{project.location}</span>
             </div>
           )}
-          
           {project.budget && (
             <div className="flex items-start gap-2">
               <DollarSign className="size-4 shrink-0 mt-0.5" />
               <span className="line-clamp-1">{project.budget}</span>
-            </div>
-          )}
-          
-          {project.ownerName && (
-            <div className="flex items-start gap-2">
-              <Building2 className="size-4 shrink-0 mt-0.5" />
-              <span className="line-clamp-1">{project.ownerName}</span>
             </div>
           )}
         </div>

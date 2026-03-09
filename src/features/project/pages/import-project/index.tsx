@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
-import { batchUploadProjects } from '@/features/project/service';
+import { batchUploadProjects } from '@/features/project/services';
 import { BulkImportProjectTrigger } from '@/features/project/components/bulk-import-project-trigger';
 import type {
   BulkProjectImportDraft,
@@ -267,6 +267,7 @@ export default function ImportProjectPage() {
                     <th className="whitespace-nowrap px-4 py-3">Revenue Stream</th>
                     <th className="whitespace-nowrap px-4 py-3">Feasibility Study</th>
                     <th className="whitespace-nowrap px-4 py-3">Additional Info</th>
+                    <th className="whitespace-nowrap px-4 py-3">Timelines</th>
                     <th className="whitespace-nowrap px-4 py-3">Location Image</th>
                     <th className="whitespace-nowrap px-4 py-3">Structure Image</th>
                     <th className="whitespace-nowrap px-4 py-3">Project File</th>
@@ -348,10 +349,24 @@ export default function ImportProjectPage() {
                           {row.dto.revenueStream || '-'}
                         </td>
                         <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                          {row.dto.is_feasibility_study ? 'Ya' : 'Tidak'}
+                          {row.dto.isFeasibilityStudy ? 'Ya' : 'Tidak'}
                         </td>
                         <td className={`max-w-[200px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.additionalInfo ?? ''}>
                           {row.dto.additionalInfo || '-'}
+                        </td>
+                        <td className={`px-4 py-3 align-top ${textColor}`}>
+                          {row.dto.timelines && row.dto.timelines.length > 0 ? (
+                            <ul className="space-y-1 text-xs">
+                              {row.dto.timelines.map((t, i) => (
+                                <li key={i} className="whitespace-nowrap">
+                                  <span className="font-medium">{t.timeRange}</span>
+                                  {t.phaseDescription && (
+                                    <span className="text-gray-400"> — {t.phaseDescription.slice(0, 40)}{t.phaseDescription.length > 40 ? '…' : ''}</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : '-'}
                         </td>
                         <td className={`max-w-[150px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.locationImageUrl ?? ''}>
                           {row.dto.locationImageUrl || '-'}

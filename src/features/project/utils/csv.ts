@@ -2,13 +2,16 @@ import type {
   BatchUploadProjectRequest,
   BulkProjectImportDraft,
   ParsedBulkProjectRow,
+  ProjectTimeline,
 } from '@/features/project/types/import-project';
 import {
   getCell,
   mapHeadersWithAliases,
   parseBoolean,
+  parseCsvRows,
   parseFile,
   preValidateCsv,
+  normalizeHeader,
   saveDraft,
   getDraft,
   clearDraft,
@@ -43,7 +46,7 @@ const EXPECTED_HEADERS: HeaderKey[] = [
   'npv',
   'irr',
   'revenueStream',
-  'is_feasibility_study',
+  'isFeasibilityStudy',
   'additionalInfo',
   'locationImageUrl',
   'projectStructureImageUrl',
@@ -70,7 +73,7 @@ const REQUIRED_FIELDS: HeaderKey[] = [
   'npv',
   'irr',
   'revenueStream',
-  'is_feasibility_study',
+  'isFeasibilityStudy',
   'locationImageUrl',
   'projectStructureImageUrl',
   'projectFileUrl',
@@ -109,8 +112,8 @@ const HEADER_ALIASES: Record<string, HeaderKey> = {
   irr: 'irr',
   revenuestream: 'revenueStream',
   revenue_stream: 'revenueStream',
-  is_feasibility_study: 'is_feasibility_study',
-  isfeasibilitystudy: 'is_feasibility_study',
+  isFeasibilityStudy: 'isFeasibilityStudy',
+  isfeasibilitystudy: 'isFeasibilityStudy',
   additionalinfo: 'additionalInfo',
   additional_info: 'additionalInfo',
   locationimageurl: 'locationImageUrl',
@@ -140,6 +143,38 @@ export function formatFundingDisplay(value: number): string {
   return `Rp${value.toLocaleString('id-ID')}`;
 }
 
+// Matches: timeline1_timeRange, timeline_1_time_range, timeline1timeRange, etc.
+const TIMELINE_RANGE_RE = /^timeline_?(\d+)_?timerange$/i;
+const TIMELINE_DESC_RE = /^timeline_?(\d+)_?phasedescription$/i;
+
+function buildTimelineIndexMaps(headerRow: string[]): {
+  rangeMap: Record<number, number>;
+  descMap: Record<number, number>;
+  slots: number[];
+} {
+  const rangeMap: Record<number, number> = {};
+  const descMap: Record<number, number> = {};
+
+  headerRow.forEach((col, idx) => {
+    const normalized = normalizeHeader(col).replace(/_/g, '');
+    const rangeMatch = TIMELINE_RANGE_RE.exec(normalized);
+    if (rangeMatch) {
+      rangeMap[Number(rangeMatch[1])] = idx;
+      return;
+    }
+    const descMatch = TIMELINE_DESC_RE.exec(normalized);
+    if (descMatch) {
+      descMap[Number(descMatch[1])] = idx;
+    }
+  });
+
+  const slots = [...new Set([...Object.keys(rangeMap), ...Object.keys(descMap)])]
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  return { rangeMap, descMap, slots };
+}
+
 export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<ParsedBulkProjectRow> {
   const pre = preValidateCsv(csvText, REQUIRED_FIELDS, headerRow =>
     mapHeadersWithAliases(headerRow, EXPECTED_HEADERS, HEADER_ALIASES)
@@ -147,6 +182,10 @@ export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<Par
   if (!pre.ok) return { rows: [], globalErrors: pre.globalErrors };
 
   const { headerMap, dataRows } = pre;
+
+  // Build timeline column index maps from the raw header row
+  const allRows = parseCsvRows(csvText);
+  const { rangeMap, descMap, slots } = buildTimelineIndexMaps(allRows[0]);
 
   const parsed: ParsedBulkProjectRow[] = dataRows.map((csvRow, idx) => {
     const rowNumber = idx + 2;
@@ -171,11 +210,21 @@ export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<Par
     const npvRaw = getCell(csvRow, headerMap.npv);
     const irrRaw = getCell(csvRow, headerMap.irr);
     const revenueStream = getCell(csvRow, headerMap.revenueStream);
-    const isFeasibilityStudyRaw = getCell(csvRow, headerMap.is_feasibility_study);
+    const isFeasibilityStudyRaw = getCell(csvRow, headerMap.isFeasibilityStudy);
     const additionalInfo = getCell(csvRow, headerMap.additionalInfo) || null;
     const locationImageUrl = getCell(csvRow, headerMap.locationImageUrl);
     const projectStructureImageUrl = getCell(csvRow, headerMap.projectStructureImageUrl);
     const projectFileUrl = getCell(csvRow, headerMap.projectFileUrl);
+
+    // Parse timeline entries (all slots detected in the header)
+    const timelines: ProjectTimeline[] = [];
+    for (const n of slots) {
+      const timeRange = rangeMap[n] != null ? getCell(csvRow, rangeMap[n]) : '';
+      const phaseDescription = descMap[n] != null ? getCell(csvRow, descMap[n]) : '';
+      if (timeRange || phaseDescription) {
+        timelines.push({ timeRange, phaseDescription });
+      }
+    }
 
     // Parse numbers
     const concessionPeriod = parseInteger(concessionPeriodRaw);
@@ -205,8 +254,9 @@ export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<Par
       npv: npv ?? 0,
       irr: irr ?? 0,
       revenueStream,
-      is_feasibility_study: isFeasibilityStudy ?? false,
+      isFeasibilityStudy: isFeasibilityStudy ?? false,
       additionalInfo,
+      timelines: timelines.length > 0 ? timelines : undefined,
       locationImageUrl,
       projectStructureImageUrl,
       projectFileUrl,
@@ -257,9 +307,9 @@ export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<Par
 
     if (!revenueStream) errors.push('Revenue stream wajib diisi.');
 
-    if (!isFeasibilityStudyRaw) errors.push('is_feasibility_study wajib diisi (true/false).');
+    if (!isFeasibilityStudyRaw) errors.push('isFeasibilityStudy wajib diisi (true/false).');
     else if (isFeasibilityStudy === null)
-      errors.push('is_feasibility_study harus bernilai true/false.');
+      errors.push('isFeasibilityStudy harus bernilai true/false.');
 
     if (!locationImageUrl) errors.push('URL gambar lokasi proyek wajib diisi.');
     else if (!URL_REGEX.test(locationImageUrl)) errors.push('Format locationImageUrl tidak valid.');
@@ -330,8 +380,14 @@ export function buildProjectTemplateCsv(): string {
     'npv',
     'irr',
     'revenueStream',
-    'is_feasibility_study',
+    'isFeasibilityStudy',
     'additionalInfo',
+    'timeline1_timeRange',
+    'timeline1_phaseDescription',
+    'timeline2_timeRange',
+    'timeline2_phaseDescription',
+    'timeline3_timeRange',
+    'timeline3_phaseDescription',
     'locationImageUrl',
     'projectStructureImageUrl',
     'projectFileUrl',
