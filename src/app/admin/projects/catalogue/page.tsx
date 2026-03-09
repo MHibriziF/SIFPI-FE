@@ -18,7 +18,7 @@ import {
   SECTOR_OPTIONS,
 } from '@/shared/enums';
 import { ApiError } from '@/shared/types/api';
-import { exportProjectCatalogue, getProjects } from '@/features/project/service';
+import { exportProjectCatalogue, getProjects } from '@/features/project/services';
 import type {
   CatalogueQuarter,
   ProjectListItemDTO,
