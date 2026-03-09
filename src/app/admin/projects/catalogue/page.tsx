@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Eye, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Eye } from 'lucide-react';
 
 import { Button } from '@/shared/components/button';
 import { Select, TextInput } from '@/shared/components/form-fields';
@@ -60,9 +60,7 @@ function formatDate(value?: string | null): string {
 }
 
 function projectCode(project: ProjectListItemDTO): string {
-  const maybeLegacy = project as ProjectListItemLegacyDTO;
-  if (maybeLegacy.projectCode) return maybeLegacy.projectCode;
-  return `PRJ-${project.id}`;
+  return `PRJ-${String(project.id).padStart(4, '0')}`;
 }
 
 function ownerLabel(project: ProjectListItemDTO): string {
@@ -214,13 +212,6 @@ export default function AdminProjectsPage() {
 
   return (
     <main className="bg-white">
-      <section className="bg-grey px-6 py-8">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="text-[44px] font-medium leading-tight text-primary">Manajemen Proyek</h1>
-          <p className="mt-2 text-xl text-gray-700">Kelola verifikasi proyek</p>
-        </div>
-      </section>
-
       <section className="px-6 py-8">
         <div className="mx-auto max-w-7xl space-y-6 rounded-xl bg-white">
           <Link
@@ -332,15 +323,9 @@ export default function AdminProjectsPage() {
                           </StatusBadge>
                         </td>
                         <td className="px-3 py-3 align-top">
-                          <div className="flex items-center justify-center gap-1 text-gray-500">
+                          <div className="flex items-center justify-center text-gray-500">
                             <button type="button" className="rounded p-1.5 hover:bg-gray-100" aria-label="Lihat detail">
                               <Eye className="size-4" />
-                            </button>
-                            <button type="button" className="rounded p-1.5 hover:bg-gray-100" aria-label="Edit proyek">
-                              <Pencil className="size-4" />
-                            </button>
-                            <button type="button" className="rounded p-1.5 hover:bg-gray-100" aria-label="Hapus proyek">
-                              <Trash2 className="size-4" />
                             </button>
                           </div>
                         </td>
