@@ -6,7 +6,8 @@ import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
-import { registerOwner } from '@/features/auth/service';
+import { registerOwner, getOrCreateOrganization, OrganizationDTO } from '@/features/auth/service';
+import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
 import type { CreateOwnerRequest } from '@/features/auth/types';
 
@@ -58,6 +59,7 @@ export default function RegisterOwnerForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
   const [loading, setLoading] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
 
   function validate(): boolean {
     const next: FormErrors = {};
@@ -96,7 +98,19 @@ export default function RegisterOwnerForm({
 
     setLoading(true);
     try {
-      await registerOwner(formData);
+      // Get or create organization
+      const orgResponse = await getOrCreateOrganization(formData.organisasi);
+      if (orgResponse.status !== 200) {
+        throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
+      }
+
+      // Register owner dengan organization name yang sudah distandarisasi
+      const ownerData = {
+        ...formData,
+        organisasi: orgResponse.data?.name || formData.organisasi,
+      };
+
+      await registerOwner(ownerData);
       setFlashToast({
         type: 'success',
         title: 'Akun berhasil dibuat!',
@@ -182,13 +196,14 @@ export default function RegisterOwnerForm({
           onBlur={() => handleBlur('email')}
           error={errors.email}
         />
-        <TextInput
+        <OrganizationAutocomplete
           id="organisasi"
           label="Organisasi / Instansi"
-          placeholder="Masukkan nama organisasi"
+          placeholder="Cari atau tambah organisasi..."
           required
           value={formData.organisasi}
-          onChange={e => handleChange('organisasi', e.target.value)}
+          onChange={value => handleChange('organisasi', value)}
+          onOrganizationSelect={setSelectedOrganization}
           onBlur={() => handleBlur('organisasi')}
           error={errors.organisasi}
         />
