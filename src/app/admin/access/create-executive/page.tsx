@@ -6,7 +6,7 @@ import { ChevronLeft, Plus, X } from 'lucide-react';
 import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
-import { createExecutive } from '@/features/user-management/service';
+import { createExecutive } from '@/features/user-management/services';
 import { ApiError } from '@/shared/types/api';
 
 interface ExecutiveAccountFormData {

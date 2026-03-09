@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/shared/components/button';
 import { TextInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
-import { setPassword } from '@/features/auth/service';
+import { setPassword } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
 import { LockKeyhole } from 'lucide-react';
 

@@ -6,8 +6,8 @@ import { Save, X } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { TextInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
-import { getCurrentUser } from '@/features/user-management/service';
-import { updatePassword } from '@/features/auth/service';
+import { getCurrentUser } from '@/features/user-management/services';
+import { updatePassword } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
 
 interface ProfileData {
