@@ -11,7 +11,7 @@ import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { ApiError } from '@/shared/types/api';
 import { ProjectSubmissionStepper } from '@/features/project/components/project-submission-stepper';
-import { createProject } from '@/features/project/service';
+import { createProject } from '@/features/project/services';
 import {
   DEFAULT_PROJECT_FORM_VALUES,
   projectFormSchema,

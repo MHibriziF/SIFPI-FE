@@ -6,29 +6,29 @@ import { CircleAlert, Upload } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
-import type { BulkImportDraft } from '@/features/user-management/types';
+import type { BulkProjectImportDraft } from '@/features/project/types/import-project';
 import {
-  buildTemplateCsv,
-  parseAndValidateBulkUserFile,
-  saveBulkImportDraft,
-} from '@/features/user-management/utils/csv';
+  buildProjectTemplateCsv,
+  parseAndValidateBulkProjectFile,
+  saveBulkProjectImportDraft,
+} from '@/features/project/utils/csv';
 import { cn } from '@/shared/lib/utils';
 
-interface BulkImportTriggerProps {
+interface BulkImportProjectTriggerProps {
   buttonLabel?: string;
   className?: string;
   buttonVariant?: 'filled' | 'outlined' | 'ghost';
   redirectPath?: string | null;
-  onDraftReady?: (draft: BulkImportDraft) => void;
+  onDraftReady?: (draft: BulkProjectImportDraft) => void;
 }
 
-export function BulkImportTrigger({
-  buttonLabel = 'Bulk Insert User',
+export function BulkImportProjectTrigger({
+  buttonLabel = 'Import Proyek',
   className,
   buttonVariant = 'filled',
-  redirectPath = '/admin/access/import',
+  redirectPath = '/admin/projects/import',
   onDraftReady,
-}: BulkImportTriggerProps) {
+}: BulkImportProjectTriggerProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -36,7 +36,10 @@ export function BulkImportTrigger({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isParsing, setIsParsing] = useState(false);
 
-  const selectedFileLabel = useMemo(() => selectedFile?.name ?? 'Tidak ada file yang dipilih', [selectedFile]);
+  const selectedFileLabel = useMemo(
+    () => selectedFile?.name ?? 'Tidak ada file yang dipilih',
+    [selectedFile]
+  );
 
   const closeModal = () => {
     setOpen(false);
@@ -45,13 +48,13 @@ export function BulkImportTrigger({
   };
 
   const handleDownloadTemplate = () => {
-    const csvContent = buildTemplateCsv();
+    const csvContent = buildProjectTemplateCsv();
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'template-import-user.csv';
+    link.download = 'template-import-proyek.csv';
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -80,20 +83,20 @@ export function BulkImportTrigger({
     setIsParsing(true);
 
     try {
-      const parsed = await parseAndValidateBulkUserFile(selectedFile);
+      const parsed = await parseAndValidateBulkProjectFile(selectedFile);
 
       if (parsed.globalErrors.length > 0) {
         showToast('danger', 'Gagal membaca CSV', parsed.globalErrors.join(' '));
         return;
       }
 
-      const draft: BulkImportDraft = {
+      const draft: BulkProjectImportDraft = {
         sourceFileName: selectedFile.name,
         rows: parsed.rows,
         createdAt: new Date().toISOString(),
       };
 
-      saveBulkImportDraft(draft);
+      saveBulkProjectImportDraft(draft);
       onDraftReady?.(draft);
       setOpen(false);
       if (redirectPath) {
@@ -137,14 +140,14 @@ export function BulkImportTrigger({
 
             <div className="space-y-6 p-8">
               <div>
-                <label htmlFor="bulk-import-file" className="text-lg font-medium text-primary">
+                <label htmlFor="bulk-import-project-file" className="text-lg font-medium text-primary">
                   Pilih file CSV
                   <span className="ml-1 text-danger">*</span>
                 </label>
                 <div className="mt-2 rounded-xl border border-gray-300 px-4 py-3">
                   <input
                     ref={fileInputRef}
-                    id="bulk-import-file"
+                    id="bulk-import-project-file"
                     type="file"
                     accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     onChange={event => {
@@ -168,10 +171,11 @@ export function BulkImportTrigger({
                   <div>
                     <p className="text-lg font-semibold">Informasi</p>
                     <p className="mt-2 text-sm">
-                      Pastikan bahwa baris pertama adalah nama kolom sesuai dengan format berikut ...
-                    </p>
-                    <p className="mt-1 text-sm">
-                      Role yang valid pada template: ADMIN, PROJECT_OWNER, INVESTOR, EXECUTIVE.
+                      Pastikan baris pertama adalah nama kolom sesuai format. Kolom wajib meliputi:
+                      ownerEmail, name, description, sector, location, valueProposition,
+                      ownerInstitution, contactPersonName, contactPersonEmail, contactPersonPhone,
+                      cooperationModel, concessionPeriod, assetReadiness, governmentSupport,
+                      totalCapex, totalOpex, npv, irr, revenueStream, is_feasibility_study.
                     </p>
                     <button
                       type="button"
@@ -190,7 +194,7 @@ export function BulkImportTrigger({
                   disabled={isParsing}
                   className="h-11 flex-1 text-base font-semibold"
                 >
-                  {isParsing ? 'Memproses...' : 'Import User'}
+                  {isParsing ? 'Memproses...' : 'Import Proyek'}
                 </Button>
                 <Button
                   variant="outlined"

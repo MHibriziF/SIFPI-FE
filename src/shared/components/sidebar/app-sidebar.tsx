@@ -35,9 +35,16 @@ interface AppSidebarProps {
   user?: { name: string; role: string };
 }
 
+function isPathActive(pathname: string, href?: string): boolean {
+  if (!href) return false;
+  if (pathname === href) return true;
+  if (href === '/') return pathname === '/';
+  return pathname.startsWith(`${href}/`);
+}
+
 function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
   const href = item.href ?? '';
-  const isActive = pathname === href || item.subItems?.some(s => s.href === pathname);
+  const isActive = isPathActive(pathname, href) || item.subItems?.some(s => isPathActive(pathname, s.href));
 
   if (item.subItems) {
     return (
@@ -58,7 +65,7 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
             <SidebarMenuSub>
               {item.subItems.map(sub => (
                 <SidebarMenuSubItem key={sub.href}>
-                  <SidebarMenuSubButton asChild isActive={pathname === sub.href}>
+                  <SidebarMenuSubButton asChild isActive={isPathActive(pathname, sub.href)}>
                     <Link href={sub.href}>{sub.title}</Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
@@ -72,7 +79,7 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={pathname === href} tooltip={item.title}>
+      <SidebarMenuButton asChild isActive={isPathActive(pathname, href)} tooltip={item.title}>
         <Link href={href}>
           <item.icon />
           <span>{item.title}</span>
