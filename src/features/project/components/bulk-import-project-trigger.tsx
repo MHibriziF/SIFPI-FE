@@ -175,7 +175,11 @@ export function BulkImportProjectTrigger({
                       ownerEmail, name, description, sector, location, valueProposition,
                       ownerInstitution, contactPersonName, contactPersonEmail, contactPersonPhone,
                       cooperationModel, concessionPeriod, assetReadiness, governmentSupport,
-                      totalCapex, totalOpex, npv, irr, revenueStream, is_feasibility_study.
+                      totalCapex, totalOpex, npv, irr, revenueStream, isFeasibilityStudy.
+                      Tambahkan kolom{' '}
+                      <code className="rounded bg-info/10 px-1">timeline1_timeRange</code>,{' '}
+                      <code className="rounded bg-info/10 px-1">timeline1_phaseDescription</code>{' '}
+                      dst untuk menyertakan tahapan proyek.
                     </p>
                     <button
                       type="button"
