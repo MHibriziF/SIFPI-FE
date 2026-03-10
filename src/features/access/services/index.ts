@@ -51,6 +51,10 @@ export async function createRole(data: CreateRoleRequest) {
   return apiPost<RoleDetail>('/api/roles', data);
 }
 
+export async function updateUserRoles(updates: { email: string; roleName: string }[]) {
+  return apiPatch<BatchRoleUpdateResult>('/api/admin/users/roles', { updates });
+}
+
 // ---------------------------------------------------------------------------
 // Server-side helpers (use raw fetch — apiGet uses axios which requires
 // document.cookie and cannot run in server components)
