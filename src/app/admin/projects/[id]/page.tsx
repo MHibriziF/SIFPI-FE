@@ -29,7 +29,7 @@ import { ApiError } from '@/shared/types/api';
 function SectionHeader({ title }: { title: string }) {
   return (
     <div className="bg-[#0f2d5e] text-white px-5 py-3 rounded-md mb-4">
-      <h3 className="text-sm font-semibold">{title}</h3>
+      <h3 className="text-base font-semibold">{title}</h3>
     </div>
   );
 }
@@ -38,7 +38,7 @@ function SectionHeader({ title }: { title: string }) {
 function CardHeader({ title }: { title: string }) {
   return (
     <div className="bg-[#0f2d5e] text-white px-6 py-4 text-center">
-      <h2 className="text-sm font-semibold tracking-wide">{title}</h2>
+      <h2 className="text-base font-semibold tracking-wide">{title}</h2>
     </div>
   );
 }
@@ -169,7 +169,7 @@ export default function ProjectDetailPage() {
   }
 
   const showVerificationPanel =
-    project.status === 'TERVERIFIKASI' || project.status === 'IN_REVIEW';
+    project.status === 'TERVERIFIKASI' || project.status === 'IN_REVIEW' || project.status === 'DIAJUKAN';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -211,6 +211,31 @@ export default function ProjectDetailPage() {
       {/* ── Body ── */}
       <div className="px-6 py-8">
         <div className="max-w-7xl mx-auto space-y-6">
+
+          {/* ══ Catatan Perbaikan Banner (hanya muncul jika status PERBAIKAN_DATA) ══ */}
+          {project.status === 'PERBAIKAN_DATA' && (() => {
+            const lastRejection = [...(project.verifications ?? [])]
+              .reverse()
+              .find((v) => v.action === 'REJECTED');
+            return lastRejection ? (
+              <div className="bg-orange-50 border border-orange-300 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <XCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-orange-800">Catatan Perbaikan Data</p>
+                    <p className="text-sm text-orange-700 mt-1 whitespace-pre-wrap">{lastRejection.notes}</p>
+                    <p className="text-xs text-orange-500 mt-1">
+                      Ditolak oleh: {lastRejection.verifiedByName} &bull;{' '}
+                      {new Date(lastRejection.verifiedAt).toLocaleDateString('id-ID', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null;
+          })()}
 
           {/* ══ ROW 1: Strategic Narrative + Project Information ══ */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -331,7 +356,7 @@ export default function ProjectDetailPage() {
 
               {/* Additional Information */}
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <CardHeader title="Additional Information and Assumptions" />
+                <CardHeader title="Additional Information" />
                 <div className="p-6">
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">
                     {project.additionalInfo?.trim() || '-'}
