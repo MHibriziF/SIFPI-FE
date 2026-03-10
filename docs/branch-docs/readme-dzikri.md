@@ -296,3 +296,82 @@ UI sections:
 - Permission checks are always computed on the server. Booleans (`canUpdate`, `canCreate`) are passed as props to client components — `auth-guard` is never imported client-side.
 - The `Edit Role Ini` button is **hidden** (not disabled) when the user lacks `USER:UPDATE` permission, per project conventions.
 - Action buttons in `AksiCard` are **hidden** (not disabled) based on `canUpdate`/`canDelete` props — never shown and then disabled.
+
+---
+
+## Backlog: PM-4 · Read Single Project Detail (PO)
+
+---
+
+## Pages Implemented
+
+### 5. Project Detail Page — `/project-owner/projects/[id]`
+
+Displays all project data in a structured, read-only layout for the Project Owner.
+
+**Route:** `src/app/project-owner/projects/[id]/page.tsx`
+
+- Protected with `withPermission('PROJECT', 'READ')` — unauthenticated → `/login`, missing permission → 404.
+- Validates that `id` is a finite positive integer; calls `notFound()` immediately for invalid values (e.g. `"null"`).
+- Computes `canEdit = hasPermission(session, 'PROJECT', 'UPDATE')` on the server using the `session` injected by `withPermission`, and passes it as a prop.
+- All data fetching is handled client-side inside `ProjectOwnerDetailView`.
+
+**Component:** `src/features/project/components/project-owner-detail-view.tsx`
+
+Fetches `GET /api/projects/{id}` and `GET /api/projects/{id}/history` in parallel via `Promise.all` on mount. On 404 → redirects to `/project-owner/projects`. Other errors → danger toast.
+
+Layout:
+
+| Section | Left column (1/3) | Right column (2/3) |
+|---|---|---|
+| Top bar | Panel Verifikasi (full width) + Metadata Proyek (fixed width) | — |
+| Body | Strategic Narrative, Project Structure, Additional Info, Feasibility Study, Financials | Status Proyek (timeline), Project Information, Incentives, Project Owner Information |
+| Bottom | Indicative / High-level Timeline (full width) | — |
+
+UI sections:
+- **Hero banner:** "Manajemen Proyek" heading + subheading
+- **Breadcrumb:** Projects / `#{id}` → back link to `/project-owner/projects`
+- **Panel Verifikasi card:** displays `rejectionReason` (admin notes); "Revisi (Edit) Proyek" button rendered only when `canEdit && status === PERBAIKAN_DATA` — hidden otherwise, never disabled
+- **Metadata Proyek card:** project ID, `StatusBadge`, `editedAt`, `createdAt`, document download link → `GET /api/projects/{id}/file`
+- **Strategic Narrative card:** location image via `GET /api/projects/{id}/location-image` with `onError` fallback; `valueProposition` text
+- **Project Structure card:** structure image via `GET /api/projects/{id}/structure-image` with `onError` fallback
+- **Additional Information card:** `additionalInfo` (rendered only when non-null)
+- **Feasibility Study card:** availability badge (`isFeasibilityStudy`)
+- **Financials card:** `totalCapex`, `totalOpex`, `npv`, `irr`, `revenueStream` — formatted as IDR / percentage
+- **Status Proyek card:** 6-step vertical approval timeline (DRAFT → DIAJUKAN → IN_REVIEW → PERBAIKAN_DATA → TERVERIFIKASI → TERPUBLIKASI) derived from history API; each step shows its date (from `changedAt`) or "Menunggu"; contact links for WhatsApp / email
+- **Project Information card:** sector, location, description, cooperation model, concession period, asset readiness
+- **Incentives card:** `governmentSupport`
+- **Project Owner Information card:** `contactPersonName`, `ownerInstitution`, `contactPersonEmail`, `contactPersonPhone`
+- **Indicative Timeline card:** horizontal scroll row of `timelines[]` entries, each rendered as a card showing `timeRange` and `phaseDescription`
+
+---
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `src/app/project-owner/projects/[id]/page.tsx` | **New** — server page with `withPermission('PROJECT', 'READ')` guard; computes `canEdit` and passes it as prop |
+| `src/features/project/components/project-owner-detail-view.tsx` | **New** — client component; fetches project detail + history in parallel; renders full read-only detail layout |
+| `src/features/project/services/index.ts` | Added `getProjectById(id)` and `getProjectHistory(id)` |
+| `src/features/project/types/index.ts` | Added `ProjectDetailDTO` (extends `ProjectResponseDTO` with `ownerId`, `rejectionReason`, `createdAt`, `editedAt`) and `ProjectHistoryItemDTO` |
+
+---
+
+## API Endpoints Used
+
+| Method | Endpoint | Used by |
+|--------|----------|---------|
+| `GET` | `/api/projects/{id}` | Project detail — main data |
+| `GET` | `/api/projects/{id}/history` | Project detail — approval timeline |
+| `GET` | `/api/projects/{id}/location-image` | Location map image (raw bytes) |
+| `GET` | `/api/projects/{id}/structure-image` | Project structure image (raw bytes) |
+| `GET` | `/api/projects/{id}/file` | Project document download (raw bytes) |
+
+---
+
+## Compliance Notes
+
+- **API calls in services only:** `getProjectById` and `getProjectHistory` live in `src/features/project/services/index.ts` using `apiGet` from `src/shared/lib/api.ts` — no inline `fetch` or `axios` in component or page files. Image/file endpoints are used directly as `<img src>` / `<a href>` since they return raw bytes, not JSON.
+- **Permission checks on server only:** `hasPermission` is called in the page file only; `canEdit` boolean is passed as a prop to the client component — `auth-guard` is never imported client-side.
+- **Buttons hidden, not disabled:** "Revisi (Edit) Proyek" uses `{showEditButton && <Button />}` where `showEditButton = canEdit && status === PERBAIKAN_DATA` — never rendered as `disabled`.
+- **No role-based gating:** all UI decisions use permission flags, not `session.role`.

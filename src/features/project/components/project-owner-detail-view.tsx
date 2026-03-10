@@ -170,9 +170,10 @@ function InfoRow({
 
 interface ProjectOwnerDetailViewProps {
   projectId: number;
+  canEdit: boolean;
 }
 
-export default function ProjectOwnerDetailView({ projectId }: ProjectOwnerDetailViewProps) {
+export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOwnerDetailViewProps) {
   const router = useRouter();
 
   const [project, setProject] = useState<ProjectDetailDTO | null>(null);
@@ -229,7 +230,9 @@ export default function ProjectOwnerDetailView({ projectId }: ProjectOwnerDetail
 
   if (!project) return null;
 
-  const isPerbaikanData = project.status === ProjectStatus.PERBAIKAN_DATA;
+  // Button is only shown when the user has UPDATE permission AND the project
+  // is in PERBAIKAN_DATA state (business rule: revisions only possible then).
+  const showEditButton = canEdit && project.status === ProjectStatus.PERBAIKAN_DATA;
 
   // ── Render ──────────────────────────────────────────────────────────────
 
@@ -276,7 +279,7 @@ export default function ProjectOwnerDetailView({ projectId }: ProjectOwnerDetail
 
               {/* Action buttons */}
               <div className="flex flex-col gap-3 w-56 flex-shrink-0">
-                {isPerbaikanData && (
+                {showEditButton && (
                   <Button
                     variant="filled"
                     className="w-full bg-success hover:bg-success/85 justify-center gap-2"
@@ -350,7 +353,7 @@ export default function ProjectOwnerDetailView({ projectId }: ProjectOwnerDetail
       <div className="px-24 flex gap-5 items-start">
 
         {/* ── LEFT COLUMN ─────────────────────────────────────────────── */}
-        <div className="w-[560px] flex-shrink-0 flex flex-col gap-5">
+        <div className="basis-1/3 min-w-0 flex flex-col gap-5">
 
           {/* Strategic Narrative / Value Proposition */}
           <SectionCard>
@@ -440,7 +443,7 @@ export default function ProjectOwnerDetailView({ projectId }: ProjectOwnerDetail
         </div>
 
         {/* ── RIGHT COLUMN ─────────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col gap-5">
+        <div className="basis-2/3 min-w-0 flex flex-col gap-5">
 
           {/* Status Proyek */}
           <SectionCard>
