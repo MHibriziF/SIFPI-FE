@@ -28,5 +28,5 @@ export interface UserProfile {
 }
 
 export async function getCurrentUser(): Promise<BaseResponse<UserProfile>> {
-  return apiGet<UserProfile>('/api/users/me');
+  return apiGet<UserProfile>('/api/me');
 }
