@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Eye, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatCard } from '@/shared/components/stat-card';
@@ -134,11 +135,6 @@ export default function AdminReadProjects() {
 
   const handleExportPortfolio = () => {
     router.push('/projects/catalogue');
-  };
-
-  const handleArchiveProjects = () => {
-    showToast('info', 'Archive Projects', 'Feature coming soon...');
-    // TODO: Implement archive
   };
 
   const formatDate = (dateString: string | null | undefined) => {
@@ -383,12 +379,12 @@ export default function AdminReadProjects() {
           )}
 
           {/* Action Buttons */}
-        <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
-            <a href="/admin/projects/publication">
+        <div className="flex justify-between items-center mt-6 pt-6 border-gray-200">
+            <Link href="/admin/projects/publication">
               <Button variant="outlined" className="border-2 border-primary text-primary bg-white hover:bg-blue-50 font-normal">
                 Kelola publikasi proyek
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

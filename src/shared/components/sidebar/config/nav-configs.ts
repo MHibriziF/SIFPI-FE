@@ -6,7 +6,6 @@ import {
   Settings,
   BarChart3,
   CheckCircleIcon,
-  ShieldCheck,
   FilePlus2,
   Newspaper,
   UserCog,

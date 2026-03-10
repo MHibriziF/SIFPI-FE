@@ -211,11 +211,30 @@ export default function UpdateProfilePage() {
       });
     } catch (error) {
       console.error('Error updating password:', error);
-      showToast(
-        'danger',
-        'Gagal mengubah password',
-        error instanceof ApiError ? error.message : 'Terjadi kesalahan. Silakan coba lagi.'
-      );
+      
+      // Handle specific error cases
+      if (error instanceof ApiError) {
+        const errorMessage = error.message;
+        
+        // If it's "Password saat ini salah", show it as a field error
+        if (errorMessage.includes('Password saat ini salah')) {
+          setErrors(prev => ({ ...prev, currentPassword: errorMessage }));
+        } 
+        // If it's "Password baru tidak boleh sama", show it as field error
+        else if (errorMessage.includes('Password baru tidak boleh sama')) {
+          setErrors(prev => ({ ...prev, newPassword: errorMessage }));
+        } 
+        // Otherwise show as toast
+        else {
+          showToast('danger', 'Gagal mengubah password', errorMessage);
+        }
+      } else {
+        showToast(
+          'danger',
+          'Gagal mengubah password',
+          'Terjadi kesalahan. Silakan coba lagi.'
+        );
+      }
     } finally {
       setIsLoadingPassword(false);
     }

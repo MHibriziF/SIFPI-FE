@@ -82,8 +82,8 @@ export default function CreateExecutiveAccountPage() {
 
       showToast(
         'success',
-        'Akun eksekutif berhasil dibuat!',
-        `Akun untuk ${formData.nama} telah ditambahkan. Email undangan telah dikirim.`
+        'Akun Executive berhasil dibuat',
+        `Email undangan telah dikirim ke ${formData.email}`
       );
 
       // Redirect after success
@@ -92,11 +92,21 @@ export default function CreateExecutiveAccountPage() {
       }, 2000);
     } catch (error) {
       console.error('Error creating executive account:', error);
-      showToast(
-        'danger',
-        'Gagal membuat akun eksekutif',
-        error instanceof ApiError ? error.message : 'Terjadi kesalahan saat membuat akun'
-      );
+      
+      // Handle duplicate email error specifically
+      if (error instanceof ApiError && error.status === 409) {
+        showToast(
+          'danger',
+          'Email sudah terdaftar',
+          `User dengan email '${formData.email}' sudah terdaftar.`
+        );
+      } else {
+        showToast(
+          'danger',
+          'Gagal membuat akun eksekutif',
+          error instanceof ApiError ? error.message : 'Terjadi kesalahan saat membuat akun'
+        );
+      }
     } finally {
       setIsLoading(false);
     }

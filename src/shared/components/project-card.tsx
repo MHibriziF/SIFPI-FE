@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Building2, MapPin, DollarSign, ImageIcon } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatusBadge } from '@/shared/components/status-badge';
@@ -39,12 +38,10 @@ export function ProjectCard({ project, viewDetailHref, className }: ProjectCardP
       {/* Location Image */}
       <div className="relative w-full h-48 bg-gray-100">
         {hasValidImage ? (
-          <Image
+          <img
             src={project.locationImageUrl!}
             alt={project.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
