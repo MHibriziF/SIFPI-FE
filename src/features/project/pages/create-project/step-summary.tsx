@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import { SubmitProjectButton, Button } from '@/shared/components/button';
+import { sectorLabel } from '@/shared/enums';
 import { SummaryCard } from '@/features/project/components/summary-card';
 import type { ProjectFormValues } from '@/features/project/types/create-project-form';
 
@@ -207,83 +208,92 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
 
   return (
     <div className="space-y-5">
-      <SummaryCard>
-        <SummaryCard.Header title="Strategic Narrative" onEdit={() => onEditStep(1)} />
-        <SummaryCard.Body>
-          <p className="text-sm text-primary">{values.general.valueProposition || '-'}</p>
-        </SummaryCard.Body>
-      </SummaryCard>
+      <div className="grid gap-5 lg:grid-cols-12 lg:items-start">
+        <div className="grid gap-5 lg:col-span-7">
+          <SummaryCard>
+            <SummaryCard.Header title="Strategic Narrative" onEdit={() => onEditStep(1)} />
+            <SummaryCard.Body>
+              <p className="text-sm text-primary">{values.general.valueProposition || '-'}</p>
+            </SummaryCard.Body>
+          </SummaryCard>
 
-      <SummaryCard>
-        <SummaryCard.Header title="Project Information" onEdit={() => onEditStep(1)} />
-        <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
-          <SummaryItem label="Project Name" value={values.general.projectName} />
-          <SummaryItem label="Sector" value={values.general.sector} />
-          <SummaryItem label="Location" value={values.general.location} />
-          <SummaryItem label="Short Description" value={values.general.shortDescription} />
-          <FileSummaryItem label="Map File" file={values.files.mapFile} />
-        </SummaryCard.Body>
-      </SummaryCard>
+          <SummaryCard>
+            <SummaryCard.Header title="Project Structure" onEdit={() => onEditStep(2)} />
+            <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
+              <SummaryItem label="Cooperation Model" value={values.technical.cooperationModel} />
+              <SummaryItem label="Concession Period" value={values.technical.concessionPeriod} />
+              <SummaryItem label="Asset Readiness" value={values.technical.assetReadiness} />
+              <FileSummaryItem label="Structure File" file={values.files.projectStructureFile} />
+              <SummaryItem label="Revenue Stream" value={values.technical.revenueStream} />
+              <SummaryItem
+                label="Is Feasibility Study"
+                value={values.technical.isFeasibilityStudy ? 'Ya' : 'Tidak'}
+              />
+              <FileSummaryItem label="Project File" file={values.files.feasibilityStudyFile} />
+            </SummaryCard.Body>
+          </SummaryCard>
 
-      <SummaryCard>
-        <SummaryCard.Header title="Project Structure" onEdit={() => onEditStep(2)} />
-        <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
-          <SummaryItem label="Cooperation Model" value={values.technical.cooperationModel} />
-          <SummaryItem label="Concession Period" value={values.technical.concessionPeriod} />
-          <SummaryItem label="Asset Readiness" value={values.technical.assetReadiness} />
-          <FileSummaryItem label="Structure File" file={values.files.projectStructureFile} />
-          <SummaryItem label="Revenue Stream" value={values.technical.revenueStream} />
-          <SummaryItem
-            label="Is Feasibility Study"
-            value={values.technical.isFeasibilityStudy ? 'Ya' : 'Tidak'}
-          />
-          <FileSummaryItem label="Project File" file={values.files.feasibilityStudyFile} />
-        </SummaryCard.Body>
-      </SummaryCard>
+          <SummaryCard>
+            <SummaryCard.Header title="Additional Information" onEdit={() => onEditStep(3)} />
+            <SummaryCard.Body>
+              <p className="text-sm text-primary">{values.financial.additionalInfo || '-'}</p>
+            </SummaryCard.Body>
+          </SummaryCard>
+        </div>
 
-      <SummaryCard>
-        <SummaryCard.Header title="Government Support" onEdit={() => onEditStep(2)} />
-        <SummaryCard.Body>
-          <p className="text-sm text-primary">{values.technical.governmentSupport || '-'}</p>
-        </SummaryCard.Body>
-      </SummaryCard>
+        <div className="grid gap-5 lg:col-span-5">
+          <SummaryCard>
+              <SummaryCard.Header title="Project Information" onEdit={() => onEditStep(1)} />
+            <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
+              <SummaryItem label="Project Name" value={values.general.projectName} />
+              <SummaryItem label="Sector" value={sectorLabel(values.general.sector)} />
+              <SummaryItem label="Location" value={values.general.location} />
+              <SummaryItem label="Short Description" value={values.general.shortDescription} />
+              <FileSummaryItem label="Map File" file={values.files.mapFile} />
+            </SummaryCard.Body>
+          </SummaryCard>
 
-      <SummaryCard>
-        <SummaryCard.Header title="Project Owner" onEdit={() => onEditStep(1)} />
-        <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
-          <SummaryItem label="Owner Institution" value={values.general.ownerInstitution} />
-          <SummaryItem label="Contact Person" value={values.general.contactPerson} />
-          <SummaryItem label="Email" value={values.general.email} />
-          <SummaryItem label="Phone" value={values.general.phone} />
-        </SummaryCard.Body>
-      </SummaryCard>
+          <SummaryCard>
+            <SummaryCard.Header title="Government Support" onEdit={() => onEditStep(2)} />
+            <SummaryCard.Body>
+              <p className="text-sm text-primary">{values.technical.governmentSupport || '-'}</p>
+            </SummaryCard.Body>
+          </SummaryCard>
 
-      <SummaryCard>
-        <SummaryCard.Header title="Financials" onEdit={() => onEditStep(3)} />
-        <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
-          <p className="md:col-span-2 text-xs text-gray-500">
-            Keterangan: Total CAPEX, Total OPEX, dan NPV ditampilkan dalam million USD. IRR
-            ditampilkan dalam persen (%).
-          </p>
-          <SummaryItem
-            label="Total CAPEX (million USD)"
-            value={formatCurrencyValue(values.financial.totalCapex)}
-          />
-          <SummaryItem
-            label="Total OPEX (million USD)"
-            value={formatCurrencyValue(values.financial.totalOpex)}
-          />
-          <SummaryItem label="NPV (million USD)" value={formatCurrencyValue(values.financial.npv)} />
-          <SummaryItem label="IRR (%)" value={formatPercentValue(values.financial.irr)} />
-        </SummaryCard.Body>
-      </SummaryCard>
+          <SummaryCard>
+            <SummaryCard.Header title="Project Owner" onEdit={() => onEditStep(1)} />
+            <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
+              <SummaryItem label="Owner Institution" value={values.general.ownerInstitution} />
+              <SummaryItem label="Contact Person" value={values.general.contactPerson} />
+              <SummaryItem label="Email" value={values.general.email} />
+              <SummaryItem label="Phone" value={values.general.phone} />
+            </SummaryCard.Body>
+          </SummaryCard>
 
-      <SummaryCard>
-        <SummaryCard.Header title="Additional Information" onEdit={() => onEditStep(3)} />
-        <SummaryCard.Body>
-          <p className="text-sm text-primary">{values.financial.additionalInfo || '-'}</p>
-        </SummaryCard.Body>
-      </SummaryCard>
+          <SummaryCard>
+            <SummaryCard.Header title="Financials" onEdit={() => onEditStep(3)} />
+            <SummaryCard.Body className="grid gap-4 md:grid-cols-2">
+              <p className="md:col-span-2 text-xs text-gray-500">
+                Keterangan: Total CAPEX, Total OPEX, dan NPV ditampilkan dalam million USD. IRR
+                ditampilkan dalam persen (%).
+              </p>
+              <SummaryItem
+                label="Total CAPEX (million USD)"
+                value={formatCurrencyValue(values.financial.totalCapex)}
+              />
+              <SummaryItem
+                label="Total OPEX (million USD)"
+                value={formatCurrencyValue(values.financial.totalOpex)}
+              />
+              <SummaryItem
+                label="NPV (million USD)"
+                value={formatCurrencyValue(values.financial.npv)}
+              />
+              <SummaryItem label="IRR (%)" value={formatPercentValue(values.financial.irr)} />
+            </SummaryCard.Body>
+          </SummaryCard>
+        </div>
+      </div>
 
       <SummaryCard>
         <SummaryCard.Header title="Timeline" onEdit={() => onEditStep(2)} />

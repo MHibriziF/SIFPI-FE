@@ -89,12 +89,6 @@ export function TimelineEditor() {
             ref={el => {
               itemRefs.current[field.id] = el;
             }}
-            draggable
-            onDragStart={() => setDragIndex(index)}
-            onDragEnd={() => {
-              setDragIndex(null);
-              setOverIndex(null);
-            }}
             onDragOver={event => {
               event.preventDefault();
               if (overIndex !== index) setOverIndex(index);
@@ -109,42 +103,59 @@ export function TimelineEditor() {
             }}
             className={[
               'rounded-lg border bg-white p-4 transition-colors duration-200',
-              highlightedId === field.id ? 'border-primary bg-primary/6' : 'border-primary/10',
+              highlightedId === field.id ? 'border-primary bg-primary/6' : 'border-gray-200',
               overIndex === index && dragIndex !== null ? 'border-primary/40 bg-primary/4' : '',
             ].join(' ')}
           >
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                <GripVertical className="size-4 text-gray-400" />
-                Fase {index + 1}
-              </div>
-              <Button
+            <div className="flex items-start gap-3">
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => remove(index)}
-                disabled={fields.length === 1}
+                draggable
+                aria-label="Ubah urutan timeline"
+                onDragStart={event => {
+                  event.dataTransfer.effectAllowed = 'move';
+                  event.dataTransfer.setData('text/plain', field.id);
+                  setDragIndex(index);
+                }}
+                onDragEnd={() => {
+                  setDragIndex(null);
+                  setOverIndex(null);
+                }}
+                className="mt-2 inline-flex size-9 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-grey focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/30 active:cursor-grabbing cursor-grab"
               >
-                <Trash2 className="size-4" />
-                Hapus
-              </Button>
-            </div>
+                <GripVertical className="size-4" />
+              </button>
 
-            <div className="grid gap-3 lg:grid-cols-2">
-              <TextInput
-                label="Rentang Waktu"
-                placeholder="Contoh: 2026-2028"
-                required
-                error={errors.timelines?.[index]?.timeRange?.message}
-                {...register(`timelines.${index}.timeRange`)}
-              />
-              <TextInput
-                label="Deskripsi Fase"
-                required
-                placeholder="Contoh: Persiapan lahan dan perizinan"
-                error={errors.timelines?.[index]?.phaseDescription?.message}
-                {...register(`timelines.${index}.phaseDescription`)}
-              />
+              <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="grid flex-1 gap-3 lg:grid-cols-2">
+                  <TextInput
+                    label="Rentang Waktu"
+                    placeholder="Contoh: 2026-2028"
+                    required
+                    error={errors.timelines?.[index]?.timeRange?.message}
+                    {...register(`timelines.${index}.timeRange`)}
+                  />
+                  <TextInput
+                    label="Deskripsi Fase"
+                    required
+                    placeholder="Contoh: Persiapan lahan dan perizinan"
+                    error={errors.timelines?.[index]?.phaseDescription?.message}
+                    {...register(`timelines.${index}.phaseDescription`)}
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => remove(index)}
+                  disabled={fields.length === 1}
+                  className="self-end text-danger hover:bg-danger/8 sm:self-auto"
+                >
+                  <Trash2 className="size-4" />
+                  Hapus
+                </Button>
+              </div>
             </div>
           </div>
         ))}

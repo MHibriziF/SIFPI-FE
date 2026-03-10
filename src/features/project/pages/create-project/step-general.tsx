@@ -18,7 +18,7 @@ export function StepGeneral() {
   return (
     <div className="space-y-6">
       <SectionCard>
-        <SectionCard.Header title="Profil Dasar" description="Informasi utama proyek." />
+        <SectionCard.Header title="Profil Dasar" />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
             label="Nama Proyek"
@@ -62,7 +62,7 @@ export function StepGeneral() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Narasi Bisnis" description="Jelaskan nilai strategis proyek." />
+        <SectionCard.Header title="Narasi Bisnis" />
         <SectionCard.Body className="grid gap-4">
           <Textarea
             label="Value Proposition"
@@ -83,7 +83,7 @@ export function StepGeneral() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Kepemilikan" description="Informasi institusi pemilik dan kontak." />
+        <SectionCard.Header title="Kepemilikan" />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
             label="Institusi Pemilik"

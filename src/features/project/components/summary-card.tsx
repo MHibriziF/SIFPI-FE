@@ -10,7 +10,7 @@ function Root({ children, className }: SummaryCardRootProps) {
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]',
+        'overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm',
         className
       )}
     >
@@ -47,7 +47,7 @@ interface SummaryCardBodyProps {
 }
 
 function Body({ children, className }: SummaryCardBodyProps) {
-  return <div className={cn('border-t border-gray-200 bg-white px-6 py-6', className)}>{children}</div>;
+  return <div className={cn('border-t border-primary/10 bg-white px-6 py-5', className)}>{children}</div>;
 }
 
 export const SummaryCard = Object.assign(Root, {

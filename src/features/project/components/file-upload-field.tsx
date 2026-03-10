@@ -55,6 +55,7 @@ export function FileUploadField({
         accept={accept}
         hint={hint}
         error={typeof fileError === 'string' ? fileError : undefined}
+        className="file:bg-gray-200 file:text-primary hover:file:bg-gray-300"
         onChange={event => {
           const selectedFile = event.currentTarget.files?.[0] ?? null;
           handleFileChange(selectedFile);
