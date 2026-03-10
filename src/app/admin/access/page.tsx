@@ -1,19 +1,27 @@
 import { cookies } from 'next/headers';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { withPermission, hasPermission } from '@/shared/lib/auth-guard';
 import { UserTable } from '@/features/access/components/user-table';
 import { RoleTable } from '@/features/access/components/role-table';
 import { serverGetAdminUsers, serverGetRoles } from '@/features/access/services';
 import { BulkImportTrigger } from '@/features/user-management/components/bulk-import-trigger';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 
-export default withPermission('USER', 'READ')(async (_props, session) => {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default withPermission('USER', 'READ')(async (props: { searchParams?: SearchParams }, session) => {
+  const sp = props.searchParams ? await props.searchParams : {};
+  const page   = Math.max(0, parseInt((sp.page   as string) ?? '0',  10));
+  const size   = Math.max(1, parseInt((sp.size   as string) ?? '10', 10));
+  const role   = (sp.role   as string) ?? '';
+  const search = (sp.search as string) ?? '';
+
   const cookieStore = await cookies();
   const token = cookieStore.get('SIFPI_TOKEN')?.value ?? '';
 
-  const [roles, { users, total }] = await Promise.all([
+  const [roles, { users, total, totalPages }] = await Promise.all([
     serverGetRoles(token),
-    serverGetAdminUsers(token),
+    serverGetAdminUsers(token, { page, size, role: role || undefined, search: search || undefined }),
   ]);
 
   const canCreate = hasPermission(session, 'USER', 'CREATE');
@@ -40,8 +48,11 @@ export default withPermission('USER', 'READ')(async (_props, session) => {
         </div>
       </div>
       <UserTable
-        initialUsers={users}
+        users={users}
         totalEntries={total}
+        totalPages={totalPages}
+        currentPage={page}
+        pageSize={size}
       />
 
       {/* Role / Access Management Section */}

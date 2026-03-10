@@ -1,12 +1,12 @@
-import { apiGet, apiPatch, apiPost } from '@/shared/lib/api';
+import { apiGet, apiPatch, apiPost, apiPut } from '@/shared/lib/api';
 import type {
   UserDTO,
-  PagedResponse,
+  AdminUser,
   Role,
   CreateRoleRequest,
+  UpdateRoleRequest,
   RoleDetail,
   BatchRoleUpdateResult,
-  User,
   RoleUserItem,
   AdminUserDetail,
 } from '../types';
@@ -51,6 +51,15 @@ export async function createRole(data: CreateRoleRequest) {
   return apiPost<RoleDetail>('/api/roles', data);
 }
 
+export async function updateRole(id: string, data: UpdateRoleRequest) {
+  return apiPut<RoleDetail>(`/api/roles/${id}`, data);
+}
+
+/** Fetch a single user's detail (including their UUID id) by email. */
+export async function getUserByEmail(email: string) {
+  return apiGet<AdminUserDetail>(`/api/admin/users/${encodeURIComponent(email)}`);
+}
+
 export async function updateUserRoles(updates: { email: string; roleName: string }[]) {
   return apiPatch<BatchRoleUpdateResult>('/api/admin/users/roles', { updates });
 }
@@ -86,21 +95,29 @@ export async function updateUserStatus(email: string, isActive: boolean) {
 // ---------------------------------------------------------------------------
 
 export async function serverGetAdminUsers(
-  token: string
-): Promise<{ users: UserDTO[]; total: number }> {
+  token: string,
+  params?: { page?: number; size?: number; role?: string; search?: string },
+): Promise<{ users: AdminUser[]; total: number; totalPages: number }> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
+    const qs = new URLSearchParams();
+    if (params?.page != null) qs.set('page', String(params.page));
+    if (params?.size != null) qs.set('size', String(params.size));
+    if (params?.role)         qs.set('role', params.role);
+    if (params?.search)       qs.set('search', params.search);
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users?${qs}`;
+    const res = await fetch(url, {
       headers: { Cookie: `SIFPI_TOKEN=${token}` },
       cache: 'no-store',
     });
-    if (!res.ok) return { users: [], total: 0 };
-    const body: BaseResponse<{ content: UserDTO[]; totalElements: number }> = await res.json();
+    if (!res.ok) return { users: [], total: 0, totalPages: 0 };
+    const body: BaseResponse<{ content: AdminUser[]; totalElements: number; totalPages: number }> = await res.json();
     return {
-      users: body.data?.content ?? [],
-      total: body.data?.totalElements ?? 0,
+      users:      body.data?.content    ?? [],
+      total:      body.data?.totalElements ?? 0,
+      totalPages: body.data?.totalPages    ?? 0,
     };
   } catch {
-    return { users: [], total: 0 };
+    return { users: [], total: 0, totalPages: 0 };
   }
 }
 
@@ -118,7 +135,10 @@ export async function serverGetRoles(token: string): Promise<Role[]> {
   }
 }
 
-export async function serverGetRoleDetail(id: string, token: string): Promise<RoleDetail | null> {
+export async function serverGetRoleDetail(
+  id: string,
+  token: string,
+): Promise<RoleDetail | null> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/roles/${id}`, {
       headers: { Cookie: `SIFPI_TOKEN=${token}` },
@@ -134,7 +154,7 @@ export async function serverGetRoleDetail(id: string, token: string): Promise<Ro
 
 export async function serverGetAdminUserDetail(
   email: string,
-  token: string
+  token: string,
 ): Promise<AdminUserDetail | null> {
   try {
     const res = await fetch(
@@ -142,7 +162,7 @@ export async function serverGetAdminUserDetail(
       {
         headers: { Cookie: `SIFPI_TOKEN=${token}` },
         cache: 'no-store',
-      }
+      },
     );
     if (!res.ok) return null;
     const body: BaseResponse<AdminUserDetail> = await res.json();
@@ -154,7 +174,7 @@ export async function serverGetAdminUserDetail(
 
 export async function serverGetRoleUsers(
   id: string,
-  token: string
+  token: string,
 ): Promise<{ users: RoleUserItem[]; total: number }> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/roles/${id}/users`, {

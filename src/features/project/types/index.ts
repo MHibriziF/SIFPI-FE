@@ -108,6 +108,45 @@ export interface ProjectHistoryItemDTO {
   changedAt: string;
 }
 
+// ─── Public Catalogue Detail ─────────────────────────────────────────────
+
+export interface CatalogueTimelineDTO {
+  id: number;
+  timeRange: string;
+  phaseDescription: string;
+}
+
+export interface CatalogueProjectDetailDTO {
+  id: number;
+  ownerId: string;
+  name: string;
+  description: string;
+  sector: string;
+  location: string;
+  valueProposition: string;
+  locationImageUrl: string | null;
+  ownerInstitution: string;
+  contactPersonName: string;
+  contactPersonEmail: string;
+  contactPersonPhone: string;
+  cooperationModel: string;
+  concessionPeriod: number;
+  assetReadiness: string;
+  projectStructureImageUrl: string | null;
+  governmentSupport: string;
+  totalCapex: number;
+  totalOpex: number;
+  npv: number;
+  irr: number;
+  revenueStream: string;
+  projectFileDownloadUrl: string | null;
+  isFeasibilityStudy: boolean;
+  additionalInfo: string | null;
+  timelines: CatalogueTimelineDTO[];
+  createdAt: string;
+  editedAt: string;
+}
+
 // ─── Catalogue Export ─────────────────────────────────────────────────────
 
 export type CatalogueQuarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';

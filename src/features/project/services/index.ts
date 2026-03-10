@@ -1,6 +1,7 @@
 import { api, apiGet, apiPatch, apiPatchFile, apiPost, apiPostFile } from '@/shared/lib/api';
 import type {
   CatalogueExportRequest,
+  CatalogueProjectDetailDTO,
   CreateProjectRequest,
   ProjectDetailDTO,
   ProjectHistoryItemDTO,
@@ -350,6 +351,18 @@ export async function getProjectById(id: number): Promise<BaseResponse<ProjectDe
 
 export async function getProjectHistory(id: number): Promise<BaseResponse<ProjectHistoryItemDTO[]>> {
   return apiGet<ProjectHistoryItemDTO[]>(`/api/projects/${id}/history`);
+}
+
+// ─── Get Public Catalogue Project Detail ─────────────────────────────────────
+
+export async function getCatalogueProjectById(id: number): Promise<BaseResponse<CatalogueProjectDetailDTO>> {
+  return apiGet<CatalogueProjectDetailDTO>(`/api/catalogue/${id}`);
+}
+
+// ─── Record Project View ──────────────────────────────────────────────────────
+
+export async function recordProjectView(projectId: number): Promise<BaseResponse<void>> {
+  return apiPost<void>('/api/project-views', { projectId });
 }
 
 // ─── Admin Project Detail ───────────────────────────────────────────────────
