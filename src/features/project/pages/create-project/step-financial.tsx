@@ -18,7 +18,7 @@ export function StepFinancial() {
   return (
     <div className="space-y-5">
       <SectionCard>
-        <SectionCard.Header title="Financials & Analytics" description="Komponen finansial utama proyek." />
+        <SectionCard.Header title="Financials & Analytics" />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
             label="Total CAPEX (million USD)"
@@ -81,7 +81,7 @@ export function StepFinancial() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Additional Information" description="Informasi tambahan (opsional)." />
+        <SectionCard.Header title="Additional Information" />
         <SectionCard.Body>
           <Textarea
             label="Catatan Tambahan"

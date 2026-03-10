@@ -10,7 +10,7 @@ function Root({ children, className }: SectionCardRootProps) {
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]',
+        'overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm',
         className
       )}
     >
@@ -27,12 +27,14 @@ interface SectionCardHeaderProps {
 
 function Header({ title, description, action }: SectionCardHeaderProps) {
   return (
-    <header className="flex items-start justify-between gap-3 bg-primary px-6 py-3.5 text-white">
-      <div>
+    <header className="relative bg-primary px-6 py-3.5 text-white">
+      <div className="text-center">
         <h2 className="text-base font-bold leading-tight">{title}</h2>
         {description ? <p className="mt-1 text-xs text-white/80">{description}</p> : null}
       </div>
-      {action}
+      {action ? (
+        <div className="absolute right-6 top-1/2 -translate-y-1/2">{action}</div>
+      ) : null}
     </header>
   );
 }
@@ -43,7 +45,7 @@ interface SectionCardBodyProps {
 }
 
 function Body({ children, className }: SectionCardBodyProps) {
-  return <div className={cn('border-t border-gray-200 bg-white px-6 py-6', className)}>{children}</div>;
+  return <div className={cn('border-t border-primary/10 bg-white px-6 py-5', className)}>{children}</div>;
 }
 
 export const SectionCard = Object.assign(Root, {

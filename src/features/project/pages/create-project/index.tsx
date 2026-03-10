@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { FormProvider, useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, FolderKanban } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
@@ -69,7 +69,7 @@ export default function CreateProjectPage() {
     if (currentStep === 1) return;
     setCurrentStep((currentStep - 1) as 1 | 2 | 3 | 4);
   };
-  
+
   const submitProject = async (values: ProjectFormValues, isSubmitted: boolean) => {
     setSubmitting(true);
     try {
@@ -128,35 +128,28 @@ export default function CreateProjectPage() {
   const onSaveDraft = form.handleSubmit(async values => submitProject(values, false));
 
   return (
-    <main className="min-h-full bg-gray-50 px-4 pt-6 pb-2 md:px-6 md:pb-3">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <section className="flex items-start gap-3 px-1">
-          <div className="mt-0.5 flex size-13 shrink-0 items-center justify-center rounded-md border border-primary/15 bg-primary/8">
-            <FolderKanban className="size-8 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-medium text-primary">Manajemen Proyek</p>
-            <p className="mt-0.5 text-m text-gray-500">Kelola proyek yang diajukan</p>
-          </div>
-        </section>
+    <main className="bg-white">
+      <section className="w-full bg-grey px-4 py-5 md:px-6">
+        <div className="mx-auto max-w-4xl">
+          <p className="text-3xl font-semibold text-primary">Manajemen Proyek</p>
+          <p className="mt-1 text-base text-gray-600">Kelola proyek yang diajukan</p>
+        </div>
+      </section>
 
-        <header className="rounded-xl bg-gray-50 px-6 py-5">
-          <div>
+      <div className="px-4 py-6 pb-4 md:px-6 md:py-5 md:pb-4">
+        <div className="mx-auto max-w-4xl space-y-6">
+          <header className="px-1">
             <h1 className="text-2xl font-semibold text-primary">Buat Pengajuan Proyek Baru</h1>
             <Link
               href="/project-owner/projects"
-              className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+              className="mt-1 inline-flex items-center text-sm font-medium text-primary/90 hover:text-primary"
             >
-              <div className="flex items-center">
               <ArrowLeft className="mr-2 size-4" />
-              Kembali ke daftar proyek
-            </div>
+              Lihat semua riwayat proyek
             </Link>
-          </div>
-        </header>
+          </header>
 
-        <div className="px-2 py-1">
-          <div className="mx-auto max-w-4xl">
+          <div className="px-1">
             <ProjectSubmissionStepper
               steps={steps}
               currentStep={currentStep}
@@ -164,40 +157,40 @@ export default function CreateProjectPage() {
               onStepChange={goToStep}
             />
           </div>
-        </div>
 
-        <FormProvider {...form}>
-          <form onSubmit={onSubmit} className="space-y-6">
-            {currentStep === 4 ? (
-              <StepSummary
-                onBack={handleBack}
-                onEditStep={step => goToStep(step)}
-                onSaveDraft={() => void onSaveDraft()}
-                submitting={submitting}
-              />
-            ) : (
-              <>
-                {renderStep(currentStep)}
-                {currentStep === 1 ? (
-                  <div className="flex flex-wrap items-center justify-start gap-3">
-                    <Button type="button" onClick={() => void handleNext()}>
-                      Simpan data dan lanjutkan
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <Button type="button" variant="outlined" onClick={handleBack}>
-                      Kembali
-                    </Button>
-                    <Button type="button" onClick={() => void handleNext()}>
-                      Lanjut
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </form>
-        </FormProvider>
+          <FormProvider {...form}>
+            <form onSubmit={onSubmit} className="space-y-6">
+              {currentStep === 4 ? (
+                <StepSummary
+                  onBack={handleBack}
+                  onEditStep={step => goToStep(step)}
+                  onSaveDraft={() => void onSaveDraft()}
+                  submitting={submitting}
+                />
+              ) : (
+                <>
+                  {renderStep(currentStep)}
+                  {currentStep === 1 ? (
+                    <div className="flex flex-wrap items-center justify-start gap-3">
+                      <Button type="button" onClick={() => void handleNext()}>
+                        Simpan data dan lanjutkan
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <Button type="button" variant="outlined" onClick={handleBack}>
+                        Kembali
+                      </Button>
+                      <Button type="button" onClick={() => void handleNext()}>
+                        Lanjut
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </form>
+          </FormProvider>
+        </div>
       </div>
     </main>
   );

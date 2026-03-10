@@ -17,7 +17,7 @@ export function StepTechnical() {
   return (
     <div className="space-y-5">
       <SectionCard>
-        <SectionCard.Header title="Skema Legal" description="Model kerja sama dan masa konsesi proyek." />
+        <SectionCard.Header title="Skema Legal" />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
             label="Model Kerja Sama"
@@ -40,7 +40,7 @@ export function StepTechnical() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Status Teknis" description="Kesiapan teknis dan dukungan pemerintah." />
+        <SectionCard.Header title="Status Teknis" />
         <SectionCard.Body className="grid gap-4">
           <TextInput
             label="Kesiapan Aset"
@@ -68,10 +68,7 @@ export function StepTechnical() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header
-          title="Model Bisnis & Lampiran"
-          description="Skema pendapatan, lampiran dokumen, dan status feasibility study."
-        />
+        <SectionCard.Header title="Model Bisnis & Lampiran" />
         <SectionCard.Body className="grid gap-4">
           <Textarea
             label="Revenue Stream"
@@ -103,7 +100,7 @@ export function StepTechnical() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Timeline" description="Tambahkan fase proyek secara berurutan." />
+        <SectionCard.Header title="Timeline" />
         <SectionCard.Body>
           <TimelineEditor />
         </SectionCard.Body>
