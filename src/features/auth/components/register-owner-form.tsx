@@ -6,7 +6,7 @@ import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
-import { registerOwner, getOrCreateOrganization } from '@/features/auth/services';
+import { registerOwner } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
 import type { CreateOwnerRequest, OrganizationDTO } from '@/features/auth/types';
@@ -98,19 +98,8 @@ export default function RegisterOwnerForm({
 
     setLoading(true);
     try {
-      // Get or create organization
-      const orgResponse = await getOrCreateOrganization(formData.organisasi);
-      if (orgResponse.status !== 200) {
-        throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
-      }
-
-      // Register owner dengan organization name yang sudah distandarisasi
-      const ownerData = {
-        ...formData,
-        organisasi: orgResponse.data?.name || formData.organisasi,
-      };
-
-      await registerOwner(ownerData);
+      // Register owner - backend akan handle organisasi creation dalam transaksi
+      await registerOwner(formData);
       setFlashToast({
         type: 'success',
         title: 'Akun berhasil dibuat!',
