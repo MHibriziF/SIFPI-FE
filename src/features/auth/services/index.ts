@@ -1,5 +1,13 @@
-import { apiPost, apiPatch } from '@/shared/lib/api';
-import type { LoginRequest, AuthResponse, CreateOwnerRequest, CreateInvestorRequest, OwnerDTO, InvestorDTO } from '@/features/auth/types';
+import { apiPost, apiPatch, apiGet } from '@/shared/lib/api';
+import type {
+  LoginRequest,
+  AuthResponse,
+  CreateOwnerRequest,
+  CreateInvestorRequest,
+  OwnerDTO,
+  InvestorDTO,
+  OrganizationDTO,
+} from '@/features/auth/types';
 import type { BaseResponse } from '@/shared/types/api';
 
 export async function login(data: LoginRequest) {
@@ -37,4 +45,21 @@ export async function setPassword(request: SetPasswordRequest): Promise<BaseResp
 
 export async function updatePassword(request: UpdatePasswordRequest): Promise<BaseResponse<void>> {
   return apiPatch<void>('/api/users/password', request);
+}
+
+export async function getAllOrganizations(): Promise<BaseResponse<OrganizationDTO[]>> {
+  return apiGet<OrganizationDTO[]>('/api/auth/organizations');
+}
+
+export async function searchOrganizations(
+  searchTerm: string
+): Promise<BaseResponse<OrganizationDTO[]>> {
+  const encodedTerm = encodeURIComponent(searchTerm);
+  return apiGet<OrganizationDTO[]>(`/api/auth/organizations/search?q=${encodedTerm}`);
+}
+
+export async function getOrCreateOrganization(
+  name: string
+): Promise<BaseResponse<OrganizationDTO>> {
+  return apiPost<OrganizationDTO>('/api/auth/organizations/get-or-create', { name });
 }

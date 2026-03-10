@@ -14,7 +14,9 @@ export interface CreateExecutiveRequest {
   phone: string;
 }
 
-export async function createExecutive(request: CreateExecutiveRequest): Promise<BaseResponse<void>> {
+export async function createExecutive(
+  request: CreateExecutiveRequest
+): Promise<BaseResponse<void>> {
   return apiPost<void>('/api/register/executive', request);
 }
 

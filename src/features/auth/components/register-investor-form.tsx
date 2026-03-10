@@ -6,7 +6,7 @@ import { TextInput, Select, type SelectOption } from '@/shared/components/form-f
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
-import { registerInvestor, getOrCreateOrganization, OrganizationDTO } from '@/features/auth/service';
+import { registerInvestor, getOrCreateOrganization, OrganizationDTO } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
 import type { CreateInvestorRequest } from '@/features/auth/types';

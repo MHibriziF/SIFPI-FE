@@ -25,7 +25,7 @@ import {
   SidebarSeparator,
 } from '@/shared/components/sidebar/sidebar';
 import { NAV_CONFIGS, type NavItem, type NavKey } from '@/shared/components/sidebar/config/nav-configs';
-import { logout } from '@/features/auth/service';
+import { logout } from '@/features/auth/services';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { ApiError } from '@/shared/types/api';

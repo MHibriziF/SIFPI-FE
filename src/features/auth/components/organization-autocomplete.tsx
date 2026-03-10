@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { searchOrganizations, OrganizationDTO } from '@/features/auth/service';
+import { searchOrganizations } from '@/features/auth/services';
+import { OrganizationDTO } from '../types';
 
 interface OrganizationAutocompleteProps {
   id: string;
