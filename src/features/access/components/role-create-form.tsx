@@ -5,19 +5,16 @@ import Link from 'next/link';
 import { ChevronLeft, Search, ChevronLeft as PrevIcon, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { TextInput, Textarea, Select } from '@/shared/components/form-fields';
-import type { RoleUser } from '../types';
 import { Toast } from '@/shared/components/toast';
 import {
   useCreateRoleForm,
   PERMISSION_MODULES,
   ROLE_STATUS_OPTIONS,
+  PAGE_SIZE_OPTIONS,
 } from '../hooks/use-create-role-form';
+import { RoleConfirmModal } from './role-confirm-modal';
 
-interface RoleCreateFormProps {
-  availableUsers: RoleUser[];
-}
-
-export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
+export function RoleCreateForm() {
   const {
     // Form fields
     name,
@@ -38,19 +35,27 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
     setUserSearch,
     userRoleFilter,
     setUserRoleFilter,
-    selectedUserIds,
-    toggleUserSelection,
+    selectedEmails,
+    selectedUserDetails,
+    toggleEmailSelection,
     userPage,
     setUserPage,
-    filteredUsers,
-    paginatedUsers,
-    totalUserPages,
-    usersPerPage,
+    pageSize,
+    setPageSize,
+    users,
+    usersLoading,
+    usersTotalPages,
+    usersTotalElements,
+
+    // Confirmation modal
+    confirmModalOpen,
+    closeConfirmModal,
+    confirmSubmit,
 
     // Actions
     handleSubmit,
     goBack,
-  } = useCreateRoleForm(availableUsers);
+  } = useCreateRoleForm();
 
   const infoSectionRef = useRef<HTMLDivElement>(null);
   const permissionsSectionRef = useRef<HTMLDivElement>(null);
@@ -63,6 +68,9 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
       permissionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [errors]);
+
+  const startItem = usersTotalElements === 0 ? 0 : (userPage - 1) * pageSize + 1;
+  const endItem = Math.min(userPage * pageSize, usersTotalElements);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -209,18 +217,18 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
               type="text"
               placeholder="Cari nama atau email"
               value={userSearch}
-              onChange={(e) => { setUserSearch(e.target.value); setUserPage(1); }}
+              onChange={(e) => setUserSearch(e.target.value)}
               className="w-full pl-10 pr-3 py-2.5 text-sm text-black border border-gray-300 rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
           <select
             value={userRoleFilter}
-            onChange={(e) => { setUserRoleFilter(e.target.value); setUserPage(1); }}
+            onChange={(e) => setUserRoleFilter(e.target.value)}
             className="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
           >
             <option value="">Semua Role</option>
             <option value="ADMIN">Admin</option>
-            <option value="OWNER">Project Owner</option>
+            <option value="PROJECT_OWNER">Project Owner</option>
             <option value="INVESTOR">Investor</option>
             <option value="EXECUTIVE">Executive</option>
           </select>
@@ -233,7 +241,7 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
               <tr className="border-b border-gray-200">
                 <th className="w-10 py-3 px-4" />
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Nama User/Nama
+                  Nama
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Email
@@ -244,26 +252,35 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.length === 0 ? (
+              {usersLoading ? (
+                Array.from({ length: pageSize }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-100">
+                    <td className="py-3 px-4"><div className="size-4 bg-gray-200 rounded animate-pulse" /></td>
+                    <td className="py-3 px-4"><div className="h-4 w-32 bg-gray-200 rounded animate-pulse" /></td>
+                    <td className="py-3 px-4"><div className="h-4 w-40 bg-gray-200 rounded animate-pulse" /></td>
+                    <td className="py-3 px-4"><div className="h-4 w-24 bg-gray-200 rounded animate-pulse" /></td>
+                  </tr>
+                ))
+              ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-gray-400">
                     Tidak ada pengguna ditemukan
                   </td>
                 </tr>
               ) : (
-                paginatedUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                users.map((user) => (
+                  <tr key={user.email} className="border-b border-gray-100 hover:bg-gray-50/50">
                     <td className="py-3 px-4">
                       <input
                         type="checkbox"
-                        checked={selectedUserIds.has(user.id)}
-                        onChange={() => toggleUserSelection(user.id)}
+                        checked={selectedEmails.has(user.email)}
+                        onChange={() => toggleEmailSelection(user)}
                         className="size-4 rounded border-gray-300 accent-primary cursor-pointer"
                       />
                     </td>
-                    <td className="py-3 px-4 font-medium text-primary">{user.name}</td>
+                    <td className="py-3 px-4 font-medium text-primary">{user.nama}</td>
                     <td className="py-3 px-4 text-gray-600">{user.email}</td>
-                    <td className="py-3 px-4 text-gray-600">{user.currentRole}</td>
+                    <td className="py-3 px-4 text-gray-600">{user.role}</td>
                   </tr>
                 ))
               )}
@@ -273,16 +290,28 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-          <span>
-            Showing {filteredUsers.length === 0 ? 0 : (userPage - 1) * usersPerPage + 1}-
-            {Math.min(userPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} people
-          </span>
+          <div className="flex items-center gap-2">
+            <span>
+              {usersTotalElements === 0
+                ? 'Tidak ada data'
+                : `Showing ${startItem}-${endItem} of ${usersTotalElements} pengguna`}
+            </span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n} / halaman</option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-1">
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
-              disabled={userPage <= 1}
+              disabled={userPage <= 1 || usersLoading}
               onClick={() => setUserPage(userPage - 1)}
             >
               <PrevIcon className="size-4" />
@@ -291,7 +320,7 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
               type="button"
               variant="ghost"
               size="icon-sm"
-              disabled={userPage >= totalUserPages}
+              disabled={userPage >= usersTotalPages || usersLoading}
               onClick={() => setUserPage(userPage + 1)}
             >
               <ChevronRight className="size-4" />
@@ -302,7 +331,6 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
       </div>
 
       {/* Warning notice */}
-
       <Toast
         variant="info"
         title="Perhatian!"
@@ -325,6 +353,19 @@ export function RoleCreateForm({ availableUsers }: RoleCreateFormProps) {
           Batal/Buang Perubahan
         </Button>
       </div>
+
+      <RoleConfirmModal
+        isOpen={confirmModalOpen}
+        submitting={submitting}
+        name={name}
+        status={status}
+        description={description}
+        permissions={permissions}
+        selectedEmails={selectedEmails}
+        selectedUserDetails={selectedUserDetails}
+        onConfirm={confirmSubmit}
+        onCancel={closeConfirmModal}
+      />
     </form>
   );
 }

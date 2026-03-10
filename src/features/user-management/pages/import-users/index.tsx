@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, CheckCircle2, CircleAlert } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
-import { bulkInsertUsers } from '@/features/user-management/service';
+import { bulkInsertUsers } from '@/features/user-management/services';
 import { BulkImportTrigger } from '@/features/user-management/components/bulk-import-trigger';
 import type {
   BackendValidationError,

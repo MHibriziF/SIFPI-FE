@@ -14,7 +14,9 @@ export interface CreateExecutiveRequest {
   phone: string;
 }
 
-export async function createExecutive(request: CreateExecutiveRequest): Promise<BaseResponse<void>> {
+export async function createExecutive(
+  request: CreateExecutiveRequest
+): Promise<BaseResponse<void>> {
   return apiPost<void>('/api/register/executive', request);
 }
 
@@ -28,5 +30,5 @@ export interface UserProfile {
 }
 
 export async function getCurrentUser(): Promise<BaseResponse<UserProfile>> {
-  return apiGet<UserProfile>('/api/users/me');
+  return apiGet<UserProfile>('/api/me');
 }

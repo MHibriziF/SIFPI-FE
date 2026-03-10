@@ -1,14 +1,29 @@
-import { apiGet, apiPost } from '@/shared/lib/api';
-import type { User, Role, CreateRoleRequest, RoleDetail } from '../types';
+import { apiGet, apiPatch, apiPost } from '@/shared/lib/api';
+import type {
+  UserDTO,
+  PagedResponse,
+  Role,
+  CreateRoleRequest,
+  RoleDetail,
+  BatchRoleUpdateResult,
+} from '../types';
 
 export async function getUsers(params?: {
   search?: string;
   role?: string;
-  status?: string;
+  isVerified?: boolean;
+  isActive?: boolean;
+  organisasi?: string;
+  sortBy?: string;
+  sortDirection?: string;
   page?: number;
   size?: number;
 }) {
-  return apiGet<{ content: User[]; totalElements: number; totalPages: number }>('/users', params);
+  return apiGet<PagedResponse<UserDTO>>('/api/admin/users', params);
+}
+
+export async function updateUserRoles(updates: { email: string; roleName: string }[]) {
+  return apiPatch<BatchRoleUpdateResult>('/api/users/roles', { updates });
 }
 
 export async function getRoles() {
