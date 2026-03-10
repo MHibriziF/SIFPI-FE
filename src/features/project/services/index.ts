@@ -15,6 +15,7 @@ import type {
   AdminProjectDetailDTO,
 } from '@/features/project/types/admin-detail';
 import type { ProjectCardData } from '@/shared/components/project-card';
+import { ProjectStatus } from '@/shared/enums/project-status';
 import { BaseResponse } from '@/shared/types/api';
 
 // ─── Shared pagination types ────────────────────────────────────────────────
@@ -79,6 +80,16 @@ export async function updateProject(projectId: number, payload: UpdateProjectPay
   return apiPatchFile<ProjectResponseDTO>(`/api/projects/${projectId}`, formData);
 }
 
+/** Submit a DRAFT project for review without changing any other fields. */
+export async function submitProject(projectId: number) {
+  const formData = new FormData();
+  formData.append(
+    'data',
+    new Blob([JSON.stringify({ isSubmitted: true })], { type: 'application/json' })
+  );
+  return apiPatchFile<ProjectResponseDTO>(`/api/projects/${projectId}`, formData);
+}
+
 export async function getProjects() {
   return apiGet<ProjectListItemDTO[] | { content?: ProjectListItemDTO[]; items?: ProjectListItemDTO[] }>(
     '/api/admin/projects'
@@ -124,6 +135,8 @@ export interface GetMyProjectsParams {
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   status?: string;
+  sector?: string;
+  search?: string;
 }
 
 export async function getMyProjects(params: GetMyProjectsParams): Promise<BaseResponse<PagedProjectsResponse>> {
@@ -136,6 +149,14 @@ export async function getMyProjects(params: GetMyProjectsParams): Promise<BaseRe
 
   if (params.status) {
     queryParams.status = params.status;
+  }
+
+  if (params.sector) {
+    queryParams.sector = params.sector;
+  }
+
+  if (params.search) {
+    queryParams.search = params.search;
   }
 
   return apiGet<PagedProjectsResponse>('/api/projects/my-projects', queryParams);
@@ -195,7 +216,10 @@ export interface GetPublishedProjectsParams {
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   sector?: string;
-  location?: string; // Changed from province to match backend
+  location?: string;
+  cooperationModel?: string;
+  minBudget?: string;
+  maxBudget?: string;
   search?: string;
 }
 
@@ -232,8 +256,7 @@ export async function getPublishedProjects(params: GetPublishedProjectsParams): 
   const queryParams: Record<string, string> = {
     page: (params.page ?? 0).toString(),
     size: (params.size ?? 12).toString(),
-    sortBy: params.sortBy ?? 'createdAt',
-    sortDirection: params.sortDirection ?? 'desc',
+    sort: `${params.sortBy ?? 'createdAt'},${params.sortDirection ?? 'desc'}`,
   };
 
   if (params.sector) {
@@ -241,7 +264,19 @@ export async function getPublishedProjects(params: GetPublishedProjectsParams): 
   }
 
   if (params.location) {
-    queryParams.location = params.location; // Backend expects 'location' not 'province'
+    queryParams.location = params.location;
+  }
+
+  if (params.cooperationModel) {
+    queryParams.cooperationModel = params.cooperationModel;
+  }
+
+  if (params.minBudget) {
+    queryParams.minBudget = params.minBudget;
+  }
+
+  if (params.maxBudget) {
+    queryParams.maxBudget = params.maxBudget;
   }
 
   if (params.search && params.search.trim()) {
@@ -264,7 +299,7 @@ export async function getPublishedProjects(params: GetPublishedProjectsParams): 
       id: project.id,
       name: project.name,
       sector: project.sector,
-      status: 'TERPUBLIKASI' as const, // All public catalogue projects are published
+      status: ProjectStatus.TERPUBLIKASI, // All public catalogue projects are published
       location: project.location,
       description: project.description,
       budget: formatBudget(project.totalCapex),

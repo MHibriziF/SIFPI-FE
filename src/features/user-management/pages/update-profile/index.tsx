@@ -47,6 +47,13 @@ export default function UpdateProfilePage() {
   });
   const [errors, setErrors] = useState<ErrorState>({});
 
+  // Button is only active when all fields filled and new password matches confirmation
+  const isPasswordFormValid =
+    passwordData.currentPassword.trim().length > 0 &&
+    passwordData.newPassword.trim().length > 0 &&
+    passwordData.confirmPassword.trim().length > 0 &&
+    passwordData.newPassword === passwordData.confirmPassword;
+
   // Fetch current user data
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -210,8 +217,6 @@ export default function UpdateProfilePage() {
         confirmPassword: '',
       });
     } catch (error) {
-      console.error('Error updating password:', error);
-      
       // Handle specific error cases
       if (error instanceof ApiError) {
         const errorMessage = error.message;
@@ -386,7 +391,7 @@ export default function UpdateProfilePage() {
                 <Button
                   type="submit"
                   variant="filled"
-                  disabled={isLoadingPassword}
+                  disabled={!isPasswordFormValid || isLoadingPassword}
                   className="bg-action-submit hover:bg-action-submit/85"
                 >
                   <Save className="size-4" />

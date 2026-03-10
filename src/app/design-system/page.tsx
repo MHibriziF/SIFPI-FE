@@ -9,6 +9,7 @@ import type { ToastVariant } from '@/shared/components/toast';
 import StatusBadge from '@/shared/components/status-badge';
 import { StatCard } from '@/shared/components/stat-card';
 import { ProjectCard } from '@/shared/components/project-card';
+import { ProjectStatus } from '@/shared/enums/project-status';
 import Navbar from '@/shared/components/layout/navbar';
 import { FileEdit, Clock, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 
@@ -434,7 +435,7 @@ export default function DesignSystemPage() {
                     id: 1,
                     name: "Proyek Pembangunan Jalan Tol Jakarta-Bandung",
                     sector: "TOLL_ROAD",
-                    status: "DIAJUKAN",
+                    status: ProjectStatus.DIAJUKAN,
                     location: "Jawa Barat",
                     description: "Proyek pembangunan infrastruktur jalan tol untuk meningkatkan konektivitas antar kota dengan target penyelesaian 2 tahun.",
                     ownerName: "PT Jasa Marga",
@@ -447,7 +448,7 @@ export default function DesignSystemPage() {
                     id: 2,
                     name: "Proyek MRT Jakarta Fase 3",
                     sector: "PUBLIC_TRANSPORTATION",
-                    status: "TERVERIFIKASI",
+                    status: ProjectStatus.TERVERIFIKASI,
                     location: "DKI Jakarta",
                     description: "Pengembangan jalur MRT Jakarta untuk melayani koridor Utara-Selatan dengan teknologi modern dan ramah lingkungan.",
                     ownerName: "PT MRT Jakarta",
@@ -460,7 +461,7 @@ export default function DesignSystemPage() {
                     id: 3,
                     name: "Proyek Perumahan Rakyat Subsidi",
                     sector: "AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT",
-                    status: "DRAFT",
+                    status: ProjectStatus.DRAFT,
                     location: "Banten",
                     description: "Pembangunan perumahan subsidi untuk masyarakat berpenghasilan rendah dengan fasilitas lengkap dan akses transportasi mudah.",
                     ownerName: "Kementerian PUPR",

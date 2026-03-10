@@ -10,12 +10,13 @@ import {
   Phone,
   Info,
   Pencil,
+  Send,
 } from 'lucide-react';
 import { SectionCard } from '@/features/project/components/section-card';
 import { StatusBadge } from '@/shared/components/status-badge';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
-import { getProjectById, getProjectHistory } from '@/features/project/services';
+import { getProjectById, getProjectHistory, submitProject } from '@/features/project/services';
 import { ApiError } from '@/shared/types/api';
 import type { ProjectDetailDTO, ProjectHistoryItemDTO } from '@/features/project/types';
 import { ProjectStatus } from '@/shared/enums/project-status';
@@ -179,6 +180,7 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
   const [project, setProject] = useState<ProjectDetailDTO | null>(null);
   const [history, setHistory] = useState<ProjectHistoryItemDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -203,6 +205,24 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
       setIsLoading(false);
     }
   }, [projectId, router]);
+
+  const handleSubmit = async () => {
+    if (!project) return;
+    setIsSubmitting(true);
+    try {
+      await submitProject(project.id);
+      showToast('success', 'Proyek berhasil diajukan!', 'Status proyek telah berubah menjadi Diajukan.');
+      fetchData();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        showToast('danger', 'Gagal mengajukan proyek', err.message);
+      } else {
+        showToast('danger', 'Gagal mengajukan proyek', 'Terjadi kesalahan. Silakan coba lagi.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -235,6 +255,12 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
   const showEditButton =
     canEdit &&
     (project.status === ProjectStatus.DRAFT || project.status === ProjectStatus.PERBAIKAN_DATA);
+
+  // "Ajukan" button — only for DRAFT (first-time submission).
+  const showSubmitButton = canEdit && (
+    project.status === ProjectStatus.DRAFT ||
+    project.status === ProjectStatus.PERBAIKAN_DATA
+  );
 
   // ── Render ──────────────────────────────────────────────────────────────
 
@@ -281,6 +307,21 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
 
               {/* Action buttons */}
               <div className="flex flex-col gap-3 w-56 flex-shrink-0">
+                {showSubmitButton && (
+                  <Button
+                    variant="filled"
+                    className="w-full justify-center gap-2"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    <Send className="size-4" />
+                    {isSubmitting
+                      ? 'Mengajukan...'
+                      : project.status === ProjectStatus.PERBAIKAN_DATA
+                        ? 'Ajukan Ulang'
+                        : 'Ajukan Proyek'}
+                  </Button>
+                )}
                 {showEditButton && (
                   <Button
                     variant="filled"
@@ -364,7 +405,6 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
             <SectionCard.Header title="Strategic Narrative / Value Proposition" />
             <SectionCard.Body className="flex gap-8 items-start">
               <div className="w-48 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/projects/${projectId}/location-image`}
                   alt="Location"
@@ -387,7 +427,6 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
             <SectionCard.Header title="Project Structure" />
             <SectionCard.Body>
               <div className="rounded-xl overflow-hidden aspect-video w-full bg-gray-100 flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/projects/${projectId}/structure-image`}
                   alt="Project Structure"

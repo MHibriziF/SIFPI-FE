@@ -2,33 +2,40 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, FileEdit, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { FileEdit, Clock, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/components/button';
+import { Select, TextInput } from '@/shared/components/form-fields';
 import { ProjectCard, type ProjectCardData } from '@/shared/components/project-card';
 import { StatCard } from '@/shared/components/stat-card';
 import { showToast } from '@/shared/components/toast';
 import { getMyProjects } from '@/features/project/services';
 import { ApiError } from '@/shared/types/api';
+import {
+  ProjectStatus,
+  PROJECT_STATUS_LABELS,
+  SECTOR_OPTIONS,
+} from '@/shared/enums';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-type OwnerStatus = 'DRAFT' | 'DIAJUKAN' | 'IN_REVIEW' | 'PERBAIKAN_DATA' | 'TERVERIFIKASI' | 'TERPUBLIKASI' | '';
+type OwnerStatus = ProjectStatus | '';
 
-const SECTOR_OPTIONS = [
-  { value: '', label: 'All Sectors' },
-  { value: 'PUBLIC_TRANSPORTATION', label: 'Public Transportation' },
-  { value: 'LAND_BASED_TRANSPORT', label: 'Land Based Transport' },
-  { value: 'WASTE_MANAGEMENT', label: 'Waste Management' },
-  { value: 'TOLL_ROAD', label: 'Toll Road' },
-  { value: 'AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT', label: 'Affordable Housing' },
-  { value: 'HEALTH', label: 'Health' },
-  { value: 'WATER_RESOURCE_DRINKING_WATER_AND_IRRIGATION', label: 'Water Resource' },
-  { value: 'MARITIME', label: 'Maritime' },
-  { value: 'OIL_GAS_AND_ENERGY', label: 'Oil & Gas, Energy' },
-  { value: 'AVIATION', label: 'Aviation' },
-  { value: 'DIGITAL_AND_TELECOMMUNICATIONS', label: 'Digital & Telecom' },
-  { value: 'EDUCATION_RESEARCH_AND_DEVELOPMENT', label: 'Education & R&D' },
-  { value: 'URBAN_ECONOMICS_INFRASTRUCTURE_FACILITIES', label: 'Urban Economics' },
+/** Radix Select.Item disallows value="" — use a sentinel for "all" options */
+const ALL = '__all__';
+
+const SECTOR_FILTER_OPTIONS = [
+  { value: ALL, label: 'Semua Sektor' },
+  ...SECTOR_OPTIONS,
+];
+
+const STATUS_FILTER_OPTIONS = [
+  { value: ALL, label: 'Semua Status' },
+  ...Object.values(ProjectStatus).map(s => ({ value: s, label: PROJECT_STATUS_LABELS[s] })),
+];
+
+const SORT_OPTIONS = [
+  { value: 'desc', label: 'Terbaru' },
+  { value: 'asc', label: 'Terlama' },
 ];
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -41,11 +48,12 @@ export default function OwnerReadAllProjects() {
     status: '' as OwnerStatus,
     sector: '',
     keyword: '',
+    sortDirection: 'desc' as 'asc' | 'desc',
   });
 
   const [pagination, setPagination] = useState({
     page: 0,
-    size: 9,
+    size: 10,
     totalElements: 0,
     totalPages: 0,
   });
@@ -114,8 +122,10 @@ export default function OwnerReadAllProjects() {
         page: pagination.page,
         size: pagination.size,
         sortBy: 'createdAt',
-        sortDirection: 'desc',
+        sortDirection: filters.sortDirection,
         status: filters.status || undefined,
+        sector: filters.sector || undefined,
+        search: filters.keyword || undefined,
       });
 
       const data = response.data;
@@ -132,7 +142,7 @@ export default function OwnerReadAllProjects() {
     } finally {
       setIsLoading(false);
     }
-  }, [pagination.page, pagination.size, filters.status]);
+  }, [pagination.page, pagination.size, filters.status, filters.keyword, filters.sector, filters.sortDirection]);
 
   useEffect(() => {
     fetchProjects();
@@ -148,11 +158,6 @@ export default function OwnerReadAllProjects() {
   const handleStatusFilter = (status: OwnerStatus) => {
     setFilters((prev) => ({ ...prev, status: prev.status === status ? '' : status }));
     setPagination((prev) => ({ ...prev, page: 0 }));
-  };
-
-  const handleSearch = () => {
-    setPagination((prev) => ({ ...prev, page: 0 }));
-    fetchProjects();
   };
 
   // ── Render ──────────────────────────────────────────────────────────────
@@ -173,100 +178,73 @@ export default function OwnerReadAllProjects() {
             title="Draft"
             value={statusCounts.draft}
             variant="draft"
-            isActive={filters.status === 'DRAFT'}
-            onClick={() => handleStatusFilter('DRAFT')}
+            isActive={filters.status === ProjectStatus.DRAFT}
+            onClick={() => handleStatusFilter(ProjectStatus.DRAFT)}
           />
           <StatCard
             icon={Clock}
             title="In Review"
             value={statusCounts.submitted}
             variant="info"
-            isActive={filters.status === 'IN_REVIEW' || filters.status === 'DIAJUKAN'}
-            onClick={() => handleStatusFilter('IN_REVIEW')}
+            isActive={filters.status === ProjectStatus.IN_REVIEW || filters.status === ProjectStatus.DIAJUKAN}
+            onClick={() => handleStatusFilter(ProjectStatus.IN_REVIEW)}
           />
           <StatCard
             icon={CheckCircle}
             title="Terverifikasi"
             value={statusCounts.approved}
             variant="success"
-            isActive={filters.status === 'TERVERIFIKASI' || filters.status === 'TERPUBLIKASI'}
-            onClick={() => handleStatusFilter('TERVERIFIKASI')}
+            isActive={filters.status === ProjectStatus.TERVERIFIKASI || filters.status === ProjectStatus.TERPUBLIKASI}
+            onClick={() => handleStatusFilter(ProjectStatus.TERVERIFIKASI)}
           />
           <StatCard
             icon={AlertTriangle}
             title="Perbaikan Data"
             value={statusCounts.needsRevision}
             variant="warning"
-            isActive={filters.status === 'PERBAIKAN_DATA'}
-            onClick={() => handleStatusFilter('PERBAIKAN_DATA')}
+            isActive={filters.status === ProjectStatus.PERBAIKAN_DATA}
+            onClick={() => handleStatusFilter(ProjectStatus.PERBAIKAN_DATA)}
           />
         </div>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Keyword</label>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                placeholder="Masukkan nama proyek..."
-                value={filters.keyword}
-                onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <Button onClick={handleSearch} variant="filled" className="px-6">
-                <Search className="size-4" />
-                Search Project
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sector</label>
-              <select
-                value={filters.sector}
-                onChange={(e) => {
-                  setFilters((prev) => ({ ...prev, sector: e.target.value }));
-                  setPagination((prev) => ({ ...prev, page: 0 }));
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                {SECTOR_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option>All Locations</option>
-                <option>Jakarta</option>
-                <option>Bandung</option>
-                <option>Surabaya</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) => handleStatusFilter(e.target.value as OwnerStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">All Statuses</option>
-                <option value="DRAFT">Draft</option>
-                <option value="DIAJUKAN">Diajukan</option>
-                <option value="IN_REVIEW">In Review</option>
-                <option value="PERBAIKAN_DATA">Perbaikan Data</option>
-                <option value="TERVERIFIKASI">Terverifikasi</option>
-                <option value="TERPUBLIKASI">Terpublikasi</option>
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <TextInput
+              label="Cari Proyek"
+              placeholder="Masukkan nama proyek..."
+              value={filters.keyword}
+              onChange={(e) => {
+                setFilters((prev) => ({ ...prev, keyword: e.target.value }));
+                setPagination((prev) => ({ ...prev, page: 0 }));
+              }}
+            />
+            <Select
+              label="Sektor"
+              options={SECTOR_FILTER_OPTIONS}
+              value={filters.sector || ALL}
+              onValueChange={(val) => {
+                setFilters((prev) => ({ ...prev, sector: val === ALL ? '' : val }));
+                setPagination((prev) => ({ ...prev, page: 0 }));
+              }}
+            />
+            <Select
+              label="Status"
+              options={STATUS_FILTER_OPTIONS}
+              value={filters.status || ALL}
+              onValueChange={(val) => {
+                handleStatusFilter(val === ALL ? '' : val as OwnerStatus);
+              }}
+            />
+            <Select
+              label="Urutkan"
+              options={SORT_OPTIONS}
+              value={filters.sortDirection}
+              onValueChange={(val) => {
+                setFilters((prev) => ({ ...prev, sortDirection: val as 'asc' | 'desc' }));
+                setPagination((prev) => ({ ...prev, page: 0 }));
+              }}
+            />
           </div>
         </div>
 
@@ -278,7 +256,7 @@ export default function OwnerReadAllProjects() {
           </div>
         ) : projects.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <p className="text-gray-500 mb-4">Belum ada proyek yang dibuat</p>
+            <p className="text-gray-500 mb-4">Belum ada proyek yang diajukan</p>
             <Button asChild>
               <Link href="/project-owner/projects/create">Buat Proyek Baru</Link>
             </Button>
@@ -291,41 +269,48 @@ export default function OwnerReadAllProjects() {
                   key={project.id}
                   project={project}
                   viewDetailHref={`/project-owner/projects/${project.id}`}
+                  showSubmittedDate
                 />
               ))}
             </div>
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600">
-                  Showing {pagination.page * pagination.size + 1}-
-                  {Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of{' '}
-                  {pagination.totalElements} projects
-                </p>
-                <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <span>
+                Showing {pagination.page * pagination.size + 1}-
+                {Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of{' '}
+                {pagination.totalElements} entries
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={pagination.page <= 0}
+                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
                   <Button
-                    variant="outlined"
-                    onClick={() => setPagination((prev) => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
-                    disabled={pagination.page === 0}
-                    className="border-primary text-primary"
+                    key={i}
+                    variant={pagination.page === i ? 'filled' : 'ghost'}
+                    size="icon-sm"
+                    onClick={() => setPagination((prev) => ({ ...prev, page: i }))}
+                    className="text-xs"
                   >
-                    Previous
+                    {i + 1}
                   </Button>
-                  <span className="text-sm text-gray-600">
-                    Page {pagination.page + 1} of {pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setPagination((prev) => ({ ...prev, page: Math.min(prev.totalPages - 1, prev.page + 1) }))}
-                    disabled={pagination.page >= pagination.totalPages - 1}
-                    className="border-primary text-primary"
-                  >
-                    Next
-                  </Button>
-                </div>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={pagination.page >= pagination.totalPages - 1}
+                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
               </div>
-            )}
+            </div>
           </>
         )}
       </div>

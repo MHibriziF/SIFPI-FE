@@ -1,15 +1,16 @@
 import React from 'react';
 import Link from 'next/link';
-import { Building2, MapPin, DollarSign, ImageIcon } from 'lucide-react';
+import { Building2, MapPin, DollarSign, ImageIcon, CalendarDays, Layers } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatusBadge } from '@/shared/components/status-badge';
 import { cn } from '@/shared/lib/utils';
+import { ProjectStatus, SECTOR_LABELS, type Sector } from '@/shared/enums';
 
 export interface ProjectCardData {
   id: number;
   name: string;
   sector: string;
-  status: 'DRAFT' | 'DIAJUKAN' | 'IN_REVIEW' | 'PERBAIKAN_DATA' | 'TERVERIFIKASI' | 'TERPUBLIKASI';
+  status: ProjectStatus;
   location?: string;
   description?: string;
   isSubmitted?: boolean;
@@ -23,9 +24,11 @@ interface ProjectCardProps {
   project: ProjectCardData;
   viewDetailHref?: string;
   className?: string;
+  hideStatusBadge?: boolean;
+  showSubmittedDate?: boolean;
 }
 
-export function ProjectCard({ project, viewDetailHref, className }: ProjectCardProps) {
+export function ProjectCard({ project, viewDetailHref, className, hideStatusBadge, showSubmittedDate }: ProjectCardProps) {
   const detailLink = viewDetailHref || `/project-owner/projects/${project.id}`;
   
   // Check if image URL is valid (not null, not empty, not starting with "null/")
@@ -49,9 +52,11 @@ export function ProjectCard({ project, viewDetailHref, className }: ProjectCardP
           </div>
         )}
         {/* Status Badge Overlay */}
-        <div className="absolute top-3 right-3">
-          <StatusBadge variant={project.status} />
-        </div>
+        {!hideStatusBadge && (
+          <div className="absolute top-3 right-3">
+            <StatusBadge variant={project.status} />
+          </div>
+        )}
       </div>
 
       {/* Card Content */}
@@ -63,6 +68,12 @@ export function ProjectCard({ project, viewDetailHref, className }: ProjectCardP
 
         {/* Metadata */}
         <div className="space-y-2 text-sm text-gray-600 mb-4">
+          {project.sector && (
+            <div className="flex items-start gap-2">
+              <Layers className="size-4 shrink-0 mt-0.5" />
+              <span>{SECTOR_LABELS[project.sector as Sector] ?? project.sector}</span>
+            </div>
+          )}
           {project.ownerName && (
             <div className="flex items-start gap-2">
               <Building2 className="size-4 shrink-0 mt-0.5" />
@@ -98,6 +109,14 @@ export function ProjectCard({ project, viewDetailHref, className }: ProjectCardP
         >
           <Link href={detailLink}>View Detail</Link>
         </Button>
+
+        {/* Submitted date — small footer text */}
+        {showSubmittedDate && project.createdAt && (
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
+            <CalendarDays className="size-3.5" />
+            Dibuat pada {new Date(project.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        )}
       </div>
     </div>
   );

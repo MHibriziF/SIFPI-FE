@@ -8,7 +8,7 @@ export enum ProjectStatus {
 }
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  [ProjectStatus.DRAFT]: 'Dibuat',
+  [ProjectStatus.DRAFT]: 'Draft',
   [ProjectStatus.DIAJUKAN]: 'Diajukan',
   [ProjectStatus.IN_REVIEW]: 'In review',
   [ProjectStatus.PERBAIKAN_DATA]: 'Perbaikan data',
