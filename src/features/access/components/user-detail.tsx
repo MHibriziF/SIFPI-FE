@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, CheckCircle, Pencil, ShieldOff } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, FolderCheck, Pencil } from 'lucide-react';
 
 import { StatusBadge } from '@/shared/components/status-badge';
 import { Button } from '@/shared/components/button';
+import SuccessModal from '@/shared/components/success-modal';
+import { verifyProjectOwner, updateUserStatus } from '../services';
 import type { AdminUserDetail } from '../types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -74,39 +77,184 @@ function TextField({ label, value }: { label: string; value: string }) {
 }
 
 function AksiCard({
+  email,
+  role,
   isVerified,
+  isActive,
   canUpdate,
   canDelete,
   className = '',
 }: {
+  email: string;
+  role: string;
   isVerified: boolean;
+  isActive: boolean;
   canUpdate: boolean;
   canDelete: boolean;
   className?: string;
 }) {
+  const router = useRouter();
+  const isProjectOwner = role === 'PROJECT_OWNER';
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+
+  const [modal, setModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+  }>({ open: false, title: '', message: '' });
+
+  function closeModal() {
+    setModal((m) => ({ ...m, open: false }));
+    router.refresh();
+  }
+
+  async function handleVerify() {
+    setVerifyLoading(true);
+    try {
+      await verifyProjectOwner(email);
+      setModal({
+        open: true,
+        title: 'Persetujuan akun berhasil disetujui!',
+        message:
+          'Persetujuan akun berhasil disetujui! Pengguna akan mendapatkan bahwa pengajuan akun sudah disetujui dan dapat mengakses fitur-fitur yang ditentukan.',
+      });
+    } catch {
+      setModal({
+        open: true,
+        title: 'Verifikasi Gagal',
+        message: 'Gagal memverifikasi akun. Silakan coba lagi.',
+      });
+    } finally {
+      setVerifyLoading(false);
+    }
+  }
+
+  async function handleDeactivate() {
+    if (!confirmDeactivate) {
+      setConfirmDeactivate(true);
+      return;
+    }
+    setDeactivateLoading(true);
+    try {
+      await updateUserStatus(email, false);
+      setModal({
+        open: true,
+        title: 'Pembekuan akun berhasil!',
+        message:
+          'Akun berhasil dibekukan. Status akun bersifat tidak aktif dan pengguna tidak dapat login ke akun IPFO',
+      });
+    } catch {
+      setModal({
+        open: true,
+        title: 'Nonaktifkan Gagal',
+        message: 'Gagal menonaktifkan akses. Silakan coba lagi.',
+      });
+    } finally {
+      setDeactivateLoading(false);
+      setConfirmDeactivate(false);
+    }
+  }
+
+  async function handleReactivate() {
+    setDeactivateLoading(true);
+    try {
+      await updateUserStatus(email, true);
+      setModal({
+        open: true,
+        title: 'Akun berhasil diaktifkan!',
+        message:
+          'Akun pengguna telah diaktifkan kembali. Pengguna dapat login dan mengakses fitur IPFO.',
+      });
+    } catch {
+      setModal({
+        open: true,
+        title: 'Aktivasi Gagal',
+        message: 'Gagal mengaktifkan akses. Silakan coba lagi.',
+      });
+    } finally {
+      setDeactivateLoading(false);
+    }
+  }
+
   return (
-    <Card title="Aksi Manajemen Akun" className={className}>
-      <div className="flex flex-col gap-3">
-        {canUpdate && !isVerified && (
-          <Button className="w-full bg-success hover:bg-success/85 text-white">
-            <CheckCircle className="size-4" />
-            Verifikasi Akun
-          </Button>
-        )}
-        {canUpdate && (
-          <Button className="w-full">
-            <Pencil className="size-4" />
-            Edit Informasi
-          </Button>
-        )}
-        {canDelete && (
-          <Button className="w-full bg-danger hover:bg-danger/85 text-white">
-            <ShieldOff className="size-4" />
-            Nonaktifkan Akses
-          </Button>
-        )}
-      </div>
-    </Card>
+    <>
+      <SuccessModal
+        isOpen={modal.open}
+        title={modal.title}
+        message={modal.message}
+        actionText="OK"
+        actionHref="#"
+        onClose={closeModal}
+      />
+
+      <Card title="Aksi Manajemen Akun" className={className}>
+        <div className="flex flex-col gap-3">
+          {/* Verifikasi Akun — hanya untuk Project Owner yang belum terverifikasi dan masih aktif */}
+          {canUpdate && isProjectOwner && !isVerified && isActive && (
+            <Button
+              className="w-full bg-success hover:bg-success/85 text-white font-semibold"
+              onClick={handleVerify}
+              disabled={verifyLoading}
+            >
+              <FolderCheck className="size-4 shrink-0" />
+              {verifyLoading ? 'Memverifikasi...' : 'Verifikasi Akun'}
+            </Button>
+          )}
+
+          {/* Edit Informasi */}
+          {canUpdate && (
+            <Button className="w-full font-semibold" asChild>
+              <Link
+                href={`/admin/access/users/${encodeURIComponent(email)}/edit`}
+                className="flex items-center gap-2"
+              >
+                <Pencil className="size-4 shrink-0" />
+                Edit Informasi
+              </Link>
+            </Button>
+          )}
+
+          {/* Nonaktifkan Akses — tanpa icon */}
+          {canDelete && isActive && (
+            <Button
+              className="w-full bg-danger hover:bg-danger/85 text-white font-semibold"
+              onClick={handleDeactivate}
+              disabled={deactivateLoading}
+            >
+              {deactivateLoading
+                ? 'Menonaktifkan...'
+                : confirmDeactivate
+                  ? 'Konfirmasi Nonaktifkan?'
+                  : 'Nonaktifkan Akses'}
+            </Button>
+          )}
+
+          {/* Aktifkan kembali — tanpa icon */}
+          {canDelete && !isActive && (
+            <Button
+              className="w-full bg-success hover:bg-success/85 text-white font-semibold"
+              onClick={handleReactivate}
+              disabled={deactivateLoading}
+            >
+              {deactivateLoading ? 'Mengaktifkan...' : 'Aktifkan Akses'}
+            </Button>
+          )}
+
+          {/* Cancel konfirmasi nonaktifkan */}
+          {confirmDeactivate && (
+            <Button
+              variant="outlined"
+              className="w-full"
+              onClick={() => setConfirmDeactivate(false)}
+            >
+              Batal
+            </Button>
+          )}
+        </div>
+      </Card>
+    </>
   );
 }
 
@@ -119,9 +267,14 @@ interface UserDetailViewProps {
 }
 
 export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewProps) {
-  const isVerified = user.email_verified;
   const isProjectOwner = user.role === 'PROJECT_OWNER';
   const isInvestor = user.role === 'INVESTOR';
+
+  const isVerified = isProjectOwner
+    ? (user.owner_verified ?? false)
+    : user.email_verified;
+
+  const isActive = user.is_active ?? true;
 
   return (
     <div className="flex flex-col gap-6 pb-8">
@@ -151,7 +304,6 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
           {/* Informasi Pengguna */}
           <Card title="Informasi Pengguna" className="lg:w-[55%]">
             <div className="flex flex-col gap-4">
-              {/* Name + verification badge */}
               <div className="flex flex-wrap justify-between items-start gap-2">
                 <div className="flex flex-col gap-0.5">
                   <span className="font-semibold text-lg text-black">{user.nama}</span>
@@ -162,7 +314,6 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                 </StatusBadge>
               </div>
 
-              {/* Info chips */}
               <div className="flex flex-wrap gap-3">
                 <InfoChip label="Role" value={formatRole(user.role)} />
                 {user.phone && <InfoChip label="Phone" value={user.phone} />}
@@ -187,9 +338,7 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                       <td className="py-3 px-3 text-sm text-gray-800">{row.label}</td>
                       <td className="py-3 px-3 text-sm text-gray-600 font-semibold">{row.count}</td>
                       <td className="py-3 px-3">
-                        <Button size="xs">
-                          Lihat Detail
-                        </Button>
+                        <Button size="xs">Lihat Detail</Button>
                       </td>
                     </tr>
                   ))}
@@ -202,7 +351,6 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
           {isInvestor && (
             <Card title="Statistik Pengguna" className="flex-1">
               <div className="flex flex-col gap-4">
-                {/* Budget Range */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-primary">Budget Range</span>
@@ -215,7 +363,6 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                   </div>
                 </div>
 
-                {/* Preferensi Investasi */}
                 {user.sector_interest && user.sector_interest.length > 0 && (
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
@@ -240,16 +387,24 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
             </Card>
           )}
 
-          {/* Jabatan — EXECUTIVE only (shown in row 1 alongside Informasi Pengguna) */}
+          {/* Jabatan — EXECUTIVE only */}
           {user.role === 'EXECUTIVE' && user.jabatan && (
             <Card title="Informasi Jabatan" className="flex-1">
               <TextField label="Jabatan" value={user.jabatan} />
             </Card>
           )}
 
-          {/* Aksi Manajemen Akun — in row 1 only for roles without a row 2 */}
+          {/* Aksi Manajemen Akun — row 1 untuk non PROJECT_OWNER & non INVESTOR */}
           {!isProjectOwner && !isInvestor && (
-            <AksiCard isVerified={isVerified} canUpdate={canUpdate} canDelete={canDelete} className="lg:w-64 shrink-0" />
+            <AksiCard
+              email={user.email}
+              role={user.role}
+              isVerified={isVerified}
+              isActive={isActive}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+              className="lg:w-64 shrink-0"
+            />
           )}
         </div>
 
@@ -264,7 +419,15 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                 </div>
               </div>
             </Card>
-            <AksiCard isVerified={isVerified} canUpdate={canUpdate} canDelete={canDelete} className="lg:w-64 shrink-0" />
+            <AksiCard
+              email={user.email}
+              role={user.role}
+              isVerified={isVerified}
+              isActive={isActive}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+              className="lg:w-64 shrink-0"
+            />
           </div>
         )}
 
@@ -282,7 +445,15 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                 )}
               </div>
             </Card>
-            <AksiCard isVerified={isVerified} canUpdate={canUpdate} canDelete={canDelete} className="lg:w-64 shrink-0" />
+            <AksiCard
+              email={user.email}
+              role={user.role}
+              isVerified={isVerified}
+              isActive={isActive}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+              className="lg:w-64 shrink-0"
+            />
           </div>
         )}
       </div>

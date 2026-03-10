@@ -111,11 +111,13 @@ export default function CreateProjectPage() {
       router.push('/project-owner/projects');
     } catch (error) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
+        error instanceof ApiError && error.isForbidden
+          ? 'Akun Anda belum diverifikasi oleh admin. Silakan tunggu verifikasi sebelum dapat mengajukan proyek.'
+          : error instanceof ApiError
             ? error.message
-            : 'Gagal mengirim proyek.';
+            : error instanceof Error
+              ? error.message
+              : 'Gagal mengirim proyek.';
       showToast('danger', 'Pengajuan gagal', message);
     } finally {
       setSubmitting(false);

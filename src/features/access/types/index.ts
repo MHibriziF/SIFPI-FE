@@ -103,6 +103,9 @@ export interface AdminUserDetail {
   created_at: string;
   last_login: string;
   email_verified: boolean;
+  /** Only present for PROJECT_OWNER: true if admin has verified the account */
+  owner_verified?: boolean;
+  is_active: boolean;
 
   // PROJECT_OWNER & EXECUTIVE
   jabatan?: string;
