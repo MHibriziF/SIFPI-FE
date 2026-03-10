@@ -75,11 +75,12 @@ export interface RoleUserItem {
 export interface CreateRoleRequest {
   name: string;
   description: string;
-  status: number;
+  status: boolean;
   permissions: {
     resource: string;
     actions: string[];
   }[];
+  userEmails: string[];
 }
 
 // ─── User Detail (GET /api/admin/users/{email}) ────────────────────────────

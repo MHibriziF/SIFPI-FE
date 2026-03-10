@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { createRole, getUsers, updateUserRoles } from '../services';
+import { createRole, getUsers } from '../services';
 import { ApiError } from '@/shared/types/api';
 import { showToast } from '@/shared/components/toast';
 import type { UserDTO } from '../types';
@@ -189,40 +189,22 @@ export function useCreateRoleForm() {
       const permPayload = Object.entries(permissions)
         .filter(([, p]) => p.canAccess)
         .map(([resource, p]) => {
-          const actions: string[] = ['read'];
-          if (p.canCreate) actions.push('create');
-          if (p.canUpdate) actions.push('update');
-          if (p.canDelete) actions.push('delete');
+          const actions: string[] = ['READ'];
+          if (p.canCreate) actions.push('CREATE');
+          if (p.canUpdate) actions.push('UPDATE');
+          if (p.canDelete) actions.push('DELETE');
           return { resource, actions };
         });
 
       await createRole({
         name: name.trim(),
         description: description.trim(),
-        status: Number(status),
+        status: status === '1',
         permissions: permPayload,
+        userEmails: Array.from(selectedEmails),
       });
 
-      // Assign selected users to the new role
-      if (selectedEmails.size > 0) {
-        const updates = Array.from(selectedEmails).map(email => ({
-          email,
-          roleName: name.trim(),
-        }));
-        const roleRes = await updateUserRoles(updates);
-        const result = roleRes.data;
-        if (result.errors.length > 0) {
-          showToast(
-            'warning',
-            'Role dibuat, beberapa user gagal diassign',
-            `${result.updatedCount}/${result.totalRequested} user berhasil diassign. Gagal: ${result.errors.map(e => e.email).join(', ')}`
-          );
-        } else {
-          showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat dan ${result.updatedCount} user diassign.`);
-        }
-      } else {
-        showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat.`);
-      }
+      showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat.`);
 
       router.push('/admin/access');
     } catch (err) {
