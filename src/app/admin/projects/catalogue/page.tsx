@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Eye } from 'lucide-react';
+import { ArrowLeft, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Button } from '@/shared/components/button';
 import { Select, TextInput } from '@/shared/components/form-fields';
@@ -103,6 +103,8 @@ export default function AdminProjectsPage() {
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [page, setPage] = useState(0);
+  const perPage = 10;
 
   useEffect(() => {
     let mounted = true;
@@ -155,6 +157,12 @@ export default function AdminProjectsPage() {
       return matchName && matchSector && matchStatus;
     });
   }, [projects, search, sector, status]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(0); }, [search, sector, status]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProjects.length / perPage));
+  const paginatedProjects = filteredProjects.slice(page * perPage, (page + 1) * perPage);
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const selectedVisibleCount = filteredProjects.filter(project => selectedSet.has(project.id)).length;
@@ -296,7 +304,7 @@ export default function AdminProjectsPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredProjects.map(project => (
+                    paginatedProjects.map(project => (
                       <tr key={project.id}>
                         <td className="px-3 py-3 align-top">
                           <input
@@ -334,6 +342,44 @@ export default function AdminProjectsPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
+              <span>
+                {filteredProjects.length === 0
+                  ? '0 entries'
+                  : `Showing ${page * perPage + 1}-${Math.min((page + 1) * perPage, filteredProjects.length)} of ${filteredProjects.length} entries`}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={page <= 0}
+                  onClick={() => setPage(p => p - 1)}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <Button
+                    key={i}
+                    variant={page === i ? 'filled' : 'ghost'}
+                    size="icon-sm"
+                    onClick={() => setPage(i)}
+                    className="text-xs"
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
             </div>
           </div>
 

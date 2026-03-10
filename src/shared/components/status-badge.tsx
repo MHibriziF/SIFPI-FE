@@ -2,19 +2,11 @@
 
 import React from 'react';
 import { Circle } from 'lucide-react';
+import { ProjectStatus, PROJECT_STATUS_LABELS } from '@/shared/enums/project-status';
 
-type Variant = 
-  | 'draft' 
-  | 'submitted' 
-  | 'in-review' 
-  | 'approved' 
-  | 'rejected'
-  | 'DRAFT'
-  | 'DIAJUKAN'
-  | 'IN_REVIEW'
-  | 'PERBAIKAN_DATA'
-  | 'TERVERIFIKASI'
-  | 'TERPUBLIKASI';
+// Legacy frontend-only variants kept for backward compat (design-system page etc.)
+type LegacyVariant = 'draft' | 'submitted' | 'in-review' | 'approved' | 'rejected';
+type Variant = LegacyVariant | ProjectStatus;
 
 interface StatusBadgeProps {
   variant: Variant;
@@ -22,23 +14,25 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const VARIANT_MAP: Record<Variant, { lightBg: string; color: string; defaultLabel?: string }> = {
-  draft: { lightBg: 'bg-draft-light', color: 'text-draft', defaultLabel: 'Draft' },
-  submitted: { lightBg: 'bg-info-light', color: 'text-info', defaultLabel: 'Submitted' },
-  'in-review': { lightBg: 'bg-warning-light', color: 'text-warning', defaultLabel: 'In Review' },
-  approved: { lightBg: 'bg-success-light', color: 'text-success', defaultLabel: 'Approved' },
-  rejected: { lightBg: 'bg-danger-light', color: 'text-danger', defaultLabel: 'Rejected' },
-  // Backend status mapping
-  DRAFT: { lightBg: 'bg-draft-light', color: 'text-draft', defaultLabel: 'Draft Proyek' },
-  DIAJUKAN: { lightBg: 'bg-info-light', color: 'text-info', defaultLabel: 'Sedang Direview' },
-  IN_REVIEW: { lightBg: 'bg-warning-light', color: 'text-warning', defaultLabel: 'Sedang Direview' },
-  PERBAIKAN_DATA: { lightBg: 'bg-yellow-100', color: 'text-yellow-700', defaultLabel: 'Butuh Revisi' },
-  TERVERIFIKASI: { lightBg: 'bg-success-light', color: 'text-success', defaultLabel: 'Telah Disetujui' },
-  TERPUBLIKASI: { lightBg: 'bg-success-light', color: 'text-success', defaultLabel: 'Telah Disetujui' },
+const VARIANT_MAP: Record<Variant, { lightBg: string; color: string; defaultLabel: string }> = {
+  // ── Legacy variants (design-system only) ──────────────────────────────────
+  draft:      { lightBg: 'bg-draft-light',   color: 'text-draft',    defaultLabel: 'Draft' },
+  submitted:  { lightBg: 'bg-info-light',    color: 'text-info',     defaultLabel: 'Submitted' },
+  'in-review':{ lightBg: 'bg-warning-light', color: 'text-warning',  defaultLabel: 'In Review' },
+  approved:   { lightBg: 'bg-success-light', color: 'text-success',  defaultLabel: 'Approved' },
+  rejected:   { lightBg: 'bg-danger-light',  color: 'text-danger',   defaultLabel: 'Rejected' },
+
+  // ── Backend enum variants (canonical labels from PROJECT_STATUS_LABELS) ───
+  [ProjectStatus.DRAFT]:          { lightBg: 'bg-draft-light',   color: 'text-draft',       defaultLabel: PROJECT_STATUS_LABELS[ProjectStatus.DRAFT] },
+  [ProjectStatus.DIAJUKAN]:       { lightBg: 'bg-info-light',    color: 'text-info',        defaultLabel: PROJECT_STATUS_LABELS[ProjectStatus.DIAJUKAN] },
+  [ProjectStatus.IN_REVIEW]:      { lightBg: 'bg-warning-light', color: 'text-warning',     defaultLabel: PROJECT_STATUS_LABELS[ProjectStatus.IN_REVIEW] },
+  [ProjectStatus.PERBAIKAN_DATA]: { lightBg: 'bg-yellow-100',    color: 'text-yellow-700',  defaultLabel: PROJECT_STATUS_LABELS[ProjectStatus.PERBAIKAN_DATA] },
+  [ProjectStatus.TERVERIFIKASI]:  { lightBg: 'bg-success-light', color: 'text-success',     defaultLabel: PROJECT_STATUS_LABELS[ProjectStatus.TERVERIFIKASI] },
+  [ProjectStatus.TERPUBLIKASI]:   { lightBg: 'bg-success-light', color: 'text-success',     defaultLabel: PROJECT_STATUS_LABELS[ProjectStatus.TERPUBLIKASI] },
 };
 
 export function StatusBadge({ variant, children, className = '' }: StatusBadgeProps) {
-  const classes = VARIANT_MAP[variant] || VARIANT_MAP.draft;
+  const classes = VARIANT_MAP[variant] ?? VARIANT_MAP.draft;
 
   return (
     <span
