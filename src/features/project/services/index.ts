@@ -1,4 +1,4 @@
-import { api, apiGet, apiPatch, apiPost, apiPostFile } from '@/shared/lib/api';
+import { api, apiGet, apiPatch, apiPatchFile, apiPost, apiPostFile } from '@/shared/lib/api';
 import type {
   CatalogueExportRequest,
   CreateProjectRequest,
@@ -49,6 +49,34 @@ export async function createProject(payload: CreateProjectPayload) {
   formData.append('projectFile', payload.projectFile);
 
   return apiPostFile<ProjectResponseDTO>('/api/projects', formData);
+}
+
+// ─── Update Project (Project Owner) ─────────────────────────────────────────
+
+export interface UpdateProjectPayload {
+  data: CreateProjectRequest;
+  mapFile?: File | null;
+  projectStructureFile?: File | null;
+  projectFile?: File | null;
+}
+
+export async function updateProject(projectId: number, payload: UpdateProjectPayload) {
+  const formData = new FormData();
+  formData.append(
+    'data',
+    new Blob([JSON.stringify(payload.data)], { type: 'application/json' })
+  );
+  if (payload.mapFile) {
+    formData.append('mapFile', payload.mapFile);
+  }
+  if (payload.projectStructureFile) {
+    formData.append('projectStructureFile', payload.projectStructureFile);
+  }
+  if (payload.projectFile) {
+    formData.append('projectFile', payload.projectFile);
+  }
+
+  return apiPatchFile<ProjectResponseDTO>(`/api/projects/${projectId}`, formData);
 }
 
 export async function getProjects() {
@@ -145,7 +173,8 @@ export async function getAllProjects(params: GetAllProjectsParams): Promise<Base
     queryParams.search = params.search.trim();
   }
 
-  return apiGet<PagedProjectsResponse>('/api/admin/projects', queryParams);
+  const response = await apiGet<PagedProjectsResponse>('/api/admin/projects', queryParams);
+  return response;
 }
 
 // ─── Publish Projects (Admin) ───────────────────────────────────────────────

@@ -231,8 +231,10 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
   if (!project) return null;
 
   // Button is only shown when the user has UPDATE permission AND the project
-  // is in PERBAIKAN_DATA state (business rule: revisions only possible then).
-  const showEditButton = canEdit && project.status === ProjectStatus.PERBAIKAN_DATA;
+  // is in DRAFT or PERBAIKAN_DATA state (editable statuses).
+  const showEditButton =
+    canEdit &&
+    (project.status === ProjectStatus.DRAFT || project.status === ProjectStatus.PERBAIKAN_DATA);
 
   // ── Render ──────────────────────────────────────────────────────────────
 
@@ -287,7 +289,9 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
                   >
                     <Link href={`/project-owner/projects/${project.id}/edit`}>
                       <Pencil className="size-4" />
-                      Revisi (Edit) Proyek
+                      {project.status === ProjectStatus.PERBAIKAN_DATA
+                        ? 'Revisi (Edit) Proyek'
+                        : 'Edit Proyek'}
                     </Link>
                   </Button>
                 )}
