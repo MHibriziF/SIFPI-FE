@@ -13,4 +13,10 @@ export interface AuthResponse {
   permissions: Record<string, string[]>;
 }
 
+// Organization types
+export interface OrganizationDTO {
+  id: number;
+  name: string;
+}
+
 export * from './register';

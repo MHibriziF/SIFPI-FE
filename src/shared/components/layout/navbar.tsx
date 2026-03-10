@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/shared/components/button';
-import { logout } from '@/features/auth/service';
+import { logout } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
 import { showToast } from '@/shared/components/toast';
 

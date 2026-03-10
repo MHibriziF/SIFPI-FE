@@ -7,7 +7,7 @@ import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
-import { login } from '@/features/auth/service';
+import { login } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
 import { getRoleHome } from '@/shared/lib/role-home';
 

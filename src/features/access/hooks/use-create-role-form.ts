@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { createRole } from '../services';
+import { createRole, getUsers, updateUserRoles } from '../services';
 import { ApiError } from '@/shared/types/api';
-import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { showToast } from '@/shared/components/toast';
-import type { RoleUser } from '../types';
+import type { UserDTO } from '../types';
 
 export interface PermissionState {
   canAccess: boolean;
@@ -48,8 +47,6 @@ export const ROLE_STATUS_OPTIONS = [
   { value: '0', label: 'Draft' },
 ];
 
-const USERS_PER_PAGE = 5;
-
 function buildInitialPermissions(): Record<string, PermissionState> {
   return Object.fromEntries(
     PERMISSION_MODULES.map(m => [
@@ -59,7 +56,9 @@ function buildInitialPermissions(): Record<string, PermissionState> {
   );
 }
 
-export function useCreateRoleForm(availableUsers: RoleUser[]) {
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
+export function useCreateRoleForm() {
   const router = useRouter();
 
   const [name, setName] = useState('');
@@ -71,10 +70,63 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
   const [permissions, setPermissions] =
     useState<Record<string, PermissionState>>(buildInitialPermissions());
 
+  // User search/filter state
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
-  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [userPage, setUserPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Users fetched from BE
+  const [users, setUsers] = useState<UserDTO[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersTotalPages, setUsersTotalPages] = useState(1);
+  const [usersTotalElements, setUsersTotalElements] = useState(0);
+
+  // Selected emails + display info (persisted across pages)
+  const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
+  const [selectedUserDetails, setSelectedUserDetails] = useState<
+    Map<string, { nama: string; role: string }>
+  >(new Map());
+
+  // Confirmation modal
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+
+  // Debounced search value
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(userSearch), 400);
+    return () => clearTimeout(timer);
+  }, [userSearch]);
+
+  // Reset to page 1 when filter/search/pageSize changes
+  useEffect(() => {
+    setUserPage(1);
+  }, [debouncedSearch, userRoleFilter, pageSize]);
+
+  const fetchUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const res = await getUsers({
+        search: debouncedSearch || undefined,
+        role: userRoleFilter || undefined,
+        page: userPage - 1, // Spring Pageable is 0-indexed
+        size: pageSize,
+      });
+      setUsers(res.data.content);
+      setUsersTotalPages(res.data.totalPages);
+      setUsersTotalElements(res.data.totalElements);
+    } catch {
+      setUsers([]);
+      setUsersTotalPages(1);
+      setUsersTotalElements(0);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [debouncedSearch, userRoleFilter, userPage, pageSize]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   function togglePermission(module: string, field: keyof PermissionState) {
     setPermissions(prev => {
@@ -92,31 +144,26 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
     });
   }
 
-  function toggleUserSelection(userId: string) {
-    setSelectedUserIds(prev => {
+  function toggleEmailSelection(user: UserDTO) {
+    const { email, nama, role } = user;
+    setSelectedEmails(prev => {
       const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
+      if (next.has(email)) {
+        next.delete(email);
+        setSelectedUserDetails(d => {
+          const m = new Map(d);
+          m.delete(email);
+          return m;
+        });
+      } else {
+        next.add(email);
+        setSelectedUserDetails(d => new Map(d).set(email, { nama, role }));
+      }
       return next;
     });
   }
 
-  const filteredUsers = availableUsers.filter(u => {
-    const matchesSearch =
-      !userSearch ||
-      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearch.toLowerCase());
-    const matchesRole = !userRoleFilter || u.currentRole === userRoleFilter;
-    return matchesSearch && matchesRole;
-  });
-
-  const totalUserPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
-  const paginatedUsers = filteredUsers.slice(
-    (userPage - 1) * USERS_PER_PAGE,
-    userPage * USERS_PER_PAGE
-  );
-
-  async function handleSubmit(e: React.SubmitEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
@@ -131,6 +178,11 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
     }
 
     setErrors({});
+    setConfirmModalOpen(true);
+  }
+
+  async function confirmSubmit() {
+    setConfirmModalOpen(false);
     setSubmitting(true);
 
     try {
@@ -151,7 +203,27 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
         permissions: permPayload,
       });
 
-      showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat.`);
+      // Assign selected users to the new role
+      if (selectedEmails.size > 0) {
+        const updates = Array.from(selectedEmails).map(email => ({
+          email,
+          roleName: name.trim(),
+        }));
+        const roleRes = await updateUserRoles(updates);
+        const result = roleRes.data;
+        if (result.errors.length > 0) {
+          showToast(
+            'warning',
+            'Role dibuat, beberapa user gagal diassign',
+            `${result.updatedCount}/${result.totalRequested} user berhasil diassign. Gagal: ${result.errors.map(e => e.email).join(', ')}`
+          );
+        } else {
+          showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat dan ${result.updatedCount} user diassign.`);
+        }
+      } else {
+        showToast('success', 'Role berhasil dibuat', `Role "${name}" telah berhasil dibuat.`);
+      }
+
       router.push('/admin/access');
     } catch (err) {
       if (err instanceof ApiError) {
@@ -184,14 +256,22 @@ export function useCreateRoleForm(availableUsers: RoleUser[]) {
     setUserSearch,
     userRoleFilter,
     setUserRoleFilter,
-    selectedUserIds,
-    toggleUserSelection,
+    selectedEmails,
+    selectedUserDetails,
+    toggleEmailSelection,
     userPage,
     setUserPage,
-    filteredUsers,
-    paginatedUsers,
-    totalUserPages,
-    usersPerPage: USERS_PER_PAGE,
+    pageSize,
+    setPageSize,
+    users,
+    usersLoading,
+    usersTotalPages,
+    usersTotalElements,
+
+    // Confirmation modal
+    confirmModalOpen,
+    closeConfirmModal: () => setConfirmModalOpen(false),
+    confirmSubmit,
 
     // Actions
     handleSubmit,

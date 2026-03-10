@@ -6,10 +6,10 @@ import { TextInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
-import { registerOwner, getOrCreateOrganization, OrganizationDTO } from '@/features/auth/service';
+import { registerOwner, getOrCreateOrganization } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
-import type { CreateOwnerRequest } from '@/features/auth/types';
+import type { CreateOwnerRequest, OrganizationDTO } from '@/features/auth/types';
 
 function validateEmail(value: string): string | undefined {
   if (!value.trim()) return 'Email wajib diisi';
