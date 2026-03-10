@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Building2, MapPin, DollarSign, ImageIcon, CalendarDays, Layers } from 'lucide-react';
+import { Building2, MapPin, Landmark, ImageIcon, CalendarDays, Layers } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatusBadge } from '@/shared/components/status-badge';
 import { cn } from '@/shared/lib/utils';
@@ -16,7 +16,7 @@ export interface ProjectCardData {
   isSubmitted?: boolean;
   createdAt?: string;
   ownerName?: string;
-  budget?: string;
+  ownerInstitution?: string;
   locationImageUrl?: string;
 }
 
@@ -86,10 +86,10 @@ export function ProjectCard({ project, viewDetailHref, className, hideStatusBadg
               <span className="line-clamp-1">{project.location}</span>
             </div>
           )}
-          {project.budget && (
+          {project.ownerInstitution && (
             <div className="flex items-start gap-2">
-              <DollarSign className="size-4 shrink-0 mt-0.5" />
-              <span className="line-clamp-1">{project.budget}</span>
+              <Landmark className="size-4 shrink-0 mt-0.5" />
+              <span className="line-clamp-1">{project.ownerInstitution}</span>
             </div>
           )}
         </div>
