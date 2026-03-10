@@ -7,27 +7,17 @@ export interface User {
   status: string;
 }
 
-<<<<<<< HEAD
 export interface UserDTO {
   email: string;
   nama: string;
   organisasi: string;
   phone: string;
-=======
-/** Shape returned by GET /api/admin/users */
-export interface AdminUser {
-  email: string;
-  nama: string;
-  organisasi: string | null;
-  phone: string | null;
->>>>>>> 600d4fad89ff37d8c818c4a65f5ea750d94f1065
   role: string;
   is_verified: boolean;
   is_active: boolean;
   created_at: string;
 }
 
-<<<<<<< HEAD
 export interface PagedResponse<T> {
   content: T[];
   page: number;
@@ -44,8 +34,6 @@ export interface BatchRoleUpdateResult {
   errors: { email: string; reason: string }[];
 }
 
-=======
->>>>>>> 600d4fad89ff37d8c818c4a65f5ea750d94f1065
 export interface Role {
   id: string;
   name: string;

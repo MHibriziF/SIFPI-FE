@@ -8,6 +8,7 @@ import type {
   BatchRoleUpdateResult,
   User,
   RoleUserItem,
+  AdminUserDetail,
 } from '../types';
 import { BaseResponse } from '@/shared/types/api';
 
@@ -57,14 +58,14 @@ export async function createRole(data: CreateRoleRequest) {
 
 export async function serverGetAdminUsers(
   token: string
-): Promise<{ users: AdminUser[]; total: number }> {
+): Promise<{ users: UserDTO[]; total: number }> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
       headers: { Cookie: `SIFPI_TOKEN=${token}` },
       cache: 'no-store',
     });
     if (!res.ok) return { users: [], total: 0 };
-    const body: BaseResponse<{ content: AdminUser[]; totalElements: number }> = await res.json();
+    const body: BaseResponse<{ content: UserDTO[]; totalElements: number }> = await res.json();
     return {
       users: body.data?.content ?? [],
       total: body.data?.totalElements ?? 0,
