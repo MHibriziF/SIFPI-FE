@@ -380,7 +380,6 @@ export default function PublicationManagementPage() {
                           {project.sector?.replace(/_/g, ' ') || 'N/A'}
                         </td>
                         <td className="py-4 text-sm text-gray-600">{formatDate(project.createdAt)}</td>
-                        <td className="py-4 text-sm text-gray-900 font-medium">{project.budget || 'N/A'}</td>
                         <td className="py-4">
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
