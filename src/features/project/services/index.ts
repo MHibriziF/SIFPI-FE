@@ -2,6 +2,8 @@ import { api, apiGet, apiPatch, apiPost, apiPostFile } from '@/shared/lib/api';
 import type {
   CatalogueExportRequest,
   CreateProjectRequest,
+  ProjectDetailDTO,
+  ProjectHistoryItemDTO,
   ProjectListItemDTO,
   ProjectResponseDTO,
 } from '@/features/project/types';
@@ -147,4 +149,16 @@ export async function getAllProjects(params: GetAllProjectsParams): Promise<Base
 
 export async function publishProjects(projectIds: number[]): Promise<BaseResponse<void>> {
   return apiPatch<void>('/api/projects/publish', { projectIds });
+}
+
+// ─── Get Single Project Detail ───────────────────────────────────────────────
+
+export async function getProjectById(id: number): Promise<BaseResponse<ProjectDetailDTO>> {
+  return apiGet<ProjectDetailDTO>(`/api/projects/${id}`);
+}
+
+// ─── Get Project Status History ──────────────────────────────────────────────
+
+export async function getProjectHistory(id: number): Promise<BaseResponse<ProjectHistoryItemDTO[]>> {
+  return apiGet<ProjectHistoryItemDTO[]>(`/api/projects/${id}/history`);
 }
