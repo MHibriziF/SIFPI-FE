@@ -7,6 +7,8 @@ import type {
   OwnerDTO,
   InvestorDTO,
   OrganizationDTO,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
 } from '@/features/auth/types';
 import type { BaseResponse } from '@/shared/types/api';
 
@@ -62,4 +64,13 @@ export async function getOrCreateOrganization(
   name: string
 ): Promise<BaseResponse<OrganizationDTO>> {
   return apiPost<OrganizationDTO>('/api/auth/organizations/get-or-create', { name });
+}
+
+// Forgot / Reset password
+export async function forgotPassword(data: ForgotPasswordRequest): Promise<BaseResponse<null>> {
+  return apiPost<null>('/api/auth/forgot-password', data);
+}
+
+export async function resetPassword(data: ResetPasswordRequest): Promise<BaseResponse<null>> {
+  return apiPost<null>('/api/auth/reset-password', data);
 }

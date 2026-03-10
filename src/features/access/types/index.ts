@@ -8,6 +8,7 @@ export interface User {
 }
 
 export interface UserDTO {
+  id?: string;
   email: string;
   nama: string;
   organisasi: string;
@@ -16,6 +17,19 @@ export interface UserDTO {
   is_verified: boolean;
   is_active: boolean;
   created_at: string;
+}
+
+/** Shape returned by GET /api/admin/users */
+export interface AdminUser {
+  email: string;
+  nama: string;
+  organisasi: string | null;
+  phone: string | null;
+  role: string;
+  is_verified: boolean;
+  is_active: boolean;
+  created_at: string;
+  project_owner_is_verified: boolean | null;
 }
 
 export interface PagedResponse<T> {
@@ -68,8 +82,19 @@ export interface RoleUser {
 
 /** Shape returned by GET /api/roles/:id/users */
 export interface RoleUserItem {
+  id: string;
   email: string;
   nama: string;
+}
+
+/** Request body for PUT /api/roles/{id} (UM-15) */
+export interface UpdateRoleRequest {
+  name?: string;
+  description?: string;
+  status?: boolean;
+  permissions?: { resource: string; actions: string[] }[];
+  addUserIds?: string[];
+  removeUserIds?: string[];
 }
 
 export interface CreateRoleRequest {
@@ -120,4 +145,13 @@ export interface AdminUserDetail {
   company_info?: CompanyInfo;
   sector_interest?: string[];
   budget_range?: string;
+  preferred_investment_instrument?: string;
+  engagement_model?: string;
+  stage_preference?: string;
+  risk_appetite?: string;
+  esg_standards?: string;
+  local_presence?: string;
+  aum_size?: string;
+  opt_in_email?: boolean;
+  agree_privacy?: boolean;
 }

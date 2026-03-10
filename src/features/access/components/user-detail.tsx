@@ -351,6 +351,7 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
           {isInvestor && (
             <Card title="Statistik Pengguna" className="flex-1">
               <div className="flex flex-col gap-4">
+                {/* Budget Range */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-primary">Budget Range</span>
@@ -363,10 +364,26 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                   </div>
                 </div>
 
+                {/* AUM Size */}
+                {user.aum_size && (
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-primary">AUM Size</span>
+                      <span className="text-xs font-medium text-warning bg-warning-light px-2 py-0.5 rounded-full">
+                        Confidential
+                      </span>
+                    </div>
+                    <div className="bg-gray-100 border border-gray-400 rounded-lg px-4 py-2 text-sm text-black">
+                      {user.aum_size}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sektor Minat */}
                 {user.sector_interest && user.sector_interest.length > 0 && (
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-primary">Preferensi Investasi</span>
+                      <span className="text-sm text-primary">Sektor Minat</span>
                       <span className="text-xs font-medium text-warning bg-warning-light px-2 py-0.5 rounded-full">
                         Confidential
                       </span>
@@ -455,6 +472,60 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
               className="lg:w-64 shrink-0"
             />
           </div>
+        )}
+
+        {/* ── Row 3 — INVESTOR: Preferensi Investasi ────────────────────── */}
+        {isInvestor && (
+          <Card title="Preferensi Investasi">
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {user.preferred_investment_instrument && (
+                  <TextField label="Instrumen Investasi" value={user.preferred_investment_instrument} />
+                )}
+                {user.engagement_model && (
+                  <TextField label="Model Keterlibatan" value={user.engagement_model} />
+                )}
+                {user.stage_preference && (
+                  <TextField label="Preferensi Tahap" value={user.stage_preference} />
+                )}
+                {user.risk_appetite && (
+                  <TextField label="Tingkat Risiko" value={user.risk_appetite} />
+                )}
+                {user.esg_standards && (
+                  <TextField label="Standar ESG" value={user.esg_standards} />
+                )}
+                {user.local_presence && (
+                  <TextField label="Kehadiran Lokal" value={user.local_presence} />
+                )}
+              </div>
+
+              {/* Consent flags */}
+              {(user.opt_in_email !== undefined || user.agree_privacy !== undefined) && (
+                <div className="flex flex-wrap gap-3 pt-1 border-t border-gray-100">
+                  {user.opt_in_email !== undefined && (
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                      user.opt_in_email
+                        ? 'bg-success-light text-success'
+                        : 'bg-draft-light text-draft'
+                    }`}>
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {user.opt_in_email ? 'Opt-in Email' : 'Tidak Opt-in Email'}
+                    </span>
+                  )}
+                  {user.agree_privacy !== undefined && (
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                      user.agree_privacy
+                        ? 'bg-success-light text-success'
+                        : 'bg-danger-light text-danger'
+                    }`}>
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {user.agree_privacy ? 'Menyetujui Kebijakan Privasi' : 'Belum Menyetujui Kebijakan Privasi'}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
         )}
       </div>
     </div>

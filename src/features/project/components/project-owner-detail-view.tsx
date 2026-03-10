@@ -74,16 +74,13 @@ interface ApprovalTimelineProps {
 }
 
 function ApprovalTimeline({ currentStatus, history, createdAt }: ApprovalTimelineProps) {
-  const reachedStatuses = new Set<string>([
-    ProjectStatus.DRAFT,
-    ...history.map(h => h.status),
-  ]);
+  const currentIndex = TIMELINE_STEPS.findIndex(s => s.status === currentStatus);
 
   return (
     <div className="flex flex-col pb-1">
       {TIMELINE_STEPS.map((step, i) => {
-        const isActive = reachedStatuses.has(step.status);
-        const isCurrent = currentStatus === step.status;
+        const isPast    = i < currentIndex;
+        const isCurrent = i === currentIndex;
         const date = getStepDate(step.status, history, createdAt);
 
         return (
@@ -94,21 +91,21 @@ function ApprovalTimeline({ currentStatus, history, createdAt }: ApprovalTimelin
                 className={`size-5 rounded-full flex-shrink-0 border-2 ${
                   isCurrent
                     ? 'bg-primary border-primary'
-                    : isActive
-                      ? 'bg-success border-success'
+                    : isPast
+                      ? 'bg-success-light border-success-light'
                       : 'bg-white border-gray-300'
                 }`}
               />
               <div className="flex flex-col">
                 <span
                   className={`text-sm font-semibold ${
-                    isActive ? 'text-gray-900' : 'text-gray-400'
+                    isCurrent || isPast ? 'text-gray-900' : 'text-gray-400'
                   }`}
                 >
                   {step.label}
                 </span>
                 <span
-                  className={`text-xs ${isActive ? 'text-gray-600' : 'text-gray-400'}`}
+                  className={`text-xs ${isCurrent || isPast ? 'text-gray-600' : 'text-gray-400'}`}
                 >
                   {date ? formatDate(date) : 'Menunggu'}
                 </span>
@@ -116,7 +113,9 @@ function ApprovalTimeline({ currentStatus, history, createdAt }: ApprovalTimelin
             </div>
             {i < TIMELINE_STEPS.length - 1 && (
               <div
-                className={`ml-[9px] w-px h-6 ${isActive ? 'bg-primary' : 'bg-gray-200'}`}
+                className={`ml-[9px] w-px h-6 ${
+                  isPast ? 'bg-success-light' : 'bg-gray-200'
+                }`}
               />
             )}
           </div>
@@ -190,7 +189,7 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
         getProjectHistory(projectId),
       ]);
       setProject(projectRes.data);
-      setHistory(historyRes.data ?? []);
+      setHistory(historyRes.data);
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 404) {
