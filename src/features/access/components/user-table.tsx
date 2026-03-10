@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatusBadge } from '@/shared/components/status-badge';
-import type { AdminUser } from '../types';
+import type { UserDTO } from '../types';
 
 type BadgeVariant = 'draft' | 'submitted' | 'in-review' | 'approved' | 'rejected';
 
-function deriveStatus(user: AdminUser): { variant: BadgeVariant; label: string; key: string } {
+function deriveStatus(user: UserDTO): { variant: BadgeVariant; label: string; key: string } {
   if (user.is_active && user.is_verified)   return { variant: 'approved',  label: 'Active',    key: 'ACTIVE' };
   if (user.is_active && !user.is_verified)  return { variant: 'in-review', label: 'In Review',  key: 'IN_REVIEW' };
   if (!user.is_active && user.is_verified)  return { variant: 'draft',     label: 'Inactive',   key: 'INACTIVE' };
@@ -17,7 +17,7 @@ function deriveStatus(user: AdminUser): { variant: BadgeVariant; label: string; 
 }
 
 interface UserTableProps {
-  initialUsers: AdminUser[];
+  initialUsers: UserDTO[];
   totalEntries: number;
 }
 
