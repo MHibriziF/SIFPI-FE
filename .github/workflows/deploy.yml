@@ -3,9 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - main
-      - staging
-
+      - '**'
 jobs:
   deploy-production:
     if: ${{ github.ref == 'refs/heads/main' }}
