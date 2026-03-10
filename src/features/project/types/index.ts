@@ -87,6 +87,28 @@ export interface ProjectListItemLegacyDTO extends ProjectListItemDTO {
   ownerInstitution?: string | null;
 }
 
+// ─── Project Detail (full single-project response) ────────────────────────
+
+export interface ProjectDetailDTO extends ProjectResponseDTO {
+  ownerId: string;
+  rejectionReason: string | null;
+  createdAt: string;
+  editedAt: string;
+}
+
+// ─── Project Status History ───────────────────────────────────────────────
+
+export interface ProjectHistoryItemDTO {
+  id: number;
+  status: ProjectStatus | string;
+  changedBy: string;
+  changedByName: string;
+  notes: string | null;
+  changedAt: string;
+}
+
+// ─── Catalogue Export ─────────────────────────────────────────────────────
+
 export type CatalogueQuarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 
 export interface CatalogueExportRequest {

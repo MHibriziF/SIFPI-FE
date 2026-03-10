@@ -1,60 +1,20 @@
+import { cookies } from 'next/headers';
 import { withPermission, hasPermission } from '@/shared/lib/auth-guard';
 import { UserTable } from '@/features/access/components/user-table';
 import { RoleTable } from '@/features/access/components/role-table';
+import { serverGetAdminUsers, serverGetRoles } from '@/features/access/services';
 import { BulkImportTrigger } from '@/features/user-management/components/bulk-import-trigger';
-import type { User, Role } from '@/features/access/types';
-import Link from 'next/link';
 import { Plus } from 'lucide-react';
-
-// TODO: Replace with real API calls once backend is ready
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    name: 'Budi Santoso',
-    organization: 'PT Infrastructure Development',
-    email: 'example@gmail.com',
-    role: 'Project Owner',
-    status: 'ACTIVE',
-  },
-  {
-    id: '2',
-    name: 'Budi Santoso',
-    organization: 'Green Energy Solutions',
-    email: 'example@gmail.com',
-    role: 'Project Owner',
-    status: 'PENDING',
-  },
-  {
-    id: '3',
-    name: 'Budi Santoso',
-    organization: 'Urban Tech Indonesia',
-    email: 'example@gmail.com',
-    role: 'Investor',
-    status: 'ACTIVE',
-  },
-  {
-    id: '4',
-    name: 'Budi Santoso',
-    organization: 'Maritime Holdings Ltd',
-    email: 'example@gmail.com',
-    role: 'Project Owner',
-    status: 'REJECTED',
-  },
-];
-
-const MOCK_ROLES: Role[] = [
-  { id: '1', name: 'Admin', description: 'Keterangan role', userCount: 5 },
-  { id: '2', name: 'Executive', description: 'Keterangan role', userCount: 130 },
-  { id: '3', name: 'Project Owner', description: 'Keterangan role', userCount: 130 },
-  { id: '4', name: 'Investor', description: 'Keterangan role', userCount: 150 },
-];
+import Link from 'next/link';
 
 export default withPermission('USER', 'READ')(async (_props, session) => {
-  // TODO: Replace with real API calls:
-  // const { data: usersData } = await getUsers();
-  // const { data: rolesData } = await getRoles();
-  const users = MOCK_USERS;
-  const roles = MOCK_ROLES;
+  const cookieStore = await cookies();
+  const token = cookieStore.get('SIFPI_TOKEN')?.value ?? '';
+
+  const [roles, { users, total }] = await Promise.all([
+    serverGetRoles(token),
+    serverGetAdminUsers(token),
+  ]);
 
   const canCreate = hasPermission(session, 'USER', 'CREATE');
 
@@ -81,7 +41,7 @@ export default withPermission('USER', 'READ')(async (_props, session) => {
       </div>
       <UserTable
         initialUsers={users}
-        totalEntries={users.length}
+        totalEntries={total}
       />
 
       {/* Role / Access Management Section */}
