@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy-production:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/railwayapp/cli:latest
@@ -21,7 +21,7 @@ jobs:
         run: railway up --service=${{ secrets.SVC_ID }} --environment=production
 
   deploy-staging:
-    if: github.ref == 'refs/heads/staging'
+    if: ${{ github.ref == 'refs/heads/staging' }}
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/railwayapp/cli:latest
