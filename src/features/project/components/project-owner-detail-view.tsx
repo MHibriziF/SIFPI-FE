@@ -188,7 +188,7 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
         getProjectHistory(projectId),
       ]);
       setProject(projectRes.data);
-      setHistory(historyRes.data);
+      setHistory(historyRes.data ?? []);
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 404) {
