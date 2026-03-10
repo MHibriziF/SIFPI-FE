@@ -6,10 +6,10 @@ import { TextInput, Select, type SelectOption } from '@/shared/components/form-f
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
-import { registerInvestor, getOrCreateOrganization, OrganizationDTO } from '@/features/auth/services';
+import { registerInvestor, getOrCreateOrganization } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
-import type { CreateInvestorRequest } from '@/features/auth/types';
+import type { CreateInvestorRequest, OrganizationDTO } from '@/features/auth/types';
 import { cn } from '@/shared/lib/utils';
 
 const SECTOR_OPTIONS = [

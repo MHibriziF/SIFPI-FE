@@ -23,7 +23,7 @@ export async function getUsers(params?: {
   page?: number;
   size?: number;
 }) {
-  return apiGet<{ content: User[]; totalElements: number; totalPages: number }>(
+  return apiGet<{ content: UserDTO[]; totalElements: number; totalPages: number }>(
     '/api/admin/users',
     params
   );
