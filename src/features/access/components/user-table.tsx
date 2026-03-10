@@ -1,22 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatusBadge } from '@/shared/components/status-badge';
-import type { User } from '../types';
+import type { AdminUser } from '../types';
 
 type BadgeVariant = 'draft' | 'submitted' | 'in-review' | 'approved' | 'rejected';
 
-const STATUS_VARIANT_MAP: Record<string, { variant: BadgeVariant; label: string }> = {
-  ACTIVE: { variant: 'approved', label: 'Active' },
-  PENDING: { variant: 'in-review', label: 'In-review' },
-  INACTIVE: { variant: 'draft', label: 'Inactive' },
-  REJECTED: { variant: 'rejected', label: 'Rejected' },
-};
+function deriveStatus(user: AdminUser): { variant: BadgeVariant; label: string; key: string } {
+  if (user.is_active && user.is_verified)   return { variant: 'approved',  label: 'Active',    key: 'ACTIVE' };
+  if (user.is_active && !user.is_verified)  return { variant: 'in-review', label: 'In Review',  key: 'IN_REVIEW' };
+  if (!user.is_active && user.is_verified)  return { variant: 'draft',     label: 'Inactive',   key: 'INACTIVE' };
+  return                                           { variant: 'rejected',  label: 'Rejected',   key: 'REJECTED' };
+}
 
 interface UserTableProps {
-  initialUsers: User[];
+  initialUsers: AdminUser[];
   totalEntries: number;
 }
 
@@ -30,10 +31,11 @@ export function UserTable({ initialUsers, totalEntries }: UserTableProps) {
   const filtered = initialUsers.filter((u) => {
     const matchesSearch =
       !search ||
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = !roleFilter || u.role === roleFilter;
-    const matchesStatus = !statusFilter || u.status === statusFilter;
+      u.nama.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.organisasi ?? '').toLowerCase().includes(search.toLowerCase());
+    const matchesRole   = !roleFilter   || u.role === roleFilter;
+    const matchesStatus = !statusFilter || deriveStatus(u).key === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -60,23 +62,24 @@ export function UserTable({ initialUsers, totalEntries }: UserTableProps) {
         <select
           value={roleFilter}
           onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-          className="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="w-44 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         >
           <option value="">Semua Role</option>
           <option value="ADMIN">Admin</option>
-          <option value="OWNER">Project Owner</option>
+          <option value="PROJECT_OWNER">Project Owner</option>
           <option value="INVESTOR">Investor</option>
           <option value="EXECUTIVE">Executive</option>
         </select>
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="w-40 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="w-44 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         >
           <option value="">Semua Status</option>
           <option value="ACTIVE">Active</option>
-          <option value="PENDING">Pending</option>
+          <option value="IN_REVIEW">In Review</option>
           <option value="INACTIVE">Inactive</option>
+          <option value="REJECTED">Rejected</option>
         </select>
       </div>
 
@@ -102,18 +105,22 @@ export function UserTable({ initialUsers, totalEntries }: UserTableProps) {
               </tr>
             ) : (
               paginated.map((user) => {
-                const badge = STATUS_VARIANT_MAP[user.status] ?? STATUS_VARIANT_MAP.INACTIVE;
+                const badge = deriveStatus(user);
                 return (
-                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                    <td className="py-3 px-4 font-medium text-primary">{user.name}</td>
-                    <td className="py-3 px-4 text-gray-600">{user.organization}</td>
+                  <tr key={user.email} className="border-b border-gray-100 hover:bg-gray-50/50">
+                    <td className="py-3 px-4 font-medium text-primary">{user.nama}</td>
+                    <td className="py-3 px-4 text-gray-600">{user.organisasi ?? '-'}</td>
                     <td className="py-3 px-4 text-gray-600">{user.email}</td>
                     <td className="py-3 px-4 text-gray-600">{user.role}</td>
                     <td className="py-3 px-4">
                       <StatusBadge variant={badge.variant}>{badge.label}</StatusBadge>
                     </td>
                     <td className="py-3 px-4">
-                      <Button size="xs">Lihat Detail</Button>
+                      <Button size="xs" asChild>
+                        <Link href={`/admin/access/users/${encodeURIComponent(user.email)}`}>
+                          Lihat Detail
+                        </Link>
+                      </Button>
                     </td>
                   </tr>
                 );
