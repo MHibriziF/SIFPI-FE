@@ -439,7 +439,7 @@ export default function DesignSystemPage() {
                     location: "Jawa Barat",
                     description: "Proyek pembangunan infrastruktur jalan tol untuk meningkatkan konektivitas antar kota dengan target penyelesaian 2 tahun.",
                     ownerName: "PT Jasa Marga",
-                    budget: "Rp 5.000.000.000",
+                    ownerInstitution: "PT Jasa Marga (Persero) Tbk",
                     locationImageUrl: "https://images.unsplash.com/photo-1569163139394-de4798aa62b0?w=800&q=80"
                   }}
                 />
@@ -452,7 +452,7 @@ export default function DesignSystemPage() {
                     location: "DKI Jakarta",
                     description: "Pengembangan jalur MRT Jakarta untuk melayani koridor Utara-Selatan dengan teknologi modern dan ramah lingkungan.",
                     ownerName: "PT MRT Jakarta",
-                    budget: "Rp 15.000.000.000",
+                    ownerInstitution: "PT MRT Jakarta (Perseroda)",
                     locationImageUrl: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80"
                   }}
                 />
@@ -465,7 +465,7 @@ export default function DesignSystemPage() {
                     location: "Banten",
                     description: "Pembangunan perumahan subsidi untuk masyarakat berpenghasilan rendah dengan fasilitas lengkap dan akses transportasi mudah.",
                     ownerName: "Kementerian PUPR",
-                    budget: "Rp 3.500.000.000"
+                    ownerInstitution: "Kementerian Pekerjaan Umum dan Perumahan Rakyat"
                   }}
                 />
               </div>

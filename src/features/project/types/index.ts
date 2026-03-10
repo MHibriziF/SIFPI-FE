@@ -75,6 +75,7 @@ export interface ProjectListItemDTO {
   ownerId?: string | null;
   ownerName?: string | null;
   ownerOrganization?: string | null;
+  ownerInstitution?: string | null;
   totalCapex?: number | null;
   totalOpex?: number | null;
   createdAt?: string | null;
