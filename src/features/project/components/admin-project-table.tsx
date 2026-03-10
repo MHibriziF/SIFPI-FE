@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Eye, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { StatCard } from '@/shared/components/stat-card';
 import { showToast } from '@/shared/components/toast';
@@ -317,6 +317,7 @@ export default function AdminReadProjects() {
                         <td className="py-4">
                           <div className="flex items-center gap-2">
                             <button
+                              onClick={() => router.push(`/admin/projects/PRJ-${String(project.id).padStart(4, '0')}`)}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                               title="View"
                             >
@@ -382,13 +383,12 @@ export default function AdminReadProjects() {
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
-            <Button onClick={handleArchiveProjects} variant="outlined" className="text-red-600 border-red-300">
-              Archive projects
-            </Button>
-            <Button variant="outlined" className="border-primary text-primary">
-              Kelola publikasi proyek
-            </Button>
+        <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+            <a href="/admin/projects/publication">
+              <Button variant="outlined" className="border-2 border-primary text-primary bg-white hover:bg-blue-50 font-normal">
+                Kelola publikasi proyek
+              </Button>
+            </a>
           </div>
         </div>
       </div>

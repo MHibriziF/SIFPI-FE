@@ -11,6 +11,9 @@ import type {
   BatchUploadProjectRequest,
   BatchUploadProjectResultDTO,
 } from '@/features/project/types/import-project';
+import type {
+  AdminProjectDetailDTO,
+} from '@/features/project/types/admin-detail';
 import type { ProjectCardData } from '@/shared/components/project-card';
 import { BaseResponse } from '@/shared/types/api';
 
@@ -147,8 +150,12 @@ export async function getAllProjects(params: GetAllProjectsParams): Promise<Base
 
 // ─── Publish Projects (Admin) ───────────────────────────────────────────────
 
-export async function publishProjects(projectIds: number[]): Promise<BaseResponse<void>> {
-  return apiPatch<void>('/api/projects/publish', { projectIds });
+export async function publishProjects(projectIds: number[]): Promise<BaseResponse<number>> {
+  return apiPatch<number>('/api/admin/projects/bulk-publish', { projectIds });
+}
+
+export async function unpublishProjects(projectIds: number[]): Promise<BaseResponse<number>> {
+  return apiPatch<number>('/api/admin/projects/bulk-unpublish', { projectIds });
 }
 
 // ─── Get Published Projects (Public Catalogue) ──────────────────────────────
@@ -279,4 +286,21 @@ export async function getProjectById(id: number): Promise<BaseResponse<ProjectDe
 
 export async function getProjectHistory(id: number): Promise<BaseResponse<ProjectHistoryItemDTO[]>> {
   return apiGet<ProjectHistoryItemDTO[]>(`/api/projects/${id}/history`);
+}
+
+// ─── Admin Project Detail ───────────────────────────────────────────────────
+
+export async function getProjectDetail(projectId: number): Promise<BaseResponse<AdminProjectDetailDTO>> {
+  return apiGet<AdminProjectDetailDTO>(`/api/admin/projects/${projectId}`);
+}
+
+export async function approveProject(projectId: number): Promise<BaseResponse<ProjectResponseDTO>> {
+  return apiPatch<ProjectResponseDTO>(`/api/admin/projects/${projectId}/approve`, {});
+}
+
+export async function rejectProject(projectId: number, notes: string): Promise<BaseResponse<ProjectResponseDTO>> {
+  if (!notes || notes.length < 10 || notes.length > 500) {
+    throw new Error('Catatan wajib diisi minimal 10 karakter dan maksimal 500 karakter');
+  }
+  return apiPatch<ProjectResponseDTO>(`/api/admin/projects/${projectId}/reject`, { notes });
 }

@@ -9,6 +9,7 @@ interface SuccessModalProps {
   title: string;
   message: string;
   actionText?: string;
+  /** If omitted or set to '#', the OK button only calls onClose (no navigation). */
   actionHref?: string;
   icon?: LucideIcon;
   onClose?: () => void;
@@ -19,11 +20,23 @@ export default function SuccessModal({
   title,
   message,
   actionText = 'OK',
-  actionHref = '/login',
+  actionHref,
   icon: Icon = FolderCheck,
   onClose,
 }: SuccessModalProps) {
   if (!isOpen) return null;
+
+  // Render a plain button when there's no navigation target
+  const okButton = (
+    <Button
+      variant="outlined"
+      size="sm"
+      className="px-6 border-2"
+      onClick={onClose}
+    >
+      {actionText}
+    </Button>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/50">
@@ -47,16 +60,13 @@ export default function SuccessModal({
           <div className="flex flex-col gap-3">
             <p className="text-xs text-gray-700 leading-snug">{message}</p>
             <div>
-              <Link href={actionHref}>
-                <Button 
-                  variant="outlined" 
-                  size="sm" 
-                  className="px-6 border-2"
-                  onClick={onClose}
-                >
-                  {actionText}
-                </Button>
-              </Link>
+              {actionHref && actionHref !== '#' ? (
+                <Link href={actionHref}>
+                  {okButton}
+                </Link>
+              ) : (
+                okButton
+              )}
             </div>
           </div>
         </div>

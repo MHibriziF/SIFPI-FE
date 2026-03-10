@@ -55,6 +55,31 @@ export async function updateUserRoles(updates: { email: string; roleName: string
   return apiPatch<BatchRoleUpdateResult>('/api/admin/users/roles', { updates });
 }
 
+// ─── User Account Actions (Admin) ──────────────────────────────────────────
+
+/**
+ * Verify a Project Owner account.
+ * PATCH /api/admin/users/:email/verify
+ */
+export async function verifyProjectOwner(email: string) {
+  return apiPatch<{ email: string; verified: boolean; verifiedBy: string; verifiedAt: string }>(
+    `/api/admin/users/${encodeURIComponent(email)}/verify`,
+    {}
+  );
+}
+
+/**
+ * Update user active status (soft delete / deactivate).
+ * PATCH /api/admin/users/:email/status
+ * @param isActive - false to deactivate, true to reactivate
+ */
+export async function updateUserStatus(email: string, isActive: boolean) {
+  return apiPatch<{ email: string; active: boolean; action: string }>(
+    `/api/admin/users/${encodeURIComponent(email)}/status`,
+    { isActive }
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Server-side helpers (use raw fetch — apiGet uses axios which requires
 // document.cookie and cannot run in server components)
