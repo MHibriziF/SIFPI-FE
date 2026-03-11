@@ -359,6 +359,58 @@ export function clearBulkProjectImportDraft(): void {
   clearDraft(STORAGE_KEY);
 }
 
+export function resolveBackendErrorRow(
+  backendRow: number,
+  submittedRows: ParsedBulkProjectRow[]
+): number | null {
+  const fromOneBased = submittedRows[backendRow - 1];
+  if (fromOneBased) return fromOneBased.rowNumber;
+
+  const fromZeroBased = submittedRows[backendRow];
+  if (fromZeroBased) return fromZeroBased.rowNumber;
+
+  const direct = submittedRows.find(row => row.rowNumber === backendRow);
+  if (direct) return direct.rowNumber;
+
+  return null;
+}
+
+export function downloadImportLog(
+  processedRows: ParsedBulkProjectRow[],
+  backendMessagesByRow: Map<number, string[]>,
+  unprocessedRows: ParsedBulkProjectRow[],
+  sourceFileName: string,
+): void {
+  const escape = (s: string) => `"${s.replace(/"/g, '""')}"`;
+  const lines: string[] = [
+    ['No', 'Nama Proyek', 'Email Pemilik', 'Status', 'Keterangan'].map(escape).join(','),
+  ];
+
+  let no = 1;
+  for (const row of processedRows) {
+    const errors = backendMessagesByRow.get(row.rowNumber);
+    const status = errors ? 'Gagal' : 'Berhasil';
+    const note = errors ? errors.join('; ') : '';
+    lines.push([String(no++), row.dto.name, row.dto.ownerEmail, status, note].map(escape).join(','));
+  }
+  for (const row of unprocessedRows) {
+    lines.push(
+      [String(no++), row.dto.name, row.dto.ownerEmail, 'Tidak diproses', 'Koneksi terputus sebelum baris ini dikirim']
+        .map(escape)
+        .join(',')
+    );
+  }
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const base = sourceFileName.replace(/\.[^/.]+$/, '');
+  a.download = `import-log_${base}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function buildProjectTemplateCsv(): string {
   return [
     'ownerEmail',

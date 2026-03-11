@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { CircleAlert, Upload } from 'lucide-react';
+import { CircleAlert, Loader2, Upload } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
@@ -12,6 +12,10 @@ import {
   parseAndValidateBulkProjectFile,
   saveBulkProjectImportDraft,
 } from '@/features/project/utils/csv';
+import {
+  getImportProgressState,
+  subscribeImportProgress,
+} from '@/features/project/store/import-progress-store';
 import { cn } from '@/shared/lib/utils';
 
 interface BulkImportProjectTriggerProps {
@@ -35,6 +39,27 @@ export function BulkImportProjectTrigger({
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isParsing, setIsParsing] = useState(false);
+
+  const importProgress = useSyncExternalStore(
+    subscribeImportProgress,
+    getImportProgressState,
+    () => null
+  );
+  const isImportRunning = importProgress?.status === 'running';
+
+  // When an import is running, show a "Lihat Progress" button instead
+  if (isImportRunning && redirectPath !== null) {
+    return (
+      <Button
+        variant={buttonVariant}
+        className={className}
+        onClick={() => router.push('/admin/projects/import')}
+      >
+        <Loader2 className="size-4 animate-spin" />
+        Lihat Progress ({importProgress.done}/{importProgress.total})
+      </Button>
+    );
+  }
 
   const selectedFileLabel = useMemo(
     () => selectedFile?.name ?? 'Tidak ada file yang dipilih',
