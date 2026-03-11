@@ -6,6 +6,8 @@ import { Button } from '@/shared/components/button';
 import { TextInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getMyProfile, updateOwnerProfile } from '@/features/user-management/services';
+import { getOrCreateOrganization } from '@/features/auth/services';
+import { OrganizationAutocomplete } from '@/features/auth/components/organization-autocomplete';
 import { updatePassword } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
 import type { UpdateProjectOwnerProfileRequest } from '@/features/user-management/types';
@@ -56,8 +58,8 @@ function validatePhone(value: string): string | undefined {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border border-grey rounded-[20px] overflow-hidden bg-white">
-      <div className="bg-primary px-4 py-3 flex justify-center items-center">
+    <div className="border border-grey rounded-[20px] bg-white">
+      <div className="bg-primary px-4 py-3 flex justify-center items-center rounded-t-[20px]">
         <span className="font-bold text-xl text-white">{title}</span>
       </div>
       {children}
@@ -176,6 +178,15 @@ export default function UpdateOwnerProfileForm() {
 
     setIsSubmitting(true);
     try {
+      // Normalize organisation name via get-or-create
+      if (formData.institution_name.trim()) {
+        const orgResponse = await getOrCreateOrganization(formData.institution_name.trim());
+        if (orgResponse.status !== 200) {
+          throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
+        }
+        payload.institution_name = orgResponse.data?.name || formData.institution_name.trim();
+      }
+
       await updateOwnerProfile(payload);
       setOriginalData(formData);
       showToast('success', 'Profil berhasil diperbarui!', 'Data profil Anda telah disimpan.');
@@ -378,13 +389,12 @@ export default function UpdateOwnerProfileForm() {
 
               {/* Nama organisasi + Posisi row */}
               <div className="grid grid-cols-2 gap-5">
-                <TextInput
+                <OrganizationAutocomplete
                   id="institution_name"
-                  label="Nama organisasi"
-                  placeholder="e.g. PT Maju Bersama"
+                  label="Organisasi / Instansi"
+                  placeholder="Cari atau tambah organisasi..."
                   value={formData.institution_name}
-                  onChange={e => handleChange('institution_name', e.target.value)}
-                  disabled={isSubmitting}
+                  onChange={v => handleChange('institution_name', v)}
                 />
                 <TextInput
                   id="position"
