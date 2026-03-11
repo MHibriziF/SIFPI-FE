@@ -7,7 +7,8 @@ import { Button } from '@/shared/components/button';
 import { TextInput, Select, type SelectOption } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getMyProfile, updateInvestorProfile } from '@/features/user-management/services';
-import { updatePassword } from '@/features/auth/services';
+import { updatePassword, getOrCreateOrganization } from '@/features/auth/services';
+import { OrganizationAutocomplete } from '@/features/auth/components/organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
 import type { UpdateInvestorProfileRequest } from '@/features/user-management/types';
 
@@ -276,6 +277,15 @@ export default function UpdateInvestorProfileForm() {
 
     setIsSubmitting(true);
     try {
+      // Normalize organisation name via get-or-create
+      if (formData.company_name.trim()) {
+        const orgResponse = await getOrCreateOrganization(formData.company_name.trim());
+        if (orgResponse.status !== 200) {
+          throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
+        }
+        payload.company_name = orgResponse.data?.name || formData.company_name.trim();
+      }
+
       await updateInvestorProfile(payload);
       setOriginalData(formData);
       showToast('success', 'Profil berhasil diperbarui!', 'Data profil Anda telah disimpan.');
@@ -423,9 +433,9 @@ export default function UpdateInvestorProfileForm() {
   return (
     <div className="flex gap-5 items-start">
       {/* ── LEFT: Informasi Profil ── */}
-      <div className="flex-1 bg-white rounded-[20px] border border-grey overflow-hidden">
+      <div className="flex-1 bg-white rounded-[20px] border border-grey">
         {/* Card header */}
-        <div className="bg-primary px-4 py-3 flex justify-center items-center">
+        <div className="bg-primary px-4 py-3 flex justify-center items-center rounded-t-[20px]">
           <span className="font-bold text-xl text-white">Informasi Profil</span>
         </div>
 
@@ -469,13 +479,12 @@ export default function UpdateInvestorProfileForm() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TextInput
+            <OrganizationAutocomplete
               id="company_name"
-              label="Perusahaan / Instansi"
-              placeholder="Nama perusahaan"
+              label="Organisasi / Instansi"
+              placeholder="Cari atau tambah organisasi..."
               value={formData.company_name}
-              onChange={e => handleChange('company_name', e.target.value)}
-              disabled={isSubmitting}
+              onChange={v => handleChange('company_name', v)}
             />
             <TextInput
               id="jabatan"
