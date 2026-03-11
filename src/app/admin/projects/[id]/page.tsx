@@ -81,7 +81,22 @@ export default function ProjectDetailPage() {
         setLoading(true);
         setError(null);
         const res = await getProjectDetail(projectId);
-        res.data ? setProject(res.data) : setError(res.message || 'Gagal memuat detail proyek');
+        if (res.data) {
+          // Cache busting untuk file/image — force browser load file terbaru
+          const timestamp = `?t=${Date.now()}`;
+          if (res.data.locationImageUrl) {
+            res.data.locationImageUrl += timestamp;
+          }
+          if (res.data.projectStructureImageUrl) {
+            res.data.projectStructureImageUrl += timestamp;
+          }
+          if (res.data.projectFileDownloadUrl) {
+            res.data.projectFileDownloadUrl += timestamp;
+          }
+          setProject(res.data);
+        } else {
+          setError(res.message || 'Gagal memuat detail proyek');
+        }
       } catch (err) {
         setError((err as ApiError).message || 'Terjadi kesalahan');
       } finally {
@@ -96,6 +111,25 @@ export default function ProjectDetailPage() {
       setIsVerifying(true);
       const res = await approveProject(projectId);
       if (res.data) {
+        // Refresh data sebelum redirect
+        const updatedRes = await getProjectDetail(projectId);
+        
+        // Cache busting untuk file/image - tambah timestamp query param
+        if (updatedRes.data) {
+          const timestamp = `?t=${Date.now()}`;
+          if (updatedRes.data.locationImageUrl) {
+            updatedRes.data.locationImageUrl += timestamp;
+          }
+          if (updatedRes.data.projectStructureImageUrl) {
+            updatedRes.data.projectStructureImageUrl += timestamp;
+          }
+          if (updatedRes.data.projectFileDownloadUrl) {
+            updatedRes.data.projectFileDownloadUrl += timestamp;
+          }
+        }
+        
+        setProject(updatedRes.data);
+        
         showNotification('success', 'Berhasil', 'Proyek telah diverifikasi');
         setTimeout(() => router.push('/admin/projects'), 1500);
       } else {
@@ -117,6 +151,25 @@ export default function ProjectDetailPage() {
       setIsRejecting(true);
       const res = await rejectProject(projectId, rejectionNotes);
       if (res.data) {
+        // Refresh data sebelum redirect
+        const updatedRes = await getProjectDetail(projectId);
+        
+        // Cache busting untuk file/image - tambah timestamp query param
+        if (updatedRes.data) {
+          const timestamp = `?t=${Date.now()}`;
+          if (updatedRes.data.locationImageUrl) {
+            updatedRes.data.locationImageUrl += timestamp;
+          }
+          if (updatedRes.data.projectStructureImageUrl) {
+            updatedRes.data.projectStructureImageUrl += timestamp;
+          }
+          if (updatedRes.data.projectFileDownloadUrl) {
+            updatedRes.data.projectFileDownloadUrl += timestamp;
+          }
+        }
+        
+        setProject(updatedRes.data);
+        
         showNotification('success', 'Berhasil', 'Proyek telah ditolak');
         setTimeout(() => router.push('/admin/projects'), 1500);
       } else {
