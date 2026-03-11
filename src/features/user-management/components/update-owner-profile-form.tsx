@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/button';
 import { TextInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getMyProfile, updateOwnerProfile } from '@/features/user-management/services';
+import { updatePassword } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
 import type { UpdateProjectOwnerProfileRequest } from '@/features/user-management/types';
 
@@ -23,6 +24,18 @@ interface FormErrors {
   name?: string;
   email?: string;
   phone_number?: string;
+}
+
+interface PasswordData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+interface PasswordErrors {
+  currentPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
 }
 
 // ─── Validation helpers ───────────────────────────────────────────────────────
@@ -80,6 +93,22 @@ export default function UpdateOwnerProfileForm() {
   const [originalData, setOriginalData] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
 
+  // ── Password state ───────────────────────────────────────────────────────────
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState<PasswordData>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordErrors, setPasswordErrors] = useState<PasswordErrors>({});
+
+  // Button is only active when all fields filled and new password matches confirmation
+  const isPasswordFormValid =
+    passwordData.currentPassword.trim().length > 0 &&
+    passwordData.newPassword.trim().length > 0 &&
+    passwordData.confirmPassword.trim().length > 0 &&
+    passwordData.newPassword === passwordData.confirmPassword;
+
   // Pre-fill from GET /api/users/profile
   useEffect(() => {
     const fetchProfile = async () => {
@@ -132,8 +161,7 @@ export default function UpdateOwnerProfileForm() {
 
   // ── Submit ────────────────────────────────────────────────────────────────────
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     if (!validate()) return;
 
     const payload: UpdateProjectOwnerProfileRequest = {
@@ -172,6 +200,99 @@ export default function UpdateOwnerProfileForm() {
     setErrors({});
   }
 
+  // ── Password field helpers ───────────────────────────────────────────────────
+
+  const handlePasswordChange = (field: keyof PasswordData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordData((prev) => ({ ...prev, [field]: e.target.value }));
+    setPasswordErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  // ── Password validation ──────────────────────────────────────────────────────
+
+  function validatePasswordForm(): boolean {
+    const newErrors: PasswordErrors = {};
+
+    if (!passwordData.currentPassword) {
+      newErrors.currentPassword = 'Password saat ini wajib diisi';
+    }
+
+    if (!passwordData.newPassword) {
+      newErrors.newPassword = 'Password baru wajib diisi';
+    } else if (passwordData.newPassword.length < 8) {
+      newErrors.newPassword = 'Password baru minimal 8 karakter';
+    }
+
+    if (!passwordData.confirmPassword) {
+      newErrors.confirmPassword = 'Konfirmasi password wajib diisi';
+    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = 'Konfirmasi password tidak sama dengan password baru';
+    }
+
+    if (passwordData.currentPassword && passwordData.newPassword &&
+        passwordData.currentPassword === passwordData.newPassword) {
+      newErrors.newPassword = 'Password baru tidak boleh sama dengan password lama';
+    }
+
+    setPasswordErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  // ── Password submit ──────────────────────────────────────────────────────────
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!validatePasswordForm()) return;
+
+    setIsSubmittingPassword(true);
+    try {
+      await updatePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
+      });
+
+      showToast('success', 'Password berhasil diubah!', 'Password Anda telah diperbarui.');
+
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setPasswordErrors({});
+    } catch (error) {
+      if (error instanceof ApiError) {
+        const errorMessage = error.message;
+
+        if (errorMessage.includes('Password saat ini salah')) {
+          setPasswordErrors(prev => ({ ...prev, currentPassword: errorMessage }));
+        } else if (errorMessage.includes('Password baru tidak boleh sama')) {
+          setPasswordErrors(prev => ({ ...prev, newPassword: errorMessage }));
+        } else {
+          showToast('danger', 'Gagal mengubah password', errorMessage);
+        }
+      } else {
+        showToast('danger', 'Gagal mengubah password', 'Terjadi kesalahan. Silakan coba lagi.');
+      }
+    } finally {
+      setIsSubmittingPassword(false);
+    }
+  }
+
+  // ── Password cancel ──────────────────────────────────────────────────────────
+
+  function handleCancelPassword() {
+    if (Object.values(passwordData).some((val) => val)) {
+      const confirmed = confirm('Perubahan belum disimpan. Yakin ingin membatalkan?');
+      if (!confirmed) return;
+    }
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setPasswordErrors({});
+  }
+
   // ── Loading skeleton ──────────────────────────────────────────────────────────
 
   if (isFetching) {
@@ -206,7 +327,7 @@ export default function UpdateOwnerProfileForm() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <form onSubmit={handleSubmit}>
+    <div>
       <div className="flex gap-5 items-start">
         {/* ── LEFT: Informasi Profil ── */}
         <div className="flex-1 flex flex-col gap-5 min-w-0">
@@ -280,7 +401,8 @@ export default function UpdateOwnerProfileForm() {
           {/* Action buttons outside/below the card — matching Figma layout */}
           <div className="flex gap-5">
             <Button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={isSubmitting}
               className="bg-action-submit hover:bg-action-submit/85"
             >
@@ -300,59 +422,68 @@ export default function UpdateOwnerProfileForm() {
           </div>
         </div>
 
-        {/* ── RIGHT: Ubah Password (dummy) ── */}
+        {/* ── RIGHT: Ubah Password ── */}
         <div className="w-[440px] shrink-0">
           <Card title="Ubah Password">
-            <div className="p-8 flex flex-col gap-5">
+            <form onSubmit={handlePasswordSubmit} className="p-8 flex flex-col gap-5">
               <TextInput
                 id="currentPassword"
                 label="Password Lama"
                 type="password"
                 placeholder="••••••••"
-                disabled
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange('currentPassword')}
+                error={passwordErrors.currentPassword}
+                required
+                disabled={isSubmittingPassword}
               />
               <TextInput
                 id="newPassword"
                 label="Password Baru"
                 type="password"
                 placeholder="Minimal 8 Karakter"
-                disabled
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange('newPassword')}
+                error={passwordErrors.newPassword}
+                required
+                disabled={isSubmittingPassword}
               />
               <TextInput
                 id="confirmPassword"
                 label="Konfirmasi Password Baru"
                 type="password"
                 placeholder="Ulangi Password"
-                disabled
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange('confirmPassword')}
+                error={passwordErrors.confirmPassword}
+                required
+                disabled={isSubmittingPassword}
               />
 
               <div className="flex gap-5">
                 <Button
-                  type="button"
-                  disabled
+                  type="submit"
+                  disabled={!isPasswordFormValid || isSubmittingPassword}
                   className="bg-action-submit hover:bg-action-submit/85"
                 >
                   <Save className="size-4" />
-                  Ubah Password
+                  {isSubmittingPassword ? 'Mengubah...' : 'Ubah Password'}
                 </Button>
                 <Button
                   type="button"
                   variant="outlined"
-                  disabled
-                  className="border-danger text-danger"
+                  onClick={handleCancelPassword}
+                  disabled={isSubmittingPassword}
+                  className="border-danger text-danger hover:bg-danger/8"
                 >
                   <X className="size-4" />
                   Batalkan
                 </Button>
               </div>
-
-              <p className="text-xs text-gray-400 text-center">
-                Fitur ubah password akan segera tersedia.
-              </p>
-            </div>
+            </form>
           </Card>
         </div>
       </div>
-    </form>
+    </div>
   );
 }
