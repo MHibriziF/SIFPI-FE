@@ -168,14 +168,19 @@ export default function ImportProjectPage() {
       return;
     }
 
-    if (backendMessagesByRow.size > 0) {
-      setRows(prev =>
-        prev.map(row => {
-          const deduped = backendMessagesByRow.get(row.rowNumber);
-          if (!deduped || deduped.length === 0) return row;
+    // Deselect all processed rows: mark failed ones with errors, mark successful ones as imported
+    const processedRowNumbers = new Set(processedRows.map(r => r.rowNumber));
+    setRows(prev =>
+      prev.map(row => {
+        if (!processedRowNumbers.has(row.rowNumber)) return row;
+        const deduped = backendMessagesByRow.get(row.rowNumber);
+        if (deduped && deduped.length > 0) {
           return { ...row, errors: [...new Set([...row.errors, ...deduped])], selected: false };
-        })
-      );
+        }
+        return { ...row, errors: ['Sudah berhasil diimpor.'], selected: false };
+      })
+    );
+    if (backendMessagesByRow.size > 0) {
       downloadImportLog(processedRows, backendMessagesByRow, [], draft!.sourceFileName);
     }
 
