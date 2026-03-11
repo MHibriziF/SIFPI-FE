@@ -53,3 +53,7 @@ export interface BulkProjectImportDraft {
   rows: ParsedBulkProjectRow[];
   createdAt: string;
 }
+
+export interface RowView extends ParsedBulkProjectRow {
+  selected: boolean;
+}
