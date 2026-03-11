@@ -233,24 +233,9 @@ interface PublicProjectBackendDTO {
   location: string;
   totalCapex: number;
   cooperationModel: string;
+  ownerInstitution: string;
   locationImageUrl: string;
   createdAt: string;
-}
-
-// Helper function to format budget
-function formatBudget(totalCapex: number): string {
-  if (!totalCapex) return '';
-  
-  const billions = totalCapex / 1_000_000_000;
-  const trillions = totalCapex / 1_000_000_000_000;
-  
-  if (trillions >= 1) {
-    return `Rp ${trillions.toFixed(1)} Trillion`;
-  } else if (billions >= 1) {
-    return `Rp ${billions.toFixed(1)} Billion`;
-  } else {
-    return `Rp ${(totalCapex / 1_000_000).toFixed(1)} Million`;
-  }
 }
 
 export async function getPublishedProjects(params: GetPublishedProjectsParams): Promise<BaseResponse<PagedProjectsResponse>> {
@@ -303,9 +288,9 @@ export async function getPublishedProjects(params: GetPublishedProjectsParams): 
       status: ProjectStatus.TERPUBLIKASI, // All public catalogue projects are published
       location: project.location,
       description: project.description,
-      budget: formatBudget(project.totalCapex),
+      ownerInstitution: project.ownerInstitution,
       locationImageUrl: project.locationImageUrl,
-      // ownerName is not provided by backend yet
+      createdAt: project.createdAt,
     }));
 
     return {
