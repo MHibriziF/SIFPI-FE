@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Edit, Trash2, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Trash2, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { Select, TextInput } from '@/shared/components/form-fields';
 import { StatCard } from '@/shared/components/stat-card';
@@ -266,9 +266,6 @@ export default function AdminReadProjects() {
                         Submitted
                       </th>
                       <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Funding
-                      </th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Status
                       </th>
                       <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -310,12 +307,6 @@ export default function AdminReadProjects() {
                               title="View"
                             >
                               <Eye className="size-4" />
-                            </button>
-                            <button
-                              className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                              title="Edit"
-                            >
-                              <Edit className="size-4" />
                             </button>
                             <button
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
