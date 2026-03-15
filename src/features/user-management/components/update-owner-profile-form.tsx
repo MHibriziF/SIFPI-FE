@@ -17,15 +17,15 @@ import type { UpdateProjectOwnerProfileRequest } from '@/features/user-managemen
 interface FormData {
   name: string;
   email: string;
-  phone_number: string;
-  institution_name: string; // → organisasi
+  phoneNumber: string;
+  institutionName: string; // → organisasi
   position: string;         // → jabatan (takes precedence)
 }
 
 interface FormErrors {
   name?: string;
   email?: string;
-  phone_number?: string;
+  phoneNumber?: string;
 }
 
 interface PasswordData {
@@ -86,8 +86,8 @@ export default function UpdateOwnerProfileForm() {
   const emptyForm: FormData = {
     name: '',
     email: '',
-    phone_number: '',
-    institution_name: '',
+    phoneNumber: '',
+    institutionName: '',
     position: '',
   };
 
@@ -120,8 +120,8 @@ export default function UpdateOwnerProfileForm() {
         const populated: FormData = {
           name: d.nama ?? '',
           email: d.email ?? '',
-          phone_number: d.phone ?? '',
-          institution_name: d.organisasi ?? '',
+          phoneNumber: d.phone ?? '',
+          institutionName: d.organisasi ?? '',
           position: d.jabatan ?? '',
         };
         setFormData(populated);
@@ -155,8 +155,8 @@ export default function UpdateOwnerProfileForm() {
     if (!formData.name.trim()) next.name = 'Nama wajib diisi';
     const emailError = validateEmail(formData.email);
     if (emailError) next.email = emailError;
-    const phoneError = validatePhone(formData.phone_number);
-    if (phoneError) next.phone_number = phoneError;
+    const phoneError = validatePhone(formData.phoneNumber);
+    if (phoneError) next.phoneNumber = phoneError;
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -169,9 +169,9 @@ export default function UpdateOwnerProfileForm() {
     const payload: UpdateProjectOwnerProfileRequest = {
       name: formData.name.trim(),
       email: formData.email.trim(),
-      phone_number: formData.phone_number.trim(),
-      ...(formData.institution_name.trim() && {
-        institution_name: formData.institution_name.trim(),
+      phoneNumber: formData.phoneNumber.trim(),
+      ...(formData.institutionName.trim() && {
+        institutionName: formData.institutionName.trim(),
       }),
       ...(formData.position.trim() && { position: formData.position.trim() }),
     };
@@ -179,12 +179,12 @@ export default function UpdateOwnerProfileForm() {
     setIsSubmitting(true);
     try {
       // Normalize organisation name via get-or-create
-      if (formData.institution_name.trim()) {
-        const orgResponse = await getOrCreateOrganization(formData.institution_name.trim());
+      if (formData.institutionName.trim()) {
+        const orgResponse = await getOrCreateOrganization(formData.institutionName.trim());
         if (orgResponse.status !== 200) {
           throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
         }
-        payload.institution_name = orgResponse.data?.name || formData.institution_name.trim();
+        payload.institutionName = orgResponse.data?.name || formData.institutionName.trim();
       }
 
       await updateOwnerProfile(payload);
@@ -373,13 +373,13 @@ export default function UpdateOwnerProfileForm() {
                   disabled={isSubmitting}
                 />
                 <TextInput
-                  id="phone_number"
+                  id="phoneNumber"
                   label="Nomor telepon"
                   placeholder="+628123456789"
                   required
-                  value={formData.phone_number}
-                  onChange={e => handleChange('phone_number', e.target.value)}
-                  error={errors.phone_number}
+                  value={formData.phoneNumber}
+                  onChange={e => handleChange('phoneNumber', e.target.value)}
+                  error={errors.phoneNumber}
                   disabled={isSubmitting}
                 />
               </div>
@@ -390,11 +390,11 @@ export default function UpdateOwnerProfileForm() {
               {/* Nama organisasi + Posisi row */}
               <div className="grid grid-cols-2 gap-5">
                 <OrganizationAutocomplete
-                  id="institution_name"
+                  id="institutionName"
                   label="Organisasi / Instansi"
                   placeholder="Cari atau tambah organisasi..."
-                  value={formData.institution_name}
-                  onChange={v => handleChange('institution_name', v)}
+                  value={formData.institutionName}
+                  onChange={v => handleChange('institutionName', v)}
                 />
                 <TextInput
                   id="position"

@@ -14,9 +14,9 @@ export interface UserDTO {
   organisasi: string;
   phone: string;
   role: string;
-  is_verified: boolean;
-  is_active: boolean;
-  created_at: string;
+  isVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
 }
 
 /** Shape returned by GET /api/admin/users */
@@ -26,10 +26,10 @@ export interface AdminUser {
   organisasi: string | null;
   phone: string | null;
   role: string;
-  is_verified: boolean;
-  is_active: boolean;
-  created_at: string;
-  project_owner_is_verified: boolean | null;
+  isVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+  projectOwnerIsVerified: boolean | null;
 }
 
 export interface PagedResponse<T> {
@@ -113,7 +113,7 @@ export interface CreateRoleRequest {
 export interface CompanyInfo {
   name: string;
   sector: string;
-  industry_type: string | null;
+  industryType: string | null;
 }
 
 /**
@@ -126,32 +126,32 @@ export interface AdminUserDetail {
   nama: string;
   phone: string;
   role: string;
-  created_at: string;
-  last_login: string;
-  email_verified: boolean;
+  createdAt: string;
+  lastLogin: string;
+  emailVerified: boolean;
   /** Only present for PROJECT_OWNER: true if admin has verified the account */
-  owner_verified?: boolean;
-  is_active: boolean;
+  ownerVerified?: boolean;
+  isActive: boolean;
 
   // PROJECT_OWNER & EXECUTIVE
   jabatan?: string;
 
   // PROJECT_OWNER only
   organisasi?: string;
-  jumlah_proyek?: number;
-  inquiry_masuk?: number;
+  jumlahProyek?: number;
+  inquiryMasuk?: number;
 
   // INVESTOR only
-  company_info?: CompanyInfo;
-  sector_interest?: string[];
-  budget_range?: string;
-  preferred_investment_instrument?: string;
-  engagement_model?: string;
-  stage_preference?: string;
-  risk_appetite?: string;
-  esg_standards?: string;
-  local_presence?: string;
-  aum_size?: string;
-  opt_in_email?: boolean;
-  agree_privacy?: boolean;
+  companyInfo?: CompanyInfo;
+  sectorInterest?: string[];
+  budgetRange?: string;
+  preferredInvestmentInstrument?: string;
+  engagementModel?: string;
+  stagePreference?: string;
+  riskAppetite?: string;
+  esgStandards?: string;
+  localPresence?: string;
+  aumSize?: string;
+  optInEmail?: boolean;
+  agreePrivacy?: boolean;
 }

@@ -54,30 +54,30 @@ const RISK_OPTIONS: SelectOption[] = [
 interface FormData {
   name: string;
   email: string;
-  phone_number: string;
+  phoneNumber: string;
   jabatan: string;
-  company_name: string;
-  investment_interest_sectors: string[];
-  investment_scale: string;
-  preferred_investment_instrument: string;
-  engagement_model: string;
-  stage_preference: string;
-  risk_appetite: string;
-  esg_standards: string;
-  local_presence: string;
-  aum_size: string;
-  opt_in_email: boolean;
-  agree_privacy: boolean;
+  companyName: string;
+  investmentInterestSectors: string[];
+  investmentScale: string;
+  preferredInvestmentInstrument: string;
+  engagementModel: string;
+  stagePreference: string;
+  riskAppetite: string;
+  esgStandards: string;
+  localPresence: string;
+  aumSize: string;
+  optInEmail: boolean;
+  agreePrivacy: boolean;
 }
 
 interface FormErrors {
   name?: string;
   email?: string;
-  phone_number?: string;
+  phoneNumber?: string;
   jabatan?: string;
-  company_name?: string;
-  investment_interest_sectors?: string;
-  investment_scale?: string;
+  companyName?: string;
+  investmentInterestSectors?: string;
+  investmentScale?: string;
 }
 
 interface PasswordData {
@@ -125,20 +125,20 @@ export default function UpdateInvestorProfileForm() {
   const emptyForm: FormData = {
     name: '',
     email: '',
-    phone_number: '',
+    phoneNumber: '',
     jabatan: '',
-    company_name: '',
-    investment_interest_sectors: [],
-    investment_scale: '',
-    preferred_investment_instrument: '',
-    engagement_model: '',
-    stage_preference: '',
-    risk_appetite: '',
-    esg_standards: '',
-    local_presence: '',
-    aum_size: '',
-    opt_in_email: false,
-    agree_privacy: false,
+    companyName: '',
+    investmentInterestSectors: [],
+    investmentScale: '',
+    preferredInvestmentInstrument: '',
+    engagementModel: '',
+    stagePreference: '',
+    riskAppetite: '',
+    esgStandards: '',
+    localPresence: '',
+    aumSize: '',
+    optInEmail: false,
+    agreePrivacy: false,
   };
 
   const [formData, setFormData] = useState<FormData>(emptyForm);
@@ -171,20 +171,20 @@ export default function UpdateInvestorProfileForm() {
         const populated: FormData = {
           name: d.nama ?? '',
           email: d.email ?? '',
-          phone_number: d.phone ?? '',
+          phoneNumber: d.phone ?? '',
           jabatan: d.jabatan ?? '',
-          company_name: d.organisasi ?? '',
-          investment_interest_sectors: d.sector_interest ?? [],
-          investment_scale: d.budget_range ?? '',
-          preferred_investment_instrument: d.preferred_investment_instrument ?? '',
-          engagement_model: d.engagement_model ?? '',
-          stage_preference: d.stage_preference ?? '',
-          risk_appetite: d.risk_appetite ?? '',
-          esg_standards: d.esg_standards ?? '',
-          local_presence: d.local_presence ?? '',
-          aum_size: d.aum_size ?? '',
-          opt_in_email: d.opt_in_email ?? false,
-          agree_privacy: d.agree_privacy ?? false,
+          companyName: d.organisasi ?? '',
+          investmentInterestSectors: d.sectorInterest ?? [],
+          investmentScale: d.budgetRange ?? '',
+          preferredInvestmentInstrument: d.preferredInvestmentInstrument ?? '',
+          engagementModel: d.engagementModel ?? '',
+          stagePreference: d.stagePreference ?? '',
+          riskAppetite: d.riskAppetite ?? '',
+          esgStandards: d.esgStandards ?? '',
+          localPresence: d.localPresence ?? '',
+          aumSize: d.aumSize ?? '',
+          optInEmail: d.optInEmail ?? false,
+          agreePrivacy: d.agreePrivacy ?? false,
         };
 
         setFormData(populated);
@@ -214,13 +214,13 @@ export default function UpdateInvestorProfileForm() {
   }
 
   function toggleSector(value: string) {
-    const current = formData.investment_interest_sectors;
+    const current = formData.investmentInterestSectors;
     const updated = current.includes(value)
       ? current.filter(s => s !== value)
       : [...current, value];
-    handleChange('investment_interest_sectors', updated);
-    if (errors.investment_interest_sectors) {
-      setErrors(prev => ({ ...prev, investment_interest_sectors: undefined }));
+    handleChange('investmentInterestSectors', updated);
+    if (errors.investmentInterestSectors) {
+      setErrors(prev => ({ ...prev, investmentInterestSectors: undefined }));
     }
   }
 
@@ -234,8 +234,8 @@ export default function UpdateInvestorProfileForm() {
     const emailError = validateEmail(formData.email);
     if (emailError) next.email = emailError;
 
-    const phoneError = validatePhone(formData.phone_number);
-    if (phoneError) next.phone_number = phoneError;
+    const phoneError = validatePhone(formData.phoneNumber);
+    if (phoneError) next.phoneNumber = phoneError;
 
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -251,39 +251,39 @@ export default function UpdateInvestorProfileForm() {
       // Base — required
       name: formData.name.trim(),
       email: formData.email.trim(),
-      phone_number: formData.phone_number.trim(),
+      phoneNumber: formData.phoneNumber.trim(),
       // Optional — all roles
       ...(formData.jabatan.trim() && { jabatan: formData.jabatan.trim() }),
       // Optional — investor extra
-      ...(formData.company_name.trim() && { company_name: formData.company_name.trim() }),
-      ...(formData.investment_interest_sectors.length > 0 && {
-        investment_interest_sectors: formData.investment_interest_sectors,
+      ...(formData.companyName.trim() && { companyName: formData.companyName.trim() }),
+      ...(formData.investmentInterestSectors.length > 0 && {
+        investmentInterestSectors: formData.investmentInterestSectors,
       }),
-      ...(formData.investment_scale && { investment_scale: formData.investment_scale }),
-      ...(formData.preferred_investment_instrument.trim() && {
-        preferred_investment_instrument: formData.preferred_investment_instrument.trim(),
+      ...(formData.investmentScale && { investmentScale: formData.investmentScale }),
+      ...(formData.preferredInvestmentInstrument.trim() && {
+        preferredInvestmentInstrument: formData.preferredInvestmentInstrument.trim(),
       }),
-      ...(formData.engagement_model.trim() && {
-        engagement_model: formData.engagement_model.trim(),
+      ...(formData.engagementModel.trim() && {
+        engagementModel: formData.engagementModel.trim(),
       }),
-      ...(formData.stage_preference && { stage_preference: formData.stage_preference }),
-      ...(formData.risk_appetite && { risk_appetite: formData.risk_appetite }),
-      ...(formData.esg_standards.trim() && { esg_standards: formData.esg_standards.trim() }),
-      ...(formData.local_presence.trim() && { local_presence: formData.local_presence.trim() }),
-      ...(formData.aum_size.trim() && { aum_size: formData.aum_size.trim() }),
-      opt_in_email: formData.opt_in_email,
-      agree_privacy: formData.agree_privacy,
+      ...(formData.stagePreference && { stagePreference: formData.stagePreference }),
+      ...(formData.riskAppetite && { riskAppetite: formData.riskAppetite }),
+      ...(formData.esgStandards.trim() && { esgStandards: formData.esgStandards.trim() }),
+      ...(formData.localPresence.trim() && { localPresence: formData.localPresence.trim() }),
+      ...(formData.aumSize.trim() && { aumSize: formData.aumSize.trim() }),
+      optInEmail: formData.optInEmail,
+      agreePrivacy: formData.agreePrivacy,
     };
 
     setIsSubmitting(true);
     try {
       // Normalize organisation name via get-or-create
-      if (formData.company_name.trim()) {
-        const orgResponse = await getOrCreateOrganization(formData.company_name.trim());
+      if (formData.companyName.trim()) {
+        const orgResponse = await getOrCreateOrganization(formData.companyName.trim());
         if (orgResponse.status !== 200) {
           throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
         }
-        payload.company_name = orgResponse.data?.name || formData.company_name.trim();
+        payload.companyName = orgResponse.data?.name || formData.companyName.trim();
       }
 
       await updateInvestorProfile(payload);
@@ -467,24 +467,24 @@ export default function UpdateInvestorProfileForm() {
               disabled={isSubmitting}
             />
             <TextInput
-              id="phone_number"
+              id="phoneNumber"
               label="Nomor Telepon"
               placeholder="+628123456789"
               required
-              value={formData.phone_number}
-              onChange={e => handleChange('phone_number', e.target.value)}
-              error={errors.phone_number}
+              value={formData.phoneNumber}
+              onChange={e => handleChange('phoneNumber', e.target.value)}
+              error={errors.phoneNumber}
               disabled={isSubmitting}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <OrganizationAutocomplete
-              id="company_name"
+              id="companyName"
               label="Organisasi / Instansi"
               placeholder="Cari atau tambah organisasi..."
-              value={formData.company_name}
-              onChange={v => handleChange('company_name', v)}
+              value={formData.companyName}
+              onChange={v => handleChange('companyName', v)}
             />
             <TextInput
               id="jabatan"
@@ -500,13 +500,13 @@ export default function UpdateInvestorProfileForm() {
           <SectionDivider label="Preferensi Investasi" />
 
           <Select
-            id="investment_scale"
+            id="investmentScale"
             label="Budget Investasi"
             placeholder="Pilih rentang budget"
             options={BUDGET_OPTIONS}
-            value={formData.investment_scale}
-            onValueChange={v => handleChange('investment_scale', v)}
-            error={errors.investment_scale}
+            value={formData.investmentScale}
+            onValueChange={v => handleChange('investmentScale', v)}
+            error={errors.investmentScale}
             disabled={isSubmitting}
           />
 
@@ -523,14 +523,14 @@ export default function UpdateInvestorProfileForm() {
                     key={sector.value}
                     className={cn(
                       'flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors text-xs',
-                      formData.investment_interest_sectors.includes(sector.value)
+                      formData.investmentInterestSectors.includes(sector.value)
                         ? 'text-primary font-medium'
                         : 'text-gray-600 hover:text-primary'
                     )}
                   >
                     <input
                       type="checkbox"
-                      checked={formData.investment_interest_sectors.includes(sector.value)}
+                      checked={formData.investmentInterestSectors.includes(sector.value)}
                       onChange={() => toggleSector(sector.value)}
                       disabled={isSubmitting}
                       className="rounded border-gray-300 cursor-pointer accent-primary flex-shrink-0"
@@ -543,15 +543,15 @@ export default function UpdateInvestorProfileForm() {
 
             <p className="text-xs text-gray-400">
               Pilih minimal 3 sektor
-              {formData.investment_interest_sectors.length > 0 && (
+              {formData.investmentInterestSectors.length > 0 && (
                 <span className="ml-1 text-primary font-medium">
-                  ({formData.investment_interest_sectors.length} dipilih)
+                  ({formData.investmentInterestSectors.length} dipilih)
                 </span>
               )}
             </p>
 
-            {errors.investment_interest_sectors && (
-              <p className="text-xs text-danger">{errors.investment_interest_sectors}</p>
+            {errors.investmentInterestSectors && (
+              <p className="text-xs text-danger">{errors.investmentInterestSectors}</p>
             )}
           </div>
 
@@ -560,69 +560,69 @@ export default function UpdateInvestorProfileForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <Select
-              id="stage_preference"
+              id="stagePreference"
               label="Stage Preferensi"
               placeholder="Pilih stage"
               options={STAGE_OPTIONS}
-              value={formData.stage_preference}
-              onValueChange={v => handleChange('stage_preference', v)}
+              value={formData.stagePreference}
+              onValueChange={v => handleChange('stagePreference', v)}
               disabled={isSubmitting}
             />
             <Select
-              id="risk_appetite"
+              id="riskAppetite"
               label="Risk Appetite"
               placeholder="Pilih level risiko"
               options={RISK_OPTIONS}
-              value={formData.risk_appetite}
-              onValueChange={v => handleChange('risk_appetite', v)}
+              value={formData.riskAppetite}
+              onValueChange={v => handleChange('riskAppetite', v)}
               disabled={isSubmitting}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <TextInput
-              id="preferred_investment_instrument"
+              id="preferredInvestmentInstrument"
               label="Instrumen Investasi Pilihan"
               placeholder="e.g. Equity, Bonds"
-              value={formData.preferred_investment_instrument}
-              onChange={e => handleChange('preferred_investment_instrument', e.target.value)}
+              value={formData.preferredInvestmentInstrument}
+              onChange={e => handleChange('preferredInvestmentInstrument', e.target.value)}
               disabled={isSubmitting}
             />
             <TextInput
-              id="engagement_model"
+              id="engagementModel"
               label="Model Keterlibatan"
               placeholder="e.g. Direct Investment"
-              value={formData.engagement_model}
-              onChange={e => handleChange('engagement_model', e.target.value)}
+              value={formData.engagementModel}
+              onChange={e => handleChange('engagementModel', e.target.value)}
               disabled={isSubmitting}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <TextInput
-              id="aum_size"
+              id="aumSize"
               label="AUM Size"
               placeholder="e.g. 500M USD"
-              value={formData.aum_size}
-              onChange={e => handleChange('aum_size', e.target.value)}
+              value={formData.aumSize}
+              onChange={e => handleChange('aumSize', e.target.value)}
               disabled={isSubmitting}
             />
             <TextInput
-              id="local_presence"
+              id="localPresence"
               label="Kehadiran Lokal"
               placeholder="e.g. Jakarta, Surabaya"
-              value={formData.local_presence}
-              onChange={e => handleChange('local_presence', e.target.value)}
+              value={formData.localPresence}
+              onChange={e => handleChange('localPresence', e.target.value)}
               disabled={isSubmitting}
             />
           </div>
 
           <TextInput
-            id="esg_standards"
+            id="esgStandards"
             label="Standar ESG"
             placeholder="e.g. GRI Standards"
-            value={formData.esg_standards}
-            onChange={e => handleChange('esg_standards', e.target.value)}
+            value={formData.esgStandards}
+            onChange={e => handleChange('esgStandards', e.target.value)}
             disabled={isSubmitting}
           />
 
@@ -631,8 +631,8 @@ export default function UpdateInvestorProfileForm() {
             <label className="flex items-start gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={formData.opt_in_email}
-                onChange={e => handleChange('opt_in_email', e.target.checked)}
+                checked={formData.optInEmail}
+                onChange={e => handleChange('optInEmail', e.target.checked)}
                 disabled={isSubmitting}
                 className="mt-0.5 rounded border-gray-300 accent-primary flex-shrink-0 cursor-pointer"
               />
@@ -643,8 +643,8 @@ export default function UpdateInvestorProfileForm() {
             <label className="flex items-start gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={formData.agree_privacy}
-                onChange={e => handleChange('agree_privacy', e.target.checked)}
+                checked={formData.agreePrivacy}
+                onChange={e => handleChange('agreePrivacy', e.target.checked)}
                 disabled={isSubmitting}
                 className="mt-0.5 rounded border-gray-300 accent-primary flex-shrink-0 cursor-pointer"
               />

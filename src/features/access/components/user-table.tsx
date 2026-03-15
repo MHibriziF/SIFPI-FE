@@ -11,9 +11,9 @@ import type { AdminUser } from '../types';
 type BadgeVariant = 'draft' | 'submitted' | 'in-review' | 'approved' | 'rejected';
 
 function deriveStatus(user: AdminUser): { variant: BadgeVariant; label: string; key: string } {
-  if (user.role === 'PROJECT_OWNER' && user.project_owner_is_verified === false)
+  if (user.role === 'PROJECT_OWNER' && user.projectOwnerIsVerified === false)
     return { variant: 'in-review', label: 'In Review', key: 'IN_REVIEW' };
-  if (user.is_active) return { variant: 'approved', label: 'Active',   key: 'ACTIVE' };
+  if (user.isActive) return { variant: 'approved', label: 'Active',   key: 'ACTIVE' };
   return               { variant: 'draft',    label: 'Inactive', key: 'INACTIVE' };
 }
 

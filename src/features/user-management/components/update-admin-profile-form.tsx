@@ -15,14 +15,14 @@ import type { UpdateAdminProfileRequest } from '@/features/user-management/types
 interface FormData {
   name: string;
   email: string;
-  phone_number: string;
+  phoneNumber: string;
   jabatan: string;
 }
 
 interface FormErrors {
   name?: string;
   email?: string;
-  phone_number?: string;
+  phoneNumber?: string;
 }
 
 interface PasswordData {
@@ -70,7 +70,7 @@ export default function UpdateAdminProfileForm() {
   const [isFetching, setIsFetching] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const emptyForm: FormData = { name: '', email: '', phone_number: '', jabatan: '' };
+  const emptyForm: FormData = { name: '', email: '', phoneNumber: '', jabatan: '' };
   const [formData, setFormData] = useState<FormData>(emptyForm);
   const [originalData, setOriginalData] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -100,7 +100,7 @@ export default function UpdateAdminProfileForm() {
         const populated: FormData = {
           name: d.nama ?? '',
           email: d.email ?? '',
-          phone_number: d.phone ?? '',
+          phoneNumber: d.phone ?? '',
           jabatan: d.jabatan ?? '',
         };
         setFormData(populated);
@@ -134,8 +134,8 @@ export default function UpdateAdminProfileForm() {
     if (!formData.name.trim()) next.name = 'Nama wajib diisi';
     const emailError = validateEmail(formData.email);
     if (emailError) next.email = emailError;
-    const phoneError = validatePhone(formData.phone_number);
-    if (phoneError) next.phone_number = phoneError;
+    const phoneError = validatePhone(formData.phoneNumber);
+    if (phoneError) next.phoneNumber = phoneError;
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -148,7 +148,7 @@ export default function UpdateAdminProfileForm() {
     const payload: UpdateAdminProfileRequest = {
       name: formData.name.trim(),
       email: formData.email.trim(),
-      phone_number: formData.phone_number.trim(),
+      phoneNumber: formData.phoneNumber.trim(),
       ...(formData.jabatan.trim() && { jabatan: formData.jabatan.trim() }),
     };
 
@@ -337,13 +337,13 @@ export default function UpdateAdminProfileForm() {
                   disabled={isSubmitting}
                 />
                 <TextInput
-                  id="phone_number"
+                  id="phoneNumber"
                   label="Nomor telepon"
                   placeholder="+628123456789"
                   required
-                  value={formData.phone_number}
-                  onChange={e => handleChange('phone_number', e.target.value)}
-                  error={errors.phone_number}
+                  value={formData.phoneNumber}
+                  onChange={e => handleChange('phoneNumber', e.target.value)}
+                  error={errors.phoneNumber}
                   disabled={isSubmitting}
                 />
               </div>

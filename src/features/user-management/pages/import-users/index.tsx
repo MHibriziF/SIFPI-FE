@@ -326,7 +326,7 @@ export default function ImportUsersPage() {
                     <td className="px-4 py-3 align-top text-primary">{row.dto.organisasi}</td>
                     <td className="px-4 py-3 align-top text-primary">{row.dto.role ?? '-'}</td>
                     <td className="px-4 py-3 align-top text-primary">
-                      {formatStatusActive(row.dto.is_active)}
+                      {formatStatusActive(row.dto.isActive)}
                     </td>
                     <td className="px-4 py-3 align-top text-primary">{row.dto.email}</td>
                     <td className="px-4 py-3 align-top text-primary">{row.dto.phone ?? '-'}</td>
