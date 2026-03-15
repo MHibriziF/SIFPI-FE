@@ -8,7 +8,7 @@ import { Select, TextInput } from '@/shared/components/form-fields';
 import { ProjectCard, type ProjectCardData } from '@/shared/components/project-card';
 import { StatCard } from '@/shared/components/stat-card';
 import { showToast } from '@/shared/components/toast';
-import { getMyProjects } from '@/features/project/services';
+import { getMyProjects, getMyProjectStatusCounts } from '@/features/project/services';
 import { ApiError } from '@/shared/types/api';
 import {
   ProjectStatus,
@@ -65,51 +65,21 @@ export default function OwnerReadAllProjects() {
     needsRevision: 0,
   });
 
-  // ── Fetch Status Counts (independent of filters) ───────────────────────
+  // ── Fetch Status Counts (dedicated endpoint) ────────────────────────────
 
   const fetchStatusCounts = useCallback(async () => {
     try {
-      // Fetch ALL projects without status filter to calculate accurate counts
-      const response = await getMyProjects({
-        page: 0,
-        size: 1000, // Large enough to get all projects for counting
-        sortBy: 'createdAt',
-        sortDirection: 'desc',
-        // NO status filter here - we want all projects
-      });
+      const response = await getMyProjectStatusCounts();
+      const data = response.data;
 
-      const allProjects = response.data.content || [];
-      const counts = { draft: 0, submitted: 0, approved: 0, needsRevision: 0 };
-      
-      // Debug: Log actual status values from backend
-      console.log('📊 Status values from backend:', allProjects.map(p => ({ id: p.id, status: p.status })));
-      
-      allProjects.forEach((p) => {
-        // Normalize status to uppercase for consistent comparison
-        const normalizedStatus = p.status?.toUpperCase();
-        
-        switch (normalizedStatus) {
-          case 'DRAFT':
-            counts.draft++;
-            break;
-          case 'DIAJUKAN':
-          case 'IN_REVIEW':
-            counts.submitted++;
-            break;
-          case 'TERVERIFIKASI':
-          case 'TERPUBLIKASI':
-            counts.approved++;
-            break;
-          case 'PERBAIKAN_DATA':
-            counts.needsRevision++;
-            break;
-        }
+      setStatusCounts({
+        draft: data.draft,
+        submitted: data.diajukan + data.inReview,
+        approved: data.terverifikasi + data.terpublikasi,
+        needsRevision: data.perbaikanData,
       });
-      
-      setStatusCounts(counts);
     } catch (error) {
       console.error('Error fetching status counts:', error);
-      // Don't show toast for counts error, just log it
     }
   }, []);
 
