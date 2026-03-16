@@ -207,7 +207,7 @@ export async function getAllProjects(params: GetAllProjectsParams): Promise<Base
     queryParams.sector = params.sector;
   }
 
-  if (params.search && params.search.trim()) {
+  if (params.search?.trim()) {
     queryParams.search = params.search.trim();
   }
 
@@ -281,7 +281,7 @@ export async function getPublishedProjects(params: GetPublishedProjectsParams): 
     queryParams.maxBudget = params.maxBudget;
   }
 
-  if (params.search && params.search.trim()) {
+  if (params.search?.trim()) {
     queryParams.search = params.search.trim();
   }
 

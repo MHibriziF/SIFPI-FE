@@ -16,7 +16,7 @@ interface EditStepTechnicalProps {
 export function EditStepTechnical({
   existingStructureFileUrl,
   existingProjectFileUrl,
-}: EditStepTechnicalProps) {
+}: Readonly<EditStepTechnicalProps>) {
   const {
     register,
     formState: { errors },
@@ -104,7 +104,7 @@ export function EditStepTechnical({
               className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('technical.isFeasibilityStudy')}
             />
-            Apakah ini dokumen feasibility study?
+            {' '}Apakah ini dokumen feasibility study?
           </label>
           <p className="text-xs text-gray-500">
             Jika dicentang, metrik Financials & Analytics pada langkah berikutnya menjadi wajib.

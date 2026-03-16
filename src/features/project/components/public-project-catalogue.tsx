@@ -164,25 +164,35 @@ export function PublicProjectCatalogue() {
         </div>
 
         {/* Projects Grid */}
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary"></div>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center">
-            <p className="font-medium">{error}</p>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-16 text-center">
-            <Search size={56} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No projects found
-            </h3>
-            <p className="text-gray-600">
-              Try adjusting your filters or search keywords
-            </p>
-          </div>
-        ) : (
+        {(() => {
+          if (loading) {
+            return (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary"></div>
+              </div>
+            );
+          }
+          if (error) {
+            return (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center">
+                <p className="font-medium">{error}</p>
+              </div>
+            );
+          }
+          if (projects.length === 0) {
+            return (
+              <div className="bg-white border border-gray-200 rounded-lg p-16 text-center">
+                <Search size={56} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No projects found
+                </h3>
+                <p className="text-gray-600">
+                  Try adjusting your filters or search keywords
+                </p>
+              </div>
+            );
+          }
+          return (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {projects.map((project) => (
@@ -234,7 +244,8 @@ export function PublicProjectCatalogue() {
               </div>
             </div>
           </>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

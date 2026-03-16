@@ -22,7 +22,7 @@ export default function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const err = validateEmail(email);
     if (err) {

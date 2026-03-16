@@ -113,13 +113,9 @@ export default function AdminReadProjects() {
         growthPercentage: 12, // Mock data - should come from backend
       });
     } catch (error) {
-      console.error('❌ Error fetching admin projects:', error);
-      const apiError = error as ApiError;
-      showToast(
-        'danger',
-        'Gagal memuat proyek',
-        apiError.message || 'Terjadi kesalahan'
-      );
+      console.error('Error fetching admin projects:', error);
+      const message = error instanceof ApiError ? error.message : 'Terjadi kesalahan';
+      showToast('danger', 'Gagal memuat proyek', message);
     } finally {
       setIsLoading(false);
     }
@@ -235,16 +231,23 @@ export default function AdminReadProjects() {
           </div>
 
           {/* Table */}
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-              <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Belum ada proyek yang diajukan</p>
-            </div>
-          ) : (
+          {(() => {
+            if (isLoading) {
+              return (
+                <div className="text-center py-12">
+                  <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
+                </div>
+              );
+            }
+            if (projects.length === 0) {
+              return (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Belum ada proyek yang diajukan</p>
+                </div>
+              );
+            }
+            return (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -360,7 +363,8 @@ export default function AdminReadProjects() {
                 </div>
               </div>
             </>
-          )}
+            );
+          })()}
 
           {/* Action Buttons */}
         <div className="flex justify-between items-center mt-6 pt-6 border-gray-200">

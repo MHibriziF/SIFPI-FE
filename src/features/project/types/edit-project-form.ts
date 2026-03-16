@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const PHONE_REGEX = /^[+]?[\d\s()\-]{8,20}$/;
+const PHONE_REGEX = /^[+]?[\d\s()-]{8,20}$/;
 
 const shortDescriptionSchema = z
   .string()

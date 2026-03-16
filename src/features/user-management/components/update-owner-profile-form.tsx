@@ -47,7 +47,7 @@ function validateEmail(value: string): string | undefined {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
 }
 
-const PHONE_REGEX = /^[+]?[0-9][0-9\s\-]{6,18}[0-9]$/;
+const PHONE_REGEX = /^[+]?\d[\d\s-]{6,18}\d$/;
 function validatePhone(value: string): string | undefined {
   if (!value.trim()) return 'Nomor telepon wajib diisi';
   if (value.length > 20) return 'Nomor telepon maksimal 20 karakter';
@@ -313,8 +313,8 @@ export default function UpdateOwnerProfileForm() {
           <div className="border border-grey rounded-[20px] overflow-hidden animate-pulse">
             <div className="h-12 bg-primary" />
             <div className="p-5 space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-10 rounded-lg bg-gray-100" />
+              {['skeleton-profile-1', 'skeleton-profile-2', 'skeleton-profile-3', 'skeleton-profile-4', 'skeleton-profile-5'].map((id) => (
+                <div key={id} className="h-10 rounded-lg bg-gray-100" />
               ))}
             </div>
           </div>
@@ -326,8 +326,8 @@ export default function UpdateOwnerProfileForm() {
         <div className="w-[440px] shrink-0 border border-grey rounded-[20px] overflow-hidden animate-pulse">
           <div className="h-12 bg-primary" />
           <div className="p-8 space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-10 rounded-lg bg-gray-100" />
+            {['skeleton-password-1', 'skeleton-password-2', 'skeleton-password-3'].map((id) => (
+              <div key={id} className="h-10 rounded-lg bg-gray-100" />
             ))}
           </div>
         </div>

@@ -290,7 +290,7 @@ export default function DesignSystemPage() {
             target="_blank"
             className="inline-flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5 transition-colors"
           >
-            Open /dashboard →
+            Open /dashboard {'→'}
           </Link>
         </Section>
 

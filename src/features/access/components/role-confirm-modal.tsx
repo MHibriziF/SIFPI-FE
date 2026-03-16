@@ -40,7 +40,7 @@ export function RoleConfirmModal({
   selectedUserDetails,
   onConfirm,
   onCancel,
-}: RoleConfirmModalProps) {
+}: Readonly<RoleConfirmModalProps>) {
   if (!isOpen) return null;
 
   const statusLabel = ROLE_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status;

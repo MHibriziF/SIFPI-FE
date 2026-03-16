@@ -27,7 +27,7 @@ interface UserTableProps {
 
 
 
-export function UserTable({ users, totalEntries, totalPages, currentPage, pageSize }: UserTableProps) {
+export function UserTable({ users, totalEntries, totalPages, currentPage, pageSize }: Readonly<UserTableProps>) {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();

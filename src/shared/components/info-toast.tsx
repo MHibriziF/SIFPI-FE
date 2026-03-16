@@ -38,7 +38,7 @@ function Notification({
   description,
   onClose,
   ...props
-}: NotificationProps) {
+}: Readonly<NotificationProps>) {
   return (
     <div
       data-slot="notification"

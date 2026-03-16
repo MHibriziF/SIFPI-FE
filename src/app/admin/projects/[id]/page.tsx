@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -26,7 +25,7 @@ import { ApiError } from '@/shared/types/api';
    Small reusable pieces
 ───────────────────────────────────────── */
 
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ title }: Readonly<{ title: string }>) {
   return (
     <div className="bg-[#0f2d5e] text-white px-5 py-3 rounded-md mb-4">
       <h3 className="text-base font-semibold">{title}</h3>
@@ -35,7 +34,7 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 /* Shared card header — used by every card for consistent styling */
-function CardHeader({ title }: { title: string }) {
+function CardHeader({ title }: Readonly<{ title: string }>) {
   return (
     <div className="bg-[#0f2d5e] text-white px-6 py-4 text-center">
       <h2 className="text-base font-semibold tracking-wide">{title}</h2>
@@ -43,13 +42,62 @@ function CardHeader({ title }: { title: string }) {
   );
 }
 
-function InfoCard({ label, value }: { label: string; value?: string | null }) {
+function InfoCard({ label, value }: Readonly<{ label: string; value?: string | null }>) {
   return (
     <div className="border-b border-gray-100 px-1 py-3 last:border-b-0">
       <p className="text-xs text-gray-500 mb-0.5">{label}</p>
       <p className="text-sm font-medium text-gray-800">{value ?? '-'}</p>
     </div>
   );
+}
+
+/* ─────────────────────────────────────────
+   Helpers
+───────────────────────────────────────── */
+
+function parseProjectId(id: string | string[] | undefined): number {
+  if (typeof id !== 'string') return 0;
+  return id.startsWith('PRJ-')
+    ? parseInt(id.substring(4))
+    : parseInt(id);
+}
+
+function applyCacheBusting(data: AdminProjectDetailDTO): void {
+  const timestamp = `?t=${Date.now()}`;
+  if (data.locationImageUrl) {
+    data.locationImageUrl += timestamp;
+  }
+  if (data.projectStructureImageUrl) {
+    data.projectStructureImageUrl += timestamp;
+  }
+  if (data.projectFileDownloadUrl) {
+    data.projectFileDownloadUrl += timestamp;
+  }
+}
+
+async function refreshProjectWithCacheBusting(id: number): Promise<AdminProjectDetailDTO | null> {
+  const updatedRes = await getProjectDetail(id);
+  if (updatedRes.data) {
+    applyCacheBusting(updatedRes.data);
+  }
+  return updatedRes.data;
+}
+
+function formatNpvDisplay(npv: number | null | undefined): string {
+  if (npv == null) return '-';
+  if (npv === 0) return 'Under Calculation';
+  return `USD ${npv.toLocaleString('en-US')} Million`;
+}
+
+function formatIrrDisplay(irr: number | null | undefined): string {
+  if (irr == null) return '-';
+  if (irr === 0) return 'User Charge / Under Calculation';
+  return `${irr}%`;
+}
+
+function formatFeasibilityStudy(isFeasibilityStudy: boolean | null | undefined): string {
+  if (isFeasibilityStudy === undefined || isFeasibilityStudy === null) return '-';
+  return isFeasibilityStudy ? 'With Feasibility Study' : 'Under Preparation';
 }
 
 /* ─────────────────────────────────────────
@@ -60,12 +108,7 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
 
-  let projectId = 0;
-  if (typeof params.id === 'string') {
-    projectId = params.id.startsWith('PRJ-')
-      ? parseInt(params.id.substring(4))
-      : parseInt(params.id);
-  }
+  const projectId = parseProjectId(params.id);
 
   const [project, setProject] = useState<AdminProjectDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,23 +125,13 @@ export default function ProjectDetailPage() {
         setError(null);
         const res = await getProjectDetail(projectId);
         if (res.data) {
-          // Cache busting untuk file/image — force browser load file terbaru
-          const timestamp = `?t=${Date.now()}`;
-          if (res.data.locationImageUrl) {
-            res.data.locationImageUrl += timestamp;
-          }
-          if (res.data.projectStructureImageUrl) {
-            res.data.projectStructureImageUrl += timestamp;
-          }
-          if (res.data.projectFileDownloadUrl) {
-            res.data.projectFileDownloadUrl += timestamp;
-          }
+          applyCacheBusting(res.data);
           setProject(res.data);
         } else {
-          setError(res.message || 'Gagal memuat detail proyek');
+          setError(res.message ?? 'Gagal memuat detail proyek');
         }
       } catch (err) {
-        setError((err as ApiError).message || 'Terjadi kesalahan');
+        setError(err instanceof ApiError ? err.message : 'Terjadi kesalahan');
       } finally {
         setLoading(false);
       }
@@ -111,32 +144,15 @@ export default function ProjectDetailPage() {
       setIsVerifying(true);
       const res = await approveProject(projectId);
       if (res.data) {
-        // Refresh data sebelum redirect
-        const updatedRes = await getProjectDetail(projectId);
-        
-        // Cache busting untuk file/image - tambah timestamp query param
-        if (updatedRes.data) {
-          const timestamp = `?t=${Date.now()}`;
-          if (updatedRes.data.locationImageUrl) {
-            updatedRes.data.locationImageUrl += timestamp;
-          }
-          if (updatedRes.data.projectStructureImageUrl) {
-            updatedRes.data.projectStructureImageUrl += timestamp;
-          }
-          if (updatedRes.data.projectFileDownloadUrl) {
-            updatedRes.data.projectFileDownloadUrl += timestamp;
-          }
-        }
-        
-        setProject(updatedRes.data);
-        
+        const refreshedProject = await refreshProjectWithCacheBusting(projectId);
+        setProject(refreshedProject);
         showNotification('success', 'Berhasil', 'Proyek telah diverifikasi');
         setTimeout(() => router.push('/admin/projects'), 1500);
       } else {
-        showNotification('danger', 'Gagal', res.message || 'Gagal memverifikasi proyek');
+        showNotification('danger', 'Gagal', res.message ?? 'Gagal memverifikasi proyek');
       }
     } catch (err) {
-      showNotification('danger', 'Gagal', (err as ApiError).message || 'Terjadi kesalahan');
+      showNotification('danger', 'Gagal', err instanceof ApiError ? err.message : 'Terjadi kesalahan');
     } finally {
       setIsVerifying(false);
     }
@@ -151,32 +167,15 @@ export default function ProjectDetailPage() {
       setIsRejecting(true);
       const res = await rejectProject(projectId, rejectionNotes);
       if (res.data) {
-        // Refresh data sebelum redirect
-        const updatedRes = await getProjectDetail(projectId);
-        
-        // Cache busting untuk file/image - tambah timestamp query param
-        if (updatedRes.data) {
-          const timestamp = `?t=${Date.now()}`;
-          if (updatedRes.data.locationImageUrl) {
-            updatedRes.data.locationImageUrl += timestamp;
-          }
-          if (updatedRes.data.projectStructureImageUrl) {
-            updatedRes.data.projectStructureImageUrl += timestamp;
-          }
-          if (updatedRes.data.projectFileDownloadUrl) {
-            updatedRes.data.projectFileDownloadUrl += timestamp;
-          }
-        }
-        
-        setProject(updatedRes.data);
-        
+        const refreshedProject = await refreshProjectWithCacheBusting(projectId);
+        setProject(refreshedProject);
         showNotification('success', 'Berhasil', 'Proyek telah ditolak');
         setTimeout(() => router.push('/admin/projects'), 1500);
       } else {
-        showNotification('danger', 'Gagal', res.message || 'Gagal menolak proyek');
+        showNotification('danger', 'Gagal', res.message ?? 'Gagal menolak proyek');
       }
     } catch (err) {
-      showNotification('danger', 'Gagal', (err as ApiError).message || 'Terjadi kesalahan');
+      showNotification('danger', 'Gagal', err instanceof ApiError ? err.message : 'Terjadi kesalahan');
     } finally {
       setIsRejecting(false);
       setRejectionNotes('');
@@ -316,7 +315,7 @@ export default function ProjectDetailPage() {
                   </div>
                 )}
                 <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {project.valueProposition?.trim() || '-'}
+                  {project.valueProposition?.trim() ?? '-'}
                 </p>
               </div>
             </div>
@@ -350,9 +349,7 @@ export default function ProjectDetailPage() {
                   <div className="px-5 py-3">
                     <p className="text-xs text-gray-500 mb-0.5">Project / Asset Status</p>
                     <p className="text-sm font-medium text-gray-800">
-                      {project.isFeasibilityStudy !== undefined && project.isFeasibilityStudy !== null
-                        ? project.isFeasibilityStudy ? 'With Feasibility Study' : 'Under Preparation'
-                        : '-'}
+                      {formatFeasibilityStudy(project.isFeasibilityStudy)}
                     </p>
                   </div>
                 </div>
@@ -362,7 +359,7 @@ export default function ProjectDetailPage() {
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <CardHeader title="Incentives / Government Support" />
                 <div className="p-5">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{project.governmentSupport?.trim() || '-'}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{project.governmentSupport?.trim() ?? '-'}</p>
                 </div>
               </div>
 
@@ -403,7 +400,7 @@ export default function ProjectDetailPage() {
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <CardHeader title="Revenue Stream" />
                 <div className="p-6">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{project.revenueStream?.trim() || '-'}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{project.revenueStream?.trim() ?? '-'}</p>
                 </div>
               </div>
 
@@ -412,7 +409,7 @@ export default function ProjectDetailPage() {
                 <CardHeader title="Additional Information" />
                 <div className="p-6">
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {project.additionalInfo?.trim() || '-'}
+                    {project.additionalInfo?.trim() ?? '-'}
                   </p>
                 </div>
               </div>
@@ -555,17 +552,13 @@ export default function ProjectDetailPage() {
                   <div className="px-5 py-3">
                     <p className="text-xs text-gray-500 mb-0.5">NPV</p>
                     <p className="text-sm font-semibold text-gray-800">
-                      {project.npv != null
-                        ? project.npv === 0 ? 'Under Calculation' : `USD ${project.npv.toLocaleString('en-US')} Million`
-                        : '-'}
+                      {formatNpvDisplay(project.npv)}
                     </p>
                   </div>
                   <div className="px-5 py-3">
                     <p className="text-xs text-gray-500 mb-0.5">Return on Investment / Equity IRR</p>
                     <p className="text-sm font-semibold text-gray-800">
-                      {project.irr != null
-                        ? project.irr === 0 ? 'User Charge / Under Calculation' : `${project.irr}%`
-                        : '-'}
+                      {formatIrrDisplay(project.irr)}
                     </p>
                   </div>
                 </div>
@@ -616,7 +609,7 @@ export default function ProjectDetailPage() {
                 <div className="p-5">
                   {project.projectFileDownloadUrl ? (
                     <a
-                      href={project.projectFileDownloadUrl!}
+                      href={project.projectFileDownloadUrl ?? ''}
                       download={`project-${projectId}-document`}
                       className="flex items-center gap-2 text-sm text-[#0f2d5e] font-medium hover:underline"
                     >
@@ -674,10 +667,11 @@ export default function ProjectDetailPage() {
                 <div className="flex gap-6 items-start">
                   {/* Left: label + textarea + hint */}
                   <div className="flex-1 space-y-1.5">
-                    <label className="block text-sm font-semibold text-gray-800">
+                    <label htmlFor="rejection-notes" className="block text-sm font-semibold text-gray-800">
                       Catatan Verifikasi Admin
                     </label>
                     <textarea
+                      id="rejection-notes"
                       value={rejectionNotes}
                       onChange={(e) => setRejectionNotes(e.target.value)}
                       placeholder="Provide a detailed description..."

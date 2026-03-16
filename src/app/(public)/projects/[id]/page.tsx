@@ -5,7 +5,7 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function PublicProjectDetailPage({ params }: PageProps) {
+export default async function PublicProjectDetailPage({ params }: Readonly<PageProps>) {
   const { id } = await params;
   const projectId = Number(id);
 

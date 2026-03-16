@@ -99,7 +99,7 @@ function validateEmail(value: string): string | undefined {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
 }
 
-const PHONE_REGEX = /^[+]?[0-9][0-9\s\-]{6,18}[0-9]$/;
+const PHONE_REGEX = /^[+]?\d[\d\s-]{6,18}\d$/;
 function validatePhone(value: string): string | undefined {
   if (!value.trim()) return 'Nomor telepon wajib diisi';
   if (value.length > 20) return 'Nomor telepon maksimal 20 karakter';
@@ -241,20 +241,14 @@ export default function UpdateInvestorProfileForm() {
     return Object.keys(next).length === 0;
   }
 
-  // ── Submit ───────────────────────────────────────────────────────────────────
+  // ── Payload builder ──────────────────────────────────────────────────────────
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
-
-    const payload: UpdateInvestorProfileRequest = {
-      // Base — required
+  function buildPayload(): UpdateInvestorProfileRequest {
+    return {
       name: formData.name.trim(),
       email: formData.email.trim(),
       phoneNumber: formData.phoneNumber.trim(),
-      // Optional — all roles
       ...(formData.jabatan.trim() && { jabatan: formData.jabatan.trim() }),
-      // Optional — investor extra
       ...(formData.companyName.trim() && { companyName: formData.companyName.trim() }),
       ...(formData.investmentInterestSectors.length > 0 && {
         investmentInterestSectors: formData.investmentInterestSectors,
@@ -274,30 +268,50 @@ export default function UpdateInvestorProfileForm() {
       optInEmail: formData.optInEmail,
       agreePrivacy: formData.agreePrivacy,
     };
+  }
+
+  // ── Resolve organisation name via get-or-create ─────────────────────────────
+
+  async function resolveOrganization(payload: UpdateInvestorProfileRequest): Promise<void> {
+    const companyName = formData.companyName.trim();
+    if (!companyName) return;
+
+    const orgResponse = await getOrCreateOrganization(companyName);
+    if (orgResponse.status !== 200) {
+      throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
+    }
+    payload.companyName = orgResponse.data?.name || companyName;
+  }
+
+  // ── Handle profile update error ─────────────────────────────────────────────
+
+  function handleProfileUpdateError(err: unknown): void {
+    if (err instanceof ApiError) {
+      if (err.status === 409) {
+        setErrors(prev => ({ ...prev, email: err.message }));
+      }
+      showToast('danger', 'Gagal memperbarui profil', err.message);
+    } else {
+      showToast('danger', 'Gagal memperbarui profil', 'Terjadi kesalahan. Silakan coba lagi.');
+    }
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────────
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const payload = buildPayload();
 
     setIsSubmitting(true);
     try {
-      // Normalize organisation name via get-or-create
-      if (formData.companyName.trim()) {
-        const orgResponse = await getOrCreateOrganization(formData.companyName.trim());
-        if (orgResponse.status !== 200) {
-          throw new Error(orgResponse.message || 'Gagal membuat/mengambil organisasi');
-        }
-        payload.companyName = orgResponse.data?.name || formData.companyName.trim();
-      }
-
+      await resolveOrganization(payload);
       await updateInvestorProfile(payload);
       setOriginalData(formData);
       showToast('success', 'Profil berhasil diperbarui!', 'Data profil Anda telah disimpan.');
     } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 409) {
-          setErrors(prev => ({ ...prev, email: err.message }));
-        }
-        showToast('danger', 'Gagal memperbarui profil', err.message);
-      } else {
-        showToast('danger', 'Gagal memperbarui profil', 'Terjadi kesalahan. Silakan coba lagi.');
-      }
+      handleProfileUpdateError(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -411,16 +425,16 @@ export default function UpdateInvestorProfileForm() {
         <div className="flex-1 bg-white rounded-[20px] border border-grey overflow-hidden animate-pulse">
           <div className="h-12 bg-primary" />
           <div className="p-8 space-y-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-10 rounded-lg bg-gray-100" />
+            {['skeleton-profile-1', 'skeleton-profile-2', 'skeleton-profile-3', 'skeleton-profile-4', 'skeleton-profile-5', 'skeleton-profile-6'].map((id) => (
+              <div key={id} className="h-10 rounded-lg bg-gray-100" />
             ))}
           </div>
         </div>
         <div className="w-[440px] shrink-0 bg-white rounded-[20px] border border-grey overflow-hidden animate-pulse">
           <div className="h-12 bg-primary" />
           <div className="p-8 space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-10 rounded-lg bg-gray-100" />
+            {['skeleton-password-1', 'skeleton-password-2', 'skeleton-password-3'].map((id) => (
+              <div key={id} className="h-10 rounded-lg bg-gray-100" />
             ))}
           </div>
         </div>

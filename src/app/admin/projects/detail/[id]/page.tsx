@@ -40,7 +40,7 @@ export default function AdminProjectDetailPage() {
 
   const handleVerify = async (id: number) => {
     try {
-      const response = await approveProject(id);
+      await approveProject(id);
       // Update project status
       setProject((prev) => (prev ? { ...prev, status: 'TERVERIFIKASI' } : null));
       // Show success toast
@@ -53,7 +53,7 @@ export default function AdminProjectDetailPage() {
 
   const handleReject = async (id: number, notes: string) => {
     try {
-      const response = await rejectProject(id, notes);
+      await rejectProject(id, notes);
       // Update project status
       setProject((prev) => (prev ? { ...prev, status: 'PERBAIKAN_DATA' } : null));
       // Show success toast
@@ -80,7 +80,7 @@ export default function AdminProjectDetailPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
           <h2 className="font-bold text-red-900">Error</h2>
-          <p className="mt-2 text-red-700">{error || 'Project not found'}</p>
+          <p className="mt-2 text-red-700">{error ?? 'Project not found'}</p>
         </div>
       </div>
     );

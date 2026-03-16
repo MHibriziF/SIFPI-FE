@@ -91,7 +91,8 @@ export default function RegisterInvestorForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
   const [loading, setLoading] = useState(false);
-  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
+  // selectedOrganization is set by OrganizationAutocomplete for potential future use
+  const [, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
 
   function validateStep1(): boolean {
     const next: FormErrors = {};
@@ -165,49 +166,59 @@ export default function RegisterInvestorForm({
     }
   }
 
+  function validateFieldInline(
+    field: keyof CreateInvestorRequest,
+    value: any,
+    currentErrors: FormErrors,
+    currentFormData: CreateInvestorRequest,
+    currentTouched: TouchedFields
+  ): FormErrors {
+    const next = { ...currentErrors };
+
+    switch (field) {
+      case 'email':
+        next.email = validateEmail(value);
+        break;
+      case 'password':
+        next.password = validatePassword(value);
+        if (currentTouched.confirmPassword && currentFormData.confirmPassword) {
+          next.confirmPassword =
+            value !== currentFormData.confirmPassword ? 'Password tidak cocok' : undefined;
+        }
+        break;
+      case 'confirmPassword':
+        next.confirmPassword =
+          value !== currentFormData.password ? 'Password tidak cocok' : undefined;
+        break;
+      case 'phone':
+        next.phone = validatePhone(value);
+        break;
+      case 'nama':
+        next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
+        break;
+      case 'organisasi':
+        next.organisasi = value.trim() ? undefined : 'Organisasi/Instansi wajib diisi';
+        break;
+      case 'jabatan':
+        next.jabatan = value.trim() ? undefined : 'Jabatan wajib diisi';
+        break;
+      case 'budgetInvestasi':
+        next.budgetInvestasi = value ? undefined : 'Budget investasi wajib diisi';
+        break;
+      case 'sectorInterest':
+        next.sectorInterest =
+          (value as string[]).length >= 3 ? undefined : 'Pilih minimal 3 sektor';
+        break;
+    }
+
+    return next;
+  }
+
   function handleChange(field: keyof CreateInvestorRequest, value: any) {
     setFormData(prev => ({ ...prev, [field]: value }));
 
     if (touched[field]) {
-      const next = { ...errors };
-
-      switch (field) {
-        case 'email':
-          next.email = validateEmail(value);
-          break;
-        case 'password':
-          next.password = validatePassword(value);
-          if (touched.confirmPassword && formData.confirmPassword) {
-            next.confirmPassword =
-              value !== formData.confirmPassword ? 'Password tidak cocok' : undefined;
-          }
-          break;
-        case 'confirmPassword':
-          next.confirmPassword =
-            value !== formData.password ? 'Password tidak cocok' : undefined;
-          break;
-        case 'phone':
-          next.phone = validatePhone(value);
-          break;
-        case 'nama':
-          next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
-          break;
-        case 'organisasi':
-          next.organisasi = value.trim() ? undefined : 'Organisasi/Instansi wajib diisi';
-          break;
-        case 'jabatan':
-          next.jabatan = value.trim() ? undefined : 'Jabatan wajib diisi';
-          break;
-        case 'budgetInvestasi':
-          next.budgetInvestasi = value ? undefined : 'Budget investasi wajib diisi';
-          break;
-        case 'sectorInterest':
-          next.sectorInterest =
-            (value as string[]).length >= 3 ? undefined : 'Pilih minimal 3 sektor';
-          break;
-      }
-
-      setErrors(next);
+      setErrors(validateFieldInline(field, value, errors, formData, touched));
     }
   }
 

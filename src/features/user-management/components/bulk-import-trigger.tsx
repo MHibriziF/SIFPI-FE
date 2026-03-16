@@ -138,8 +138,8 @@ export function BulkImportTrigger({
             <div className="space-y-6 p-8">
               <div>
                 <label htmlFor="bulk-import-file" className="text-lg font-medium text-primary">
-                  Pilih file CSV
-                  <span className="ml-1 text-danger">*</span>
+                  Pilih file CSV{' '}
+                  <span className="text-danger">*</span>
                 </label>
                 <div className="mt-2 rounded-xl border border-gray-300 px-4 py-3">
                   <input

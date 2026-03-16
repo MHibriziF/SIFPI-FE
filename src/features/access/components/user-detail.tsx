@@ -43,7 +43,7 @@ function formatRole(role: string) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Card({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+function Card({ title, children, className = '' }: Readonly<{ title: string; children: React.ReactNode; className?: string }>) {
   return (
     <div className={`border border-gray-200 rounded-2xl overflow-hidden bg-white ${className}`}>
       <div className="bg-primary px-4 py-3 flex justify-center">
@@ -54,7 +54,7 @@ function Card({ title, children, className = '' }: { title: string; children: Re
   );
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
+function InfoChip({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs text-gray-500">{label}</span>
@@ -65,7 +65,7 @@ function InfoChip({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TextField({ label, value }: { label: string; value: string }) {
+function TextField({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex flex-col gap-1.5 flex-1 min-w-0">
       <span className="text-sm text-primary">{label}</span>
@@ -84,7 +84,7 @@ function AksiCard({
   canUpdate,
   canDelete,
   className = '',
-}: {
+}: Readonly<{
   email: string;
   role: string;
   isVerified: boolean;
@@ -92,7 +92,7 @@ function AksiCard({
   canUpdate: boolean;
   canDelete: boolean;
   className?: string;
-}) {
+}>) {
   const router = useRouter();
   const isProjectOwner = role === 'PROJECT_OWNER';
   const [verifyLoading, setVerifyLoading] = useState(false);
@@ -223,11 +223,11 @@ function AksiCard({
               onClick={handleDeactivate}
               disabled={deactivateLoading}
             >
-              {deactivateLoading
-                ? 'Menonaktifkan...'
-                : confirmDeactivate
-                  ? 'Konfirmasi Nonaktifkan?'
-                  : 'Nonaktifkan Akses'}
+              {(() => {
+                if (deactivateLoading) return 'Menonaktifkan...';
+                if (confirmDeactivate) return 'Konfirmasi Nonaktifkan?';
+                return 'Nonaktifkan Akses';
+              })()}
             </Button>
           )}
 
@@ -266,7 +266,7 @@ interface UserDetailViewProps {
   canDelete: boolean;
 }
 
-export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewProps) {
+export function UserDetailView({ user, canUpdate, canDelete }: Readonly<UserDetailViewProps>) {
   const isProjectOwner = user.role === 'PROJECT_OWNER';
   const isInvestor = user.role === 'INVESTOR';
 

@@ -20,7 +20,7 @@ interface RoleEditFormProps {
   totalUsers: number;
 }
 
-export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFormProps) {
+export function RoleEditForm({ role, initialRoleUsers, totalUsers }: Readonly<RoleEditFormProps>) {
   const {
     name, setName,
     status, setStatus,
@@ -257,22 +257,24 @@ export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFor
                     </tr>
                   </thead>
                   <tbody>
-                    {usersLoading ? (
-                      Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, i) => (
-                        <tr key={i} className="border-b border-gray-100">
+                    {usersLoading && (
+                      Array.from({ length: pageSize > 5 ? 5 : pageSize }, (_, i) => `skeleton-edit-${i}`).map((skeletonId) => (
+                        <tr key={skeletonId} className="border-b border-gray-100">
                           <td className="py-3 px-4"><div className="size-4 bg-gray-200 rounded animate-pulse" /></td>
                           <td className="py-3 px-4"><div className="h-4 w-32 bg-gray-200 rounded animate-pulse" /></td>
                           <td className="py-3 px-4"><div className="h-4 w-44 bg-gray-200 rounded animate-pulse" /></td>
                           <td className="py-3 px-4"><div className="h-4 w-28 bg-gray-200 rounded animate-pulse" /></td>
                         </tr>
                       ))
-                    ) : users.length === 0 ? (
+                    )}
+                    {!usersLoading && users.length === 0 && (
                       <tr>
                         <td colSpan={4} className="text-center py-8 text-gray-400 text-sm">
                           Tidak ada pengguna ditemukan
                         </td>
                       </tr>
-                    ) : (
+                    )}
+                    {!usersLoading && users.length > 0 && (
                       users.map((user) => {
                         const checked = isUserChecked(user);
                         const isCurrentMember = initialAssignedEmails.has(user.email);

@@ -88,6 +88,88 @@ function normalizeFile(input: unknown): PreviewableFile | null {
   return { blob: file, name, type, key };
 }
 
+const RESIZABLE_PREVIEW_CLASS =
+  'block h-44 w-full max-w-full min-h-32 resize overflow-auto rounded-md border border-gray-200 bg-white';
+const RESIZABLE_FRAME_CLASS =
+  'h-44 w-full max-w-full min-h-32 resize overflow-hidden rounded-md border border-gray-200 bg-white';
+const PREVIEW_CONTENT_CLASS = 'h-full w-full';
+
+function FilePreviewContent({
+  file,
+  isImage,
+  isPdf,
+  isVideo,
+  isAudio,
+  imageDataUrl,
+  objectUrl,
+}: {
+  file: PreviewableFile;
+  isImage: boolean;
+  isPdf: boolean;
+  isVideo: boolean;
+  isAudio: boolean;
+  imageDataUrl: string | null;
+  objectUrl: string | null;
+}) {
+  if (isImage && imageDataUrl) {
+    return (
+      <a href={imageDataUrl} target="_blank" rel="noreferrer" className={RESIZABLE_PREVIEW_CLASS}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageDataUrl}
+          alt={file.name}
+          className={`${PREVIEW_CONTENT_CLASS} object-contain`}
+        />
+      </a>
+    );
+  }
+  if (isImage) {
+    return (
+      <div className={`${RESIZABLE_PREVIEW_CLASS} flex items-center justify-center text-xs text-gray-500`}>
+        Menyiapkan preview gambar...
+      </div>
+    );
+  }
+  if (isPdf) {
+    return (
+      <div className={RESIZABLE_FRAME_CLASS}>
+        <iframe
+          src={objectUrl ?? undefined}
+          title={file.name}
+          className={`${PREVIEW_CONTENT_CLASS} border-0`}
+        />
+      </div>
+    );
+  }
+  if (isVideo) {
+    return (
+      <div className={RESIZABLE_FRAME_CLASS}>
+        <video
+          src={objectUrl ?? undefined}
+          controls
+          className={`${PREVIEW_CONTENT_CLASS} bg-black/90`}
+        />
+      </div>
+    );
+  }
+  if (isAudio) {
+    return <audio src={objectUrl ?? undefined} controls className="w-full" />;
+  }
+  return (
+    <div className={RESIZABLE_FRAME_CLASS}>
+      <object
+        data={objectUrl ?? undefined}
+        className={`${PREVIEW_CONTENT_CLASS} border-0`}
+        aria-label={`Preview ${file.name}`}
+      >
+        <div className="flex h-full items-center justify-center px-3 text-xs text-gray-500">
+          Preview tidak tersedia untuk tipe ini di browser. Gunakan download.
+        </div>
+      </object>
+    </div>
+  );
+}
+
 function FileSummaryItem({ label, file: rawFile }: { label: string; file: unknown }) {
   const file = useMemo(() => normalizeFile(rawFile), [rawFile]);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
@@ -125,60 +207,20 @@ function FileSummaryItem({ label, file: rawFile }: { label: string; file: unknow
   }
 
   const downloadHref = isImage ? imageDataUrl : objectUrl;
-  const resizablePreviewClass =
-    'block h-44 w-full max-w-full min-h-32 resize overflow-auto rounded-md border border-gray-200 bg-white';
-  const resizableFrameClass =
-    'h-44 w-full max-w-full min-h-32 resize overflow-hidden rounded-md border border-gray-200 bg-white';
-  const previewContentClass = 'h-full w-full';
 
   return (
     <div className="grid gap-2">
       <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
       <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
-        {isImage && imageDataUrl ? (
-          <a href={imageDataUrl} target="_blank" rel="noreferrer" className={resizablePreviewClass}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageDataUrl}
-              alt={file.name}
-              className={`${previewContentClass} object-contain`}
-            />
-          </a>
-        ) : isImage ? (
-          <div className={`${resizablePreviewClass} flex items-center justify-center text-xs text-gray-500`}>
-            Menyiapkan preview gambar...
-          </div>
-        ) : isPdf ? (
-          <div className={resizableFrameClass}>
-            <iframe
-              src={objectUrl ?? undefined}
-              title={file.name}
-              className={`${previewContentClass} border-0`}
-            />
-          </div>
-        ) : isVideo ? (
-          <div className={resizableFrameClass}>
-            <video
-              src={objectUrl ?? undefined}
-              controls
-              className={`${previewContentClass} bg-black/90`}
-            />
-          </div>
-        ) : isAudio ? (
-          <audio src={objectUrl ?? undefined} controls className="w-full" />
-        ) : (
-          <div className={resizableFrameClass}>
-            <object
-              data={objectUrl ?? undefined}
-              className={`${previewContentClass} border-0`}
-              aria-label={`Preview ${file.name}`}
-            >
-              <div className="flex h-full items-center justify-center px-3 text-xs text-gray-500">
-                Preview tidak tersedia untuk tipe ini di browser. Gunakan download.
-              </div>
-            </object>
-          </div>
-        )}
+        <FilePreviewContent
+          file={file}
+          isImage={isImage}
+          isPdf={isPdf}
+          isVideo={isVideo}
+          isAudio={isAudio}
+          imageDataUrl={imageDataUrl}
+          objectUrl={objectUrl}
+        />
       </div>
       {downloadHref ? (
         <a
@@ -323,7 +365,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.confirmDataAccuracy')}
             />
-            Saya menyatakan bahwa seluruh informasi yang dimasukkan dalam formulir ini adalah
+            {' '}Saya menyatakan bahwa seluruh informasi yang dimasukkan dalam formulir ini adalah
             benar, akurat, dan sesuai dengan dokumen perencanaan terbaru. Saya memahami bahwa
             ketidaksesuaian data dapat menyebabkan penundaan atau penolakan pada proses verifikasi
             oleh Admin IPFO.
@@ -334,7 +376,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.agreePublication')}
             />
-            Saya menyetujui bahwa informasi naratif dan visual proyek yang saya berikan akan
+            {' '}Saya menyetujui bahwa informasi naratif dan visual proyek yang saya berikan akan
             ditampilkan secara publik pada Katalog Proyek IPFO setelah disetujui.
           </label>
           <label className="flex items-start gap-2 text-sm text-primary">
@@ -343,7 +385,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.acknowledgeVerification')}
             />
-            Saya memahami bahwa proses verifikasi oleh Admin memiliki target waktu rata-rata 14
+            {' '}Saya memahami bahwa proses verifikasi oleh Admin memiliki target waktu rata-rata 14
             hari kerja sejak dokumen dinyatakan lengkap. Saya bersedia untuk segera melakukan
             revisi data jika mendapatkan catatan atau masukan dari Admin selama proses review
             berlangsung.
@@ -354,7 +396,7 @@ export function StepSummary({ onBack, onEditStep, onSaveDraft, submitting }: Ste
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.allowPromotion')}
             />
-            Saya memberikan izin kepada IPFO untuk mempublikasikan data proyek ini ke kanal berita
+            {' '}Saya memberikan izin kepada IPFO untuk mempublikasikan data proyek ini ke kanal berita
             dan newsletter resmi guna menarik minat investor.
           </label>
         </SummaryCard.Body>

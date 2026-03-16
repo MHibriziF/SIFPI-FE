@@ -252,22 +252,24 @@ export function RoleCreateForm() {
               </tr>
             </thead>
             <tbody>
-              {usersLoading ? (
-                Array.from({ length: pageSize }).map((_, i) => (
-                  <tr key={i} className="border-b border-gray-100">
+              {usersLoading && (
+                Array.from({ length: pageSize }, (_, i) => `skeleton-create-${i}`).map((skeletonId) => (
+                  <tr key={skeletonId} className="border-b border-gray-100">
                     <td className="py-3 px-4"><div className="size-4 bg-gray-200 rounded animate-pulse" /></td>
                     <td className="py-3 px-4"><div className="h-4 w-32 bg-gray-200 rounded animate-pulse" /></td>
                     <td className="py-3 px-4"><div className="h-4 w-40 bg-gray-200 rounded animate-pulse" /></td>
                     <td className="py-3 px-4"><div className="h-4 w-24 bg-gray-200 rounded animate-pulse" /></td>
                   </tr>
                 ))
-              ) : users.length === 0 ? (
+              )}
+              {!usersLoading && users.length === 0 && (
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-gray-400">
                     Tidak ada pengguna ditemukan
                   </td>
                 </tr>
-              ) : (
+              )}
+              {!usersLoading && users.length > 0 && (
                 users.map((user) => (
                   <tr key={user.email} className="border-b border-gray-100 hover:bg-gray-50/50">
                     <td className="py-3 px-4">

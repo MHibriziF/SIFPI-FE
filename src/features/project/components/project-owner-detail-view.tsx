@@ -73,7 +73,7 @@ interface ApprovalTimelineProps {
   createdAt: string;
 }
 
-function ApprovalTimeline({ currentStatus, history, createdAt }: ApprovalTimelineProps) {
+function ApprovalTimeline({ currentStatus, history, createdAt }: Readonly<ApprovalTimelineProps>) {
   const currentIndex = TIMELINE_STEPS.findIndex(s => s.status === currentStatus);
 
   return (
@@ -89,11 +89,11 @@ function ApprovalTimeline({ currentStatus, history, createdAt }: ApprovalTimelin
               {/* Dot */}
               <div
                 className={`size-5 rounded-full flex-shrink-0 border-2 ${
-                  isCurrent
-                    ? 'bg-primary border-primary'
-                    : isPast
-                      ? 'bg-success-light border-success-light'
-                      : 'bg-white border-gray-300'
+                  (() => {
+                    if (isCurrent) return 'bg-primary border-primary';
+                    if (isPast) return 'bg-success-light border-success-light';
+                    return 'bg-white border-gray-300';
+                  })()
                 }`}
               />
               <div className="flex flex-col">
@@ -131,11 +131,11 @@ function FinancialRow({
   label,
   value,
   border = true,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   border?: boolean;
-}) {
+}>) {
   return (
     <div className={`px-8 py-3 flex flex-col gap-1 ${border ? 'border-b border-gray-200' : ''}`}>
       <span className="text-xs text-gray-500">{label}</span>
@@ -150,11 +150,11 @@ function InfoRow({
   label,
   value,
   border = true,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   border?: boolean;
-}) {
+}>) {
   return (
     <div className={`px-8 py-3 flex gap-4 items-start ${border ? 'border-b border-gray-200' : ''}`}>
       <Info className="size-4 text-primary mt-0.5 flex-shrink-0" />
@@ -173,7 +173,7 @@ interface ProjectOwnerDetailViewProps {
   canEdit: boolean;
 }
 
-export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOwnerDetailViewProps) {
+export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<ProjectOwnerDetailViewProps>) {
   const router = useRouter();
 
   const [project, setProject] = useState<ProjectDetailDTO | null>(null);
@@ -314,11 +314,11 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
                     disabled={isSubmitting}
                   >
                     <Send className="size-4" />
-                    {isSubmitting
-                      ? 'Mengajukan...'
-                      : project.status === ProjectStatus.PERBAIKAN_DATA
-                        ? 'Ajukan Ulang'
-                        : 'Ajukan Proyek'}
+                    {(() => {
+                      if (isSubmitting) return 'Mengajukan...';
+                      if (project.status === ProjectStatus.PERBAIKAN_DATA) return 'Ajukan Ulang';
+                      return 'Ajukan Proyek';
+                    })()}
                   </Button>
                 )}
                 {showEditButton && (
@@ -353,6 +353,7 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
             <SectionCard.Header title="Metadata Proyek" />
             <SectionCard.Body className="flex flex-col gap-3">
               <table className="w-full text-sm border-collapse">
+                <thead className="sr-only"><tr><th>Properti</th><th>Nilai</th></tr></thead>
                 <tbody>
                   <tr>
                     <td className="py-1.5 text-gray-900 font-medium w-36 align-top">ID Proyek</td>
@@ -523,7 +524,7 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: ProjectOw
           {/* Project Information */}
           <SectionCard>
             <SectionCard.Header title="Project Information" />
-            <InfoRow label="Sektor" value={project.sector as string} />
+            <InfoRow label="Sektor" value={project.sector} />
             <InfoRow label="Lokasi" value={project.location} />
             <InfoRow label="Deskripsi" value={project.description} />
             <InfoRow label="Model Kerjasama / Cooperation Model" value={project.cooperationModel} />

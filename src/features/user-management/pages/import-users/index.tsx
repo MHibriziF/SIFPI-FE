@@ -344,13 +344,11 @@ export default function ImportUsersPage() {
           </div>
 
           <div
-            className={
-              hasNoSelection
-                ? 'rounded-xl border border-warning bg-warning-light/30 p-4 text-warning'
-                : hasValidationError
-                ? 'rounded-xl border border-danger bg-danger-light/30 p-4 text-danger'
-                : 'rounded-xl border border-success bg-success-light/30 p-4 text-success'
-            }
+            className={(() => {
+              if (hasNoSelection) return 'rounded-xl border border-warning bg-warning-light/30 p-4 text-warning';
+              if (hasValidationError) return 'rounded-xl border border-danger bg-danger-light/30 p-4 text-danger';
+              return 'rounded-xl border border-success bg-success-light/30 p-4 text-success';
+            })()}
           >
             <div className="flex items-start gap-2">
               {hasNoSelection || hasValidationError ? (
@@ -360,9 +358,10 @@ export default function ImportUsersPage() {
               )}
               <div>
                 <p className="text-sm font-semibold">Error validasi</p>
-                {hasNoSelection ? (
+                {hasNoSelection && (
                   <p className="mt-1 text-sm">Pilih minimal satu pengguna untuk diimpor.</p>
-                ) : selectedInvalidErrorItems.length > 0 ? (
+                )}
+                {!hasNoSelection && selectedInvalidErrorItems.length > 0 && (
                   <>
                     <div className="mt-1 space-y-1">
                       {selectedInvalidErrorItems.map(item => (
@@ -375,7 +374,8 @@ export default function ImportUsersPage() {
                       Hilangkan centang pada baris bermasalah untuk melanjutkan import.
                     </p>
                   </>
-                ) : (
+                )}
+                {!hasNoSelection && selectedInvalidErrorItems.length === 0 && (
                   <p className="mt-1 text-sm">Validasi awal berhasil.</p>
                 )}
               </div>

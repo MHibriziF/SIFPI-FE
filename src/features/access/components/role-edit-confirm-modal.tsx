@@ -46,7 +46,7 @@ export function RoleEditConfirmModal({
   toRemoveDetails,
   onConfirm,
   onCancel,
-}: RoleEditConfirmModalProps) {
+}: Readonly<RoleEditConfirmModalProps>) {
   if (!isOpen) return null;
 
   const statusLabel = ROLE_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;

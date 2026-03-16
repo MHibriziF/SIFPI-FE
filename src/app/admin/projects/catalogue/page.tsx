@@ -68,6 +68,12 @@ function ownerLabel(project: ProjectListItemDTO): string {
   return project.ownerOrganization || project.ownerName || maybeLegacy.ownerInstitution || '-';
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof Error) return error.message;
+  return fallback;
+}
+
 function extractProjects(payload: unknown): ProjectListItemDTO[] {
   if (Array.isArray(payload)) return payload as ProjectListItemDTO[];
   if (!payload || typeof payload !== 'object') return [];
@@ -118,13 +124,7 @@ export default function AdminProjectsPage() {
           setProjects(list);
         }
       } catch (error) {
-        const message =
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : 'Gagal mengambil data proyek.';
-        showToast('danger', 'Gagal memuat proyek', message);
+        showToast('danger', 'Gagal memuat proyek', getErrorMessage(error, 'Gagal mengambil data proyek.'));
       } finally {
         if (mounted) {
           setLoadingProjects(false);
@@ -206,13 +206,7 @@ export default function AdminProjectsPage() {
       downloadPdf(file.blob, file.filename);
       showToast('success', 'Download berhasil', 'Dokumen catalogue proyek sudah terunduh.');
     } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : 'Terjadi kesalahan saat export katalog.';
-      showToast('danger', 'Export gagal', message);
+      showToast('danger', 'Export gagal', getErrorMessage(error, 'Terjadi kesalahan saat export katalog.'));
     } finally {
       setExporting(false);
     }
@@ -291,19 +285,21 @@ export default function AdminProjectsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white text-sm text-gray-700">
-                  {loadingProjects ? (
+                  {loadingProjects && (
                     <tr>
                       <td colSpan={9} className="px-3 py-8 text-center text-gray-500">
                         Memuat proyek...
                       </td>
                     </tr>
-                  ) : filteredProjects.length === 0 ? (
+                  )}
+                  {!loadingProjects && filteredProjects.length === 0 && (
                     <tr>
                       <td colSpan={9} className="px-3 py-8 text-center text-gray-500">
                         Tidak ada proyek ditemukan.
                       </td>
                     </tr>
-                  ) : (
+                  )}
+                  {!loadingProjects && filteredProjects.length > 0 &&
                     paginatedProjects.map(project => (
                       <tr key={project.id}>
                         <td className="px-3 py-3 align-top">
@@ -339,7 +335,7 @@ export default function AdminProjectsPage() {
                         </td>
                       </tr>
                     ))
-                  )}
+                  }
                 </tbody>
               </table>
             </div>

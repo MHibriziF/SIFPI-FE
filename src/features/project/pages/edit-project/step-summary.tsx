@@ -41,7 +41,7 @@ function formatPercentValue(value?: number | null) {
   return `${numberFormatter.format(value)}%`;
 }
 
-function SummaryItem({ label, value }: { label: string; value?: string | number | null }) {
+function SummaryItem({ label, value }: Readonly<{ label: string; value?: string | number | null }>) {
   const displayValue =
     value === undefined || value === null || value === '' ? '-' : value;
 
@@ -58,12 +58,12 @@ function FileSummaryItem({
   newFile,
   existingUrl,
   existingLabel,
-}: {
+}: Readonly<{
   label: string;
   newFile?: File | null;
   existingUrl?: string | null;
   existingLabel?: string;
-}) {
+}>) {
   if (newFile) {
     return (
       <div className="grid gap-1">
@@ -104,7 +104,7 @@ export function EditStepSummary({
   existingMapFileUrl,
   existingStructureFileUrl,
   existingProjectFileUrl,
-}: EditStepSummaryProps) {
+}: Readonly<EditStepSummaryProps>) {
   const { watch, register } = useFormContext<EditProjectFormValues>();
   const values = watch();
 
@@ -205,7 +205,7 @@ export function EditStepSummary({
       <SummaryCard>
         <SummaryCard.Header title="Additional Information" onEdit={() => onEditStep(3)} />
         <SummaryCard.Body>
-          <p className="text-sm text-primary">{values.financial.additionalInfo || '-'}</p>
+          <p className="text-sm text-primary">{values.financial.additionalInfo ?? '-'}</p>
         </SummaryCard.Body>
       </SummaryCard>
 
@@ -237,7 +237,7 @@ export function EditStepSummary({
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.confirmDataAccuracy')}
             />
-            Saya menyatakan bahwa seluruh informasi yang dimasukkan dalam formulir ini adalah
+            {' '}Saya menyatakan bahwa seluruh informasi yang dimasukkan dalam formulir ini adalah
             benar, akurat, dan sesuai dengan dokumen perencanaan terbaru. Saya memahami bahwa
             ketidaksesuaian data dapat menyebabkan penundaan atau penolakan pada proses verifikasi
             oleh Admin IPFO.
@@ -248,7 +248,7 @@ export function EditStepSummary({
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.agreePublication')}
             />
-            Saya menyetujui bahwa informasi naratif dan visual proyek yang saya berikan akan
+            {' '}Saya menyetujui bahwa informasi naratif dan visual proyek yang saya berikan akan
             ditampilkan secara publik pada Katalog Proyek IPFO setelah disetujui.
           </label>
           <label className="flex items-start gap-2 text-sm text-primary">
@@ -257,7 +257,7 @@ export function EditStepSummary({
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.acknowledgeVerification')}
             />
-            Saya memahami bahwa proses verifikasi oleh Admin memiliki target waktu rata-rata 14
+            {' '}Saya memahami bahwa proses verifikasi oleh Admin memiliki target waktu rata-rata 14
             hari kerja sejak dokumen dinyatakan lengkap. Saya bersedia untuk segera melakukan
             revisi data jika mendapatkan catatan atau masukan dari Admin selama proses review
             berlangsung.
@@ -268,7 +268,7 @@ export function EditStepSummary({
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
               {...register('confirmation.allowPromotion')}
             />
-            Saya memberikan izin kepada IPFO untuk mempublikasikan data proyek ini ke kanal berita
+            {' '}Saya memberikan izin kepada IPFO untuk mempublikasikan data proyek ini ke kanal berita
             dan newsletter resmi guna menarik minat investor.
           </label>
         </SummaryCard.Body>

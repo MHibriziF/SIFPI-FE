@@ -219,11 +219,11 @@ export default function ImportProjectPage() {
 
   // ─── Validation summary card class ─────────────────────────────────────────
 
-  const validationCardClass = hasNoSelection
-    ? 'rounded-xl border border-warning bg-warning-light/30 p-4 text-warning'
-    : hasValidationError
-      ? 'rounded-xl border border-danger bg-danger-light/30 p-4 text-danger'
-      : 'rounded-xl border border-success bg-success-light/30 p-4 text-success';
+  const validationCardClass = (() => {
+    if (hasNoSelection) return 'rounded-xl border border-warning bg-warning-light/30 p-4 text-warning';
+    if (hasValidationError) return 'rounded-xl border border-danger bg-danger-light/30 p-4 text-danger';
+    return 'rounded-xl border border-success bg-success-light/30 p-4 text-success';
+  })();
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -334,18 +334,24 @@ export default function ImportProjectPage() {
                     <p className="text-sm font-semibold">
                       {hasNoSelection || hasValidationError ? 'Project tidak valid' : 'Validasi berhasil'}
                     </p>
-                    {hasNoSelection ? (
-                      <p className="mt-1 text-sm">Pilih minimal satu proyek untuk diimpor.</p>
-                    ) : hasValidationError ? (
-                      <p className="mt-1 text-sm">
-                        Terdapat {selectedInvalidRows.length} project dengan data tidak valid.
-                        Perbaiki data atau deselect project untuk dapat mengimpor project.
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-sm">
-                        Semua {selectedValidRows.length} proyek terpilih valid dan siap diimpor.
-                      </p>
-                    )}
+                    {(() => {
+                      if (hasNoSelection) {
+                        return <p className="mt-1 text-sm">Pilih minimal satu proyek untuk diimpor.</p>;
+                      }
+                      if (hasValidationError) {
+                        return (
+                          <p className="mt-1 text-sm">
+                            Terdapat {selectedInvalidRows.length} project dengan data tidak valid.
+                            Perbaiki data atau deselect project untuk dapat mengimpor project.
+                          </p>
+                        );
+                      }
+                      return (
+                        <p className="mt-1 text-sm">
+                          Semua {selectedValidRows.length} proyek terpilih valid dan siap diimpor.
+                        </p>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -383,7 +389,7 @@ export default function ImportProjectPage() {
               {isImportRunning && (
                 <p className="flex items-center gap-1.5 text-xs text-gray-400 self-center">
                   <Download className="size-3.5" />
-                  Import berjalan di background 
+                  Import berjalan di background
                 </p>
               )}
             </div>

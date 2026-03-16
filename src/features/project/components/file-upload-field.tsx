@@ -30,12 +30,11 @@ export function FileUploadField({
 
   const file = watch(fileField);
 
-  const fileError =
-    fileField === 'files.mapFile'
-      ? errors.files?.mapFile?.message
-      : fileField === 'files.projectStructureFile'
-        ? errors.files?.projectStructureFile?.message
-        : errors.files?.feasibilityStudyFile?.message;
+  const fileError = (() => {
+    if (fileField === 'files.mapFile') return errors.files?.mapFile?.message;
+    if (fileField === 'files.projectStructureFile') return errors.files?.projectStructureFile?.message;
+    return errors.files?.feasibilityStudyFile?.message;
+  })();
 
   const handleFileChange = (selectedFile: File | null) => {
     if (!selectedFile) return;

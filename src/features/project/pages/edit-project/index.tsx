@@ -46,7 +46,7 @@ interface EditProjectPageProps {
   projectId: number;
 }
 
-export default function EditProjectPage({ projectId }: EditProjectPageProps) {
+export default function EditProjectPage({ projectId }: Readonly<EditProjectPageProps>) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [maxVisitedStep, setMaxVisitedStep] = useState<1 | 2 | 3 | 4>(1);
@@ -96,7 +96,7 @@ export default function EditProjectPage({ projectId }: EditProjectPageProps) {
         general: {
           projectName: p.name ?? '',
           shortDescription: p.description ?? '',
-          sector: p.sector as string ?? '',
+          sector: (p.sector ?? '') as string,
           location: p.location ?? '',
           valueProposition: p.valueProposition ?? '',
           ownerInstitution: p.ownerInstitution ?? '',
@@ -222,14 +222,13 @@ export default function EditProjectPage({ projectId }: EditProjectPageProps) {
       }
       router.push('/project-owner/projects');
     } catch (error) {
-      const message =
-        error instanceof ApiError && error.isForbidden
-          ? 'Anda tidak memiliki izin untuk mengedit proyek ini.'
-          : error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : 'Gagal menyimpan perubahan proyek.';
+      const message = (() => {
+        if (error instanceof ApiError && error.isForbidden)
+          return 'Anda tidak memiliki izin untuk mengedit proyek ini.';
+        if (error instanceof ApiError) return error.message;
+        if (error instanceof Error) return error.message;
+        return 'Gagal menyimpan perubahan proyek.';
+      })();
       showToast('danger', 'Gagal menyimpan', message);
     } finally {
       setSubmitting(false);
@@ -272,7 +271,7 @@ export default function EditProjectPage({ projectId }: EditProjectPageProps) {
         <header className="rounded-xl bg-gray-50 px-6 py-5">
           <div>
             <h1 className="text-2xl font-semibold text-primary">Edit Proyek</h1>
-            <p className="text-sm text-gray-500 mt-1">#{project.id} — {project.name}</p>
+            <p className="text-sm text-gray-500 mt-1">#{project.id} &mdash; {project.name}</p>
             <Link
               href={`/project-owner/projects/${project.id}`}
               className="text-sm font-medium text-primary underline-offset-2 hover:underline"

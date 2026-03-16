@@ -219,19 +219,26 @@ export default function OwnerReadAllProjects() {
         </div>
 
         {/* Projects Grid */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <p className="text-gray-500 mb-4">Belum ada proyek yang diajukan</p>
-            <Button asChild>
-              <Link href="/project-owner/projects/create">Buat Proyek Baru</Link>
-            </Button>
-          </div>
-        ) : (
+        {(() => {
+          if (isLoading) {
+            return (
+              <div className="text-center py-12">
+                <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
+              </div>
+            );
+          }
+          if (projects.length === 0) {
+            return (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <p className="text-gray-500 mb-4">Belum ada proyek yang diajukan</p>
+                <Button asChild>
+                  <Link href="/project-owner/projects/create">Buat Proyek Baru</Link>
+                </Button>
+              </div>
+            );
+          }
+          return (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {projects.map((project) => (
@@ -282,7 +289,8 @@ export default function OwnerReadAllProjects() {
               </div>
             </div>
           </>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ interface EditStepGeneralProps {
   existingMapFileUrl?: string | null;
 }
 
-export function EditStepGeneral({ existingMapFileUrl }: EditStepGeneralProps) {
+export function EditStepGeneral({ existingMapFileUrl }: Readonly<EditStepGeneralProps>) {
   const {
     register,
     control,

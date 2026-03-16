@@ -21,7 +21,7 @@ import {
 const STORAGE_KEY = 'admin-bulk-project-import-draft';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^\+?[0-9\-]{8,20}$/;
+const PHONE_REGEX = /^\+?[0-9-]{8,20}$/;
 const URL_REGEX = /^https?:\/\/.+/i;
 
 type HeaderKey = keyof BatchUploadProjectRequest;
@@ -175,6 +175,174 @@ function buildTimelineIndexMaps(headerRow: string[]): {
   return { rangeMap, descMap, slots };
 }
 
+function validateRequiredText(
+  errors: string[],
+  value: string,
+  label: string,
+): void {
+  if (!value) errors.push(`${label} wajib diisi.`);
+}
+
+function validateEmail(
+  errors: string[],
+  value: string,
+  label: string,
+): void {
+  if (!value) errors.push(`${label} wajib diisi.`);
+  else if (!EMAIL_REGEX.test(value)) errors.push(`Format ${label} tidak valid.`);
+}
+
+function validatePhone(
+  errors: string[],
+  value: string,
+): void {
+  if (!value) errors.push('Telepon kontak wajib diisi.');
+  else if (!PHONE_REGEX.test(value.replace(/[\s()-]/g, '')))
+    errors.push('Format telepon kontak tidak valid.');
+}
+
+function validateNumber(
+  errors: string[],
+  raw: string,
+  parsed: number | null,
+  label: string,
+  options?: { nonNegative?: boolean },
+): void {
+  if (!raw) { errors.push(`${label} wajib diisi.`); return; }
+  if (parsed === null) { errors.push(`Format ${label} tidak valid.`); return; }
+  if (options?.nonNegative && parsed < 0) errors.push(`${label} tidak boleh negatif.`);
+}
+
+function validateUrl(
+  errors: string[],
+  value: string,
+  label: string,
+): void {
+  if (!value) errors.push(`${label} wajib diisi.`);
+  else if (!URL_REGEX.test(value)) errors.push(`Format ${label} tidak valid.`);
+}
+
+function validateRow(
+  dto: BatchUploadProjectRequest,
+  rawFields: {
+    concessionPeriodRaw: string;
+    totalCapexRaw: string;
+    totalOpexRaw: string;
+    npvRaw: string;
+    irrRaw: string;
+    isFeasibilityStudyRaw: string;
+  },
+  parsedFields: {
+    concessionPeriod: number | null;
+    totalCapex: number | null;
+    totalOpex: number | null;
+    npv: number | null;
+    irr: number | null;
+    isFeasibilityStudy: boolean | null;
+  },
+): string[] {
+  const errors: string[] = [];
+
+  validateEmail(errors, dto.ownerEmail, 'ownerEmail');
+  validateRequiredText(errors, dto.name, 'Nama proyek');
+  validateRequiredText(errors, dto.description, 'Deskripsi');
+  validateRequiredText(errors, dto.sector, 'Sektor');
+  validateRequiredText(errors, dto.location, 'Lokasi');
+  validateRequiredText(errors, dto.valueProposition, 'Value proposition');
+  validateRequiredText(errors, dto.ownerInstitution, 'Owner institution');
+  validateRequiredText(errors, dto.contactPersonName, 'Nama kontak');
+  validateEmail(errors, dto.contactPersonEmail, 'Email kontak');
+  validatePhone(errors, dto.contactPersonPhone);
+  validateRequiredText(errors, dto.cooperationModel, 'Model kerjasama');
+
+  if (!rawFields.concessionPeriodRaw) errors.push('Periode konsesi wajib diisi.');
+  else if (parsedFields.concessionPeriod === null) errors.push('Format periode konsesi tidak valid (harus angka).');
+  else if (parsedFields.concessionPeriod <= 0) errors.push('Periode konsesi harus lebih dari 0.');
+
+  validateRequiredText(errors, dto.assetReadiness, 'Kesiapan aset');
+  validateRequiredText(errors, dto.governmentSupport, 'Dukungan pemerintah');
+  validateNumber(errors, rawFields.totalCapexRaw, parsedFields.totalCapex, 'Total CAPEX', { nonNegative: true });
+  validateNumber(errors, rawFields.totalOpexRaw, parsedFields.totalOpex, 'Total OPEX', { nonNegative: true });
+  validateNumber(errors, rawFields.npvRaw, parsedFields.npv, 'NPV');
+  validateNumber(errors, rawFields.irrRaw, parsedFields.irr, 'IRR');
+  validateRequiredText(errors, dto.revenueStream, 'Revenue stream');
+
+  if (!rawFields.isFeasibilityStudyRaw) errors.push('isFeasibilityStudy wajib diisi (true/false).');
+  else if (parsedFields.isFeasibilityStudy === null) errors.push('isFeasibilityStudy harus bernilai true/false.');
+
+  validateUrl(errors, dto.locationImageUrl ?? '', 'URL gambar lokasi proyek');
+  validateUrl(errors, dto.projectStructureImageUrl ?? '', 'URL gambar struktur proyek');
+  validateUrl(errors, dto.projectFileUrl ?? '', 'URL dokumen proyek');
+
+  return errors;
+}
+
+function extractRowFields(
+  csvRow: string[],
+  headerMap: Record<string, number | null>,
+  rangeMap: Record<number, number>,
+  descMap: Record<number, number>,
+  slots: number[],
+): { dto: BatchUploadProjectRequest; rawFields: Record<string, string>; parsedFields: Record<string, unknown> } {
+  const ownerEmail = getCell(csvRow, headerMap.ownerEmail).toLowerCase();
+  const name = getCell(csvRow, headerMap.name);
+  const description = getCell(csvRow, headerMap.description);
+  const sector = getCell(csvRow, headerMap.sector);
+  const location = getCell(csvRow, headerMap.location);
+  const valueProposition = getCell(csvRow, headerMap.valueProposition);
+  const ownerInstitution = getCell(csvRow, headerMap.ownerInstitution);
+  const contactPersonName = getCell(csvRow, headerMap.contactPersonName);
+  const contactPersonEmail = getCell(csvRow, headerMap.contactPersonEmail).toLowerCase();
+  const contactPersonPhone = getCell(csvRow, headerMap.contactPersonPhone);
+  const cooperationModel = getCell(csvRow, headerMap.cooperationModel);
+  const concessionPeriodRaw = getCell(csvRow, headerMap.concessionPeriod);
+  const assetReadiness = getCell(csvRow, headerMap.assetReadiness);
+  const governmentSupport = getCell(csvRow, headerMap.governmentSupport);
+  const totalCapexRaw = getCell(csvRow, headerMap.totalCapex);
+  const totalOpexRaw = getCell(csvRow, headerMap.totalOpex);
+  const npvRaw = getCell(csvRow, headerMap.npv);
+  const irrRaw = getCell(csvRow, headerMap.irr);
+  const revenueStream = getCell(csvRow, headerMap.revenueStream);
+  const isFeasibilityStudyRaw = getCell(csvRow, headerMap.isFeasibilityStudy);
+  const additionalInfo = getCell(csvRow, headerMap.additionalInfo) || null;
+  const locationImageUrl = getCell(csvRow, headerMap.locationImageUrl);
+  const projectStructureImageUrl = getCell(csvRow, headerMap.projectStructureImageUrl);
+  const projectFileUrl = getCell(csvRow, headerMap.projectFileUrl);
+
+  const timelines: ProjectTimeline[] = [];
+  for (const n of slots) {
+    const timeRange = rangeMap[n] != null ? getCell(csvRow, rangeMap[n]) : '';
+    const phaseDescription = descMap[n] != null ? getCell(csvRow, descMap[n]) : '';
+    if (timeRange || phaseDescription) {
+      timelines.push({ timeRange, phaseDescription });
+    }
+  }
+
+  const concessionPeriod = parseInteger(concessionPeriodRaw);
+  const totalCapex = parseNumber(totalCapexRaw);
+  const totalOpex = parseNumber(totalOpexRaw);
+  const npv = parseNumber(npvRaw);
+  const irr = parseNumber(irrRaw);
+  const isFeasibilityStudy = parseBoolean(isFeasibilityStudyRaw);
+
+  const dto: BatchUploadProjectRequest = {
+    ownerEmail, name, description, sector, location, valueProposition,
+    ownerInstitution, contactPersonName, contactPersonEmail, contactPersonPhone,
+    cooperationModel, concessionPeriod: concessionPeriod ?? 0, assetReadiness,
+    governmentSupport, totalCapex: totalCapex ?? 0, totalOpex: totalOpex ?? 0,
+    npv: npv ?? 0, irr: irr ?? 0, revenueStream,
+    isFeasibilityStudy: isFeasibilityStudy ?? false, additionalInfo,
+    timelines: timelines.length > 0 ? timelines : undefined,
+    locationImageUrl, projectStructureImageUrl, projectFileUrl,
+  };
+
+  return {
+    dto,
+    rawFields: { concessionPeriodRaw, totalCapexRaw, totalOpexRaw, npvRaw, irrRaw, isFeasibilityStudyRaw },
+    parsedFields: { concessionPeriod, totalCapex, totalOpex, npv, irr, isFeasibilityStudy },
+  };
+}
+
 export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<ParsedBulkProjectRow> {
   const pre = preValidateCsv(csvText, REQUIRED_FIELDS, headerRow =>
     mapHeadersWithAliases(headerRow, EXPECTED_HEADERS, HEADER_ALIASES)
@@ -183,144 +351,17 @@ export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<Par
 
   const { headerMap, dataRows } = pre;
 
-  // Build timeline column index maps from the raw header row
   const allRows = parseCsvRows(csvText);
   const { rangeMap, descMap, slots } = buildTimelineIndexMaps(allRows[0]);
 
   const parsed: ParsedBulkProjectRow[] = dataRows.map((csvRow, idx) => {
     const rowNumber = idx + 2;
-    const errors: string[] = [];
-
-    const ownerEmail = getCell(csvRow, headerMap.ownerEmail).toLowerCase();
-    const name = getCell(csvRow, headerMap.name);
-    const description = getCell(csvRow, headerMap.description);
-    const sector = getCell(csvRow, headerMap.sector);
-    const location = getCell(csvRow, headerMap.location);
-    const valueProposition = getCell(csvRow, headerMap.valueProposition);
-    const ownerInstitution = getCell(csvRow, headerMap.ownerInstitution);
-    const contactPersonName = getCell(csvRow, headerMap.contactPersonName);
-    const contactPersonEmail = getCell(csvRow, headerMap.contactPersonEmail).toLowerCase();
-    const contactPersonPhone = getCell(csvRow, headerMap.contactPersonPhone);
-    const cooperationModel = getCell(csvRow, headerMap.cooperationModel);
-    const concessionPeriodRaw = getCell(csvRow, headerMap.concessionPeriod);
-    const assetReadiness = getCell(csvRow, headerMap.assetReadiness);
-    const governmentSupport = getCell(csvRow, headerMap.governmentSupport);
-    const totalCapexRaw = getCell(csvRow, headerMap.totalCapex);
-    const totalOpexRaw = getCell(csvRow, headerMap.totalOpex);
-    const npvRaw = getCell(csvRow, headerMap.npv);
-    const irrRaw = getCell(csvRow, headerMap.irr);
-    const revenueStream = getCell(csvRow, headerMap.revenueStream);
-    const isFeasibilityStudyRaw = getCell(csvRow, headerMap.isFeasibilityStudy);
-    const additionalInfo = getCell(csvRow, headerMap.additionalInfo) || null;
-    const locationImageUrl = getCell(csvRow, headerMap.locationImageUrl);
-    const projectStructureImageUrl = getCell(csvRow, headerMap.projectStructureImageUrl);
-    const projectFileUrl = getCell(csvRow, headerMap.projectFileUrl);
-
-    // Parse timeline entries (all slots detected in the header)
-    const timelines: ProjectTimeline[] = [];
-    for (const n of slots) {
-      const timeRange = rangeMap[n] != null ? getCell(csvRow, rangeMap[n]) : '';
-      const phaseDescription = descMap[n] != null ? getCell(csvRow, descMap[n]) : '';
-      if (timeRange || phaseDescription) {
-        timelines.push({ timeRange, phaseDescription });
-      }
-    }
-
-    // Parse numbers
-    const concessionPeriod = parseInteger(concessionPeriodRaw);
-    const totalCapex = parseNumber(totalCapexRaw);
-    const totalOpex = parseNumber(totalOpexRaw);
-    const npv = parseNumber(npvRaw);
-    const irr = parseNumber(irrRaw);
-    const isFeasibilityStudy = parseBoolean(isFeasibilityStudyRaw);
-
-    const dto: BatchUploadProjectRequest = {
-      ownerEmail,
-      name,
-      description,
-      sector,
-      location,
-      valueProposition,
-      ownerInstitution,
-      contactPersonName,
-      contactPersonEmail,
-      contactPersonPhone,
-      cooperationModel,
-      concessionPeriod: concessionPeriod ?? 0,
-      assetReadiness,
-      governmentSupport,
-      totalCapex: totalCapex ?? 0,
-      totalOpex: totalOpex ?? 0,
-      npv: npv ?? 0,
-      irr: irr ?? 0,
-      revenueStream,
-      isFeasibilityStudy: isFeasibilityStudy ?? false,
-      additionalInfo,
-      timelines: timelines.length > 0 ? timelines : undefined,
-      locationImageUrl,
-      projectStructureImageUrl,
-      projectFileUrl,
-    };
-
-    // Validation
-    if (!ownerEmail) errors.push('ownerEmail wajib diisi.');
-    else if (!EMAIL_REGEX.test(ownerEmail)) errors.push('Format ownerEmail tidak valid.');
-
-    if (!name) errors.push('Nama proyek wajib diisi.');
-    if (!description) errors.push('Deskripsi wajib diisi.');
-    if (!sector) errors.push('Sektor wajib diisi.');
-    if (!location) errors.push('Lokasi wajib diisi.');
-    if (!valueProposition) errors.push('Value proposition wajib diisi.');
-    if (!ownerInstitution) errors.push('Owner institution wajib diisi.');
-    if (!contactPersonName) errors.push('Nama kontak wajib diisi.');
-
-    if (!contactPersonEmail) errors.push('Email kontak wajib diisi.');
-    else if (!EMAIL_REGEX.test(contactPersonEmail)) errors.push('Format email kontak tidak valid.');
-
-    if (!contactPersonPhone) errors.push('Telepon kontak wajib diisi.');
-    else if (!PHONE_REGEX.test(contactPersonPhone.replace(/[\s()-]/g, '')))
-      errors.push('Format telepon kontak tidak valid.');
-
-    if (!cooperationModel) errors.push('Model kerjasama wajib diisi.');
-
-    if (!concessionPeriodRaw) errors.push('Periode konsesi wajib diisi.');
-    else if (concessionPeriod === null)
-      errors.push('Format periode konsesi tidak valid (harus angka).');
-    else if (concessionPeriod <= 0) errors.push('Periode konsesi harus lebih dari 0.');
-
-    if (!assetReadiness) errors.push('Kesiapan aset wajib diisi.');
-    if (!governmentSupport) errors.push('Dukungan pemerintah wajib diisi.');
-
-    if (!totalCapexRaw) errors.push('Total CAPEX wajib diisi.');
-    else if (totalCapex === null) errors.push('Format total CAPEX tidak valid.');
-    else if (totalCapex < 0) errors.push('Total CAPEX tidak boleh negatif.');
-
-    if (!totalOpexRaw) errors.push('Total OPEX wajib diisi.');
-    else if (totalOpex === null) errors.push('Format total OPEX tidak valid.');
-    else if (totalOpex < 0) errors.push('Total OPEX tidak boleh negatif.');
-
-    if (!npvRaw) errors.push('NPV wajib diisi.');
-    else if (npv === null) errors.push('Format NPV tidak valid.');
-
-    if (!irrRaw) errors.push('IRR wajib diisi.');
-    else if (irr === null) errors.push('Format IRR tidak valid.');
-
-    if (!revenueStream) errors.push('Revenue stream wajib diisi.');
-
-    if (!isFeasibilityStudyRaw) errors.push('isFeasibilityStudy wajib diisi (true/false).');
-    else if (isFeasibilityStudy === null)
-      errors.push('isFeasibilityStudy harus bernilai true/false.');
-
-    if (!locationImageUrl) errors.push('URL gambar lokasi proyek wajib diisi.');
-    else if (!URL_REGEX.test(locationImageUrl)) errors.push('Format locationImageUrl tidak valid.');
-
-    if (!projectStructureImageUrl) errors.push('URL gambar struktur proyek wajib diisi.');
-    else if (!URL_REGEX.test(projectStructureImageUrl))
-      errors.push('Format projectStructureImageUrl tidak valid.');
-
-    if (!projectFileUrl) errors.push('URL dokumen proyek wajib diisi.');
-    else if (!URL_REGEX.test(projectFileUrl)) errors.push('Format projectFileUrl tidak valid.');
-
+    const { dto, rawFields, parsedFields } = extractRowFields(csvRow, headerMap, rangeMap, descMap, slots);
+    const errors = validateRow(
+      dto,
+      rawFields as { concessionPeriodRaw: string; totalCapexRaw: string; totalOpexRaw: string; npvRaw: string; irrRaw: string; isFeasibilityStudyRaw: string },
+      parsedFields as { concessionPeriod: number | null; totalCapex: number | null; totalOpex: number | null; npv: number | null; irr: number | null; isFeasibilityStudy: boolean | null },
+    );
     return { rowNumber, dto, errors };
   });
 

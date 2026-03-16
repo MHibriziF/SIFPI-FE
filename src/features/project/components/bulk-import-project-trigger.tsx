@@ -56,7 +56,7 @@ export function BulkImportProjectTrigger({
         onClick={() => router.push('/admin/projects/import')}
       >
         <Loader2 className="size-4 animate-spin" />
-        Lihat Progress ({importProgress.done}/{importProgress.total})
+        {' '}Lihat Progress ({importProgress.done}/{importProgress.total})
       </Button>
     );
   }

@@ -163,7 +163,7 @@ export function useCreateRoleForm() {
     });
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
