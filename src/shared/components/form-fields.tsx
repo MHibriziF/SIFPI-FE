@@ -38,11 +38,8 @@ function FormField({ label, hint, required, error, htmlFor, children, className 
 
       {children}
 
-      {error ? (
-        <p className="text-xs text-danger">{error}</p>
-      ) : hint ? (
-        <p className="text-xs text-gray-400">{hint}</p>
-      ) : null}
+      {error && <p className="text-xs text-danger">{error}</p>}
+      {!error && hint && <p className="text-xs text-gray-400">{hint}</p>}
     </div>
   );
 }

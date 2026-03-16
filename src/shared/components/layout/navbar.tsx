@@ -2,15 +2,18 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/shared/components/button';
+import { logout } from '@/features/auth/services';
+import { ApiError } from '@/shared/types/api';
+import { showToast } from '@/shared/components/toast';
 
 export type NavbarVariant = 'public' | 'authenticated';
 
 interface NavbarProps {
   variant?: NavbarVariant;
-  skipHide?: boolean;
+  dashboardHref?: string;
 }
 
 const NAV_LINKS = [
@@ -20,11 +23,11 @@ const NAV_LINKS = [
   { href: '/resources', label: 'Resources' },
 ];
 
-
-export default function Navbar({ variant = 'public', skipHide = false }: NavbarProps) {
+export default function Navbar({ variant = 'public', dashboardHref }: NavbarProps) {
+  const router = useRouter();
   const pathname = usePathname() ?? '/';
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const navLinkClass = (href: string) =>
     `text-sm font-medium px-2 py-1 rounded-md transition-colors duration-200 ${
@@ -32,6 +35,26 @@ export default function Navbar({ variant = 'public', skipHide = false }: NavbarP
         ? 'text-secondary underline underline-offset-4'
         : 'text-white hover:text-secondary-light'
     }`;
+
+  async function handleLogout() {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      showToast('success', 'Logout berhasil', 'Sampai jumpa lagi!');
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      console.log('Logging out...', err);
+      const message =
+        err instanceof ApiError ? err.message : 'Terjadi kesalahan. Silakan coba lagi.';
+      showToast('danger', 'Logout gagal', message);
+    } finally {
+      setIsLoggingOut(false);
+      setMenuOpen(false);
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-primary/85 backdrop-blur-md px-6 py-3">
@@ -73,16 +96,27 @@ export default function Navbar({ variant = 'public', skipHide = false }: NavbarP
                   </Link>
                 </li>
                 <li>
+                  {dashboardHref && (
+                    <Link href={dashboardHref} className={navLinkClass(dashboardHref)}>
+                      Dashboard
+                    </Link> 
+                  )}
+                </li>
+                <li>
                   <Link href="/profile" className={navLinkClass('/profile')}>
                     Update Profile
                   </Link>
                 </li>
                 <li>
-                  <form action="/logout" method="post">
-                    <Button type="submit" className="bg-danger text-white border-none" size="sm">
-                      Logout
-                    </Button>
-                  </form>
+                  <Button
+                    type="button"
+                    className="bg-danger text-white border-none"
+                    size="sm"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                  >
+                    {isLoggingOut ? 'Memproses...' : 'Logout'}
+                  </Button>
                 </li>
               </>
             )}
@@ -168,15 +202,15 @@ export default function Navbar({ variant = 'public', skipHide = false }: NavbarP
                   </Link>
                 </li>
                 <li>
-                  <form action="/logout" method="post">
-                    <Button
-                      type="submit"
-                      className="bg-danger text-white border-none w-full mt-1"
-                      size="sm"
-                    >
-                      Logout
-                    </Button>
-                  </form>
+                  <Button
+                    type="button"
+                    className="bg-danger text-white border-none w-full mt-1"
+                    size="sm"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                  >
+                    {isLoggingOut ? 'Memproses...' : 'Logout'}
+                  </Button>
                 </li>
               </>
             )}

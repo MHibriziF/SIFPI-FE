@@ -8,16 +8,29 @@ export interface BaseResponse<T = unknown> {
 /**
  * Structured error thrown by the API layer.
  * Always contains the backend's message and status when available.
+ *
+ * NOTE: We override Symbol.hasInstance so that `instanceof ApiError` works
+ * reliably even when the class is duplicated across bundler chunks
+ * (common with Turbopack / Next.js dev mode).
  */
 export class ApiError extends Error {
   public readonly status: number;
   public readonly timestamp: string | null;
+  public readonly details: unknown;
 
-  constructor(status: number, message: string, timestamp?: string) {
+  /** Make `instanceof` resilient to duplicate class copies across chunks. */
+  static [Symbol.hasInstance](instance: unknown): instance is ApiError {
+    if (!(instance instanceof Error)) return false;
+    const err: Error = instance;
+    return err.name === 'ApiError' && 'status' in err;
+  }
+
+  constructor(status: number, message: string, timestamp?: string, details?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.timestamp = timestamp ?? null;
+    this.details = details ?? null;
   }
 
   get isUnauthorized(): boolean {
