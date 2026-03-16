@@ -6,8 +6,9 @@ import { Button } from '@/shared/components/button';
 import { TextInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getMyProfile, updateAdminProfile } from '@/features/user-management/services';
-import { updatePassword } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
+import { validateEmail, validatePhone } from '@/shared/lib/validation';
+import { ChangePasswordCard } from './change-password-card';
 import type { UpdateAdminProfileRequest } from '@/features/user-management/types';
 
 // ─── Form state types ─────────────────────────────────────────────────────────
@@ -23,32 +24,6 @@ interface FormErrors {
   name?: string;
   email?: string;
   phoneNumber?: string;
-}
-
-interface PasswordData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-interface PasswordErrors {
-  currentPassword?: string;
-  newPassword?: string;
-  confirmPassword?: string;
-}
-
-// ─── Validation helpers ───────────────────────────────────────────────────────
-
-function validateEmail(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
-
-const PHONE_REGEX = /^[+]?\d[\d\s-]{6,18}\d$/;
-function validatePhone(value: string): string | undefined {
-  if (!value.trim()) return 'Nomor telepon wajib diisi';
-  if (value.length > 20) return 'Nomor telepon maksimal 20 karakter';
-  if (!PHONE_REGEX.test(value.trim())) return 'Format nomor telepon tidak valid';
 }
 
 // ─── Card shell ───────────────────────────────────────────────────────────────
@@ -74,22 +49,6 @@ export default function UpdateAdminProfileForm() {
   const [formData, setFormData] = useState<FormData>(emptyForm);
   const [originalData, setOriginalData] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
-
-  // ── Password state ───────────────────────────────────────────────────────────
-  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
-  const [passwordData, setPasswordData] = useState<PasswordData>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [passwordErrors, setPasswordErrors] = useState<PasswordErrors>({});
-
-  // Button is only active when all fields filled and new password matches confirmation
-  const isPasswordFormValid =
-    passwordData.currentPassword.trim().length > 0 &&
-    passwordData.newPassword.trim().length > 0 &&
-    passwordData.confirmPassword.trim().length > 0 &&
-    passwordData.newPassword === passwordData.confirmPassword;
 
   // Pre-fill from GET /api/users/profile
   useEffect(() => {
@@ -176,99 +135,6 @@ export default function UpdateAdminProfileForm() {
   function handleCancel() {
     setFormData(originalData);
     setErrors({});
-  }
-
-  // ── Password field helpers ───────────────────────────────────────────────────
-
-  const handlePasswordChange = (field: keyof PasswordData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordData((prev) => ({ ...prev, [field]: e.target.value }));
-    setPasswordErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
-
-  // ── Password validation ──────────────────────────────────────────────────────
-
-  function validatePasswordForm(): boolean {
-    const newErrors: PasswordErrors = {};
-
-    if (!passwordData.currentPassword) {
-      newErrors.currentPassword = 'Password saat ini wajib diisi';
-    }
-
-    if (!passwordData.newPassword) {
-      newErrors.newPassword = 'Password baru wajib diisi';
-    } else if (passwordData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password baru minimal 8 karakter';
-    }
-
-    if (!passwordData.confirmPassword) {
-      newErrors.confirmPassword = 'Konfirmasi password wajib diisi';
-    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = 'Konfirmasi password tidak sama dengan password baru';
-    }
-
-    if (passwordData.currentPassword && passwordData.newPassword &&
-        passwordData.currentPassword === passwordData.newPassword) {
-      newErrors.newPassword = 'Password baru tidak boleh sama dengan password lama';
-    }
-
-    setPasswordErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }
-
-  // ── Password submit ──────────────────────────────────────────────────────────
-
-  async function handlePasswordSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validatePasswordForm()) return;
-
-    setIsSubmittingPassword(true);
-    try {
-      await updatePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-        confirmPassword: passwordData.confirmPassword,
-      });
-
-      showToast('success', 'Password berhasil diubah!', 'Password Anda telah diperbarui.');
-
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      setPasswordErrors({});
-    } catch (error) {
-      if (error instanceof ApiError) {
-        const errorMessage = error.message;
-
-        if (errorMessage.includes('Password saat ini salah')) {
-          setPasswordErrors(prev => ({ ...prev, currentPassword: errorMessage }));
-        } else if (errorMessage.includes('Password baru tidak boleh sama')) {
-          setPasswordErrors(prev => ({ ...prev, newPassword: errorMessage }));
-        } else {
-          showToast('danger', 'Gagal mengubah password', errorMessage);
-        }
-      } else {
-        showToast('danger', 'Gagal mengubah password', 'Terjadi kesalahan. Silakan coba lagi.');
-      }
-    } finally {
-      setIsSubmittingPassword(false);
-    }
-  }
-
-  // ── Password cancel ──────────────────────────────────────────────────────────
-
-  function handleCancelPassword() {
-    if (Object.values(passwordData).some((val) => val)) {
-      const confirmed = confirm('Perubahan belum disimpan. Yakin ingin membatalkan?');
-      if (!confirmed) return;
-    }
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
-    setPasswordErrors({});
   }
 
   // ── Loading skeleton ─────────────────────────────────────────────────────────
@@ -385,66 +251,7 @@ export default function UpdateAdminProfileForm() {
         </div>
 
         {/* ── RIGHT: Ubah Password ── */}
-        <div className="w-[440px] shrink-0">
-          <Card title="Ubah Password">
-            <form onSubmit={handlePasswordSubmit} className="p-8 flex flex-col gap-5">
-              <TextInput
-                id="currentPassword"
-                label="Password Lama"
-                type="password"
-                placeholder="••••••••"
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange('currentPassword')}
-                error={passwordErrors.currentPassword}
-                required
-                disabled={isSubmittingPassword}
-              />
-              <TextInput
-                id="newPassword"
-                label="Password Baru"
-                type="password"
-                placeholder="Minimal 8 Karakter"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange('newPassword')}
-                error={passwordErrors.newPassword}
-                required
-                disabled={isSubmittingPassword}
-              />
-              <TextInput
-                id="confirmPassword"
-                label="Konfirmasi Password Baru"
-                type="password"
-                placeholder="Ulangi Password"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange('confirmPassword')}
-                error={passwordErrors.confirmPassword}
-                required
-                disabled={isSubmittingPassword}
-              />
-
-              <div className="flex gap-5">
-                <Button
-                  type="submit"
-                  disabled={!isPasswordFormValid || isSubmittingPassword}
-                  className="bg-action-submit hover:bg-action-submit/85"
-                >
-                  <Save className="size-4" />
-                  {isSubmittingPassword ? 'Mengubah...' : 'Ubah Password'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outlined"
-                  onClick={handleCancelPassword}
-                  disabled={isSubmittingPassword}
-                  className="border-danger text-danger hover:bg-danger/8"
-                >
-                  <X className="size-4" />
-                  Batalkan
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
+        <ChangePasswordCard />
       </div>
     </div>
   );

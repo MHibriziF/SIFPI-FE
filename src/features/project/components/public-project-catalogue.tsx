@@ -5,8 +5,9 @@ import Image from "next/image";
 import { ProjectCard } from "@/shared/components/project-card";
 import { getPublishedProjects } from "@/features/project/services";
 import type { ProjectCardData } from "@/shared/components/project-card";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "@/shared/components/button";
+import { Pagination } from "@/shared/components/pagination";
 import { Select, TextInput } from "@/shared/components/form-fields";
 import { SECTOR_OPTIONS } from "@/shared/enums";
 
@@ -207,42 +208,13 @@ export function PublicProjectCatalogue() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>
-                Showing {currentPage * pageSize + 1}-
-                {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
-                {totalElements} entries
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={currentPage <= 0}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <Button
-                    key={i}
-                    variant={currentPage === i ? "filled" : "ghost"}
-                    size="icon-sm"
-                    onClick={() => handlePageChange(i)}
-                    className="text-xs"
-                  >
-                    {i + 1}
-                  </Button>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={currentPage >= totalPages - 1}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalElements={totalElements}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+            />
           </>
           );
         })()}

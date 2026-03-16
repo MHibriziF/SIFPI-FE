@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { FileEdit, Clock, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileEdit, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/shared/components/button';
+import { Pagination } from '@/shared/components/pagination';
 import { Select, TextInput } from '@/shared/components/form-fields';
 import { ProjectCard, type ProjectCardData } from '@/shared/components/project-card';
 import { StatCard } from '@/shared/components/stat-card';
@@ -252,42 +253,13 @@ export default function OwnerReadAllProjects() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>
-                Showing {pagination.page * pagination.size + 1}-
-                {Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of{' '}
-                {pagination.totalElements} entries
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={pagination.page <= 0}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <Button
-                    key={i}
-                    variant={pagination.page === i ? 'filled' : 'ghost'}
-                    size="icon-sm"
-                    onClick={() => setPagination((prev) => ({ ...prev, page: i }))}
-                    className="text-xs"
-                  >
-                    {i + 1}
-                  </Button>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={pagination.page >= pagination.totalPages - 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.totalPages}
+              totalElements={pagination.totalElements}
+              pageSize={pagination.size}
+              onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+            />
           </>
           );
         })()}

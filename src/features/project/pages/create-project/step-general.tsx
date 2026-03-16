@@ -6,19 +6,20 @@ import { Select, TextInput, Textarea } from '@/shared/components/form-fields';
 import { SECTOR_OPTIONS } from '@/shared/enums';
 import { FileUploadField } from '@/features/project/components/file-upload-field';
 import { SectionCard } from '@/features/project/components/section-card';
-import type { ProjectFormValues } from '@/features/project/types/create-project-form';
 
-export function StepGeneral() {
-  const {
-    register,
-    control,
-    formState: { errors },
-  } = useFormContext<ProjectFormValues>();
+interface StepGeneralProps {
+  existingMapFileUrl?: string | null;
+}
+
+export function StepGeneral({ existingMapFileUrl }: Readonly<StepGeneralProps> = {}) {
+  const { register, control, formState } = useFormContext<any>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const errors = formState.errors as any;
 
   return (
     <div className="space-y-6">
       <SectionCard>
-        <SectionCard.Header title="Profil Dasar" />
+        <SectionCard.Header title="Profil Dasar" description={existingMapFileUrl ? 'Informasi utama proyek.' : undefined} />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
             label="Nama Proyek"
@@ -62,7 +63,7 @@ export function StepGeneral() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Narasi Bisnis" />
+        <SectionCard.Header title="Narasi Bisnis" description={existingMapFileUrl ? 'Jelaskan nilai strategis proyek.' : undefined} />
         <SectionCard.Body className="grid gap-4">
           <Textarea
             label="Value Proposition"
@@ -74,16 +75,18 @@ export function StepGeneral() {
           />
           <FileUploadField
             label="Peta Lokasi"
-            required
+            required={!existingMapFileUrl}
             hint="Format yang disarankan: PNG/JPG"
             fileField="files.mapFile"
             accept=".png,.jpg,.jpeg"
+            existingFileUrl={existingMapFileUrl}
+            existingFileLabel="Lihat peta lokasi saat ini"
           />
         </SectionCard.Body>
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Kepemilikan" />
+        <SectionCard.Header title="Kepemilikan" description={existingMapFileUrl ? 'Informasi institusi pemilik dan kontak.' : undefined} />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
             label="Institusi Pemilik"

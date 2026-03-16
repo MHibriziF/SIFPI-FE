@@ -4,50 +4,21 @@ import { useState, useEffect } from 'react';
 import { Save, X } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/components/button';
-import { TextInput, Select, type SelectOption } from '@/shared/components/form-fields';
+import { TextInput, Select } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getMyProfile, updateInvestorProfile } from '@/features/user-management/services';
-import { updatePassword, getOrCreateOrganization } from '@/features/auth/services';
+import { getOrCreateOrganization } from '@/features/auth/services';
 import { OrganizationAutocomplete } from '@/features/auth/components/organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
+import { validateEmail, validatePhone } from '@/shared/lib/validation';
+import {
+  INVESTOR_SECTOR_OPTIONS,
+  BUDGET_OPTIONS,
+  STAGE_OPTIONS,
+  RISK_OPTIONS,
+} from '@/shared/enums/investment-options';
+import { ChangePasswordCard } from './change-password-card';
 import type { UpdateInvestorProfileRequest } from '@/features/user-management/types';
-
-// ─── Static options ───────────────────────────────────────────────────────────
-
-const SECTOR_OPTIONS = [
-  { value: 'PUBLIC_TRANSPORTATION', label: 'Public Transportation' },
-  { value: 'LAND_BASED_TRANSPORT', label: 'Land Based Transport' },
-  { value: 'WASTE_MANAGEMENT', label: 'Waste Management' },
-  { value: 'TOLL_ROAD', label: 'Toll Road' },
-  { value: 'AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT', label: 'Affordable Housing' },
-  { value: 'HEALTH', label: 'Health' },
-  { value: 'WATER_RESOURCE_DRINKING_WATER_AND_IRRIGATION', label: 'Water Resource' },
-  { value: 'MARITIME', label: 'Maritime' },
-  { value: 'OIL_GAS_AND_ENERGY', label: 'Oil & Gas, Energy' },
-  { value: 'AVIATION', label: 'Aviation' },
-  { value: 'DIGITAL_AND_TELECOMMUNICATIONS', label: 'Digital & Telecom' },
-  { value: 'EDUCATION_RESEARCH_AND_DEVELOPMENT', label: 'Education, R&D' },
-  { value: 'URBAN_ECONOMICS_INFRASTRUCTURE_FACILITIES', label: 'Urban Economics' },
-];
-
-const BUDGET_OPTIONS: SelectOption[] = [
-  { value: '<1', label: '< 1 Miliar' },
-  { value: '1-5', label: '1-5 Miliar' },
-  { value: '5-10', label: '5-10 Miliar' },
-  { value: '>10', label: '> 10 Miliar' },
-];
-
-const STAGE_OPTIONS: SelectOption[] = [
-  { value: 'Greenfield', label: 'Greenfield' },
-  { value: 'Brownfield', label: 'Brownfield' },
-  { value: 'Both', label: 'Both' },
-];
-
-const RISK_OPTIONS: SelectOption[] = [
-  { value: 'Low', label: 'Low' },
-  { value: 'Medium', label: 'Medium' },
-  { value: 'High', label: 'High' },
-];
 
 // ─── Form state types ─────────────────────────────────────────────────────────
 
@@ -78,32 +49,6 @@ interface FormErrors {
   companyName?: string;
   investmentInterestSectors?: string;
   investmentScale?: string;
-}
-
-interface PasswordData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-interface PasswordErrors {
-  currentPassword?: string;
-  newPassword?: string;
-  confirmPassword?: string;
-}
-
-// ─── Validation helpers ───────────────────────────────────────────────────────
-
-function validateEmail(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
-
-const PHONE_REGEX = /^[+]?\d[\d\s-]{6,18}\d$/;
-function validatePhone(value: string): string | undefined {
-  if (!value.trim()) return 'Nomor telepon wajib diisi';
-  if (value.length > 20) return 'Nomor telepon maksimal 20 karakter';
-  if (!PHONE_REGEX.test(value.trim())) return 'Format nomor telepon tidak valid';
 }
 
 // ─── Section divider ──────────────────────────────────────────────────────────
@@ -144,22 +89,6 @@ export default function UpdateInvestorProfileForm() {
   const [formData, setFormData] = useState<FormData>(emptyForm);
   const [originalData, setOriginalData] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
-
-  // ── Password state ───────────────────────────────────────────────────────────
-  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
-  const [passwordData, setPasswordData] = useState<PasswordData>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [passwordErrors, setPasswordErrors] = useState<PasswordErrors>({});
-
-  // Button is only active when all fields filled and new password matches confirmation
-  const isPasswordFormValid =
-    passwordData.currentPassword.trim().length > 0 &&
-    passwordData.newPassword.trim().length > 0 &&
-    passwordData.confirmPassword.trim().length > 0 &&
-    passwordData.newPassword === passwordData.confirmPassword;
 
   // Fetch current profile (pre-fill form)
   useEffect(() => {
@@ -207,7 +136,6 @@ export default function UpdateInvestorProfileForm() {
 
   function handleChange<K extends keyof FormData>(field: K, value: FormData[K]) {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error on change
     if (field in errors) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -322,99 +250,6 @@ export default function UpdateInvestorProfileForm() {
   function handleCancel() {
     setFormData(originalData);
     setErrors({});
-  }
-
-  // ── Password field helpers ───────────────────────────────────────────────────
-
-  const handlePasswordChange = (field: keyof PasswordData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordData((prev) => ({ ...prev, [field]: e.target.value }));
-    setPasswordErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
-
-  // ── Password validation ──────────────────────────────────────────────────────
-
-  function validatePasswordForm(): boolean {
-    const newErrors: PasswordErrors = {};
-
-    if (!passwordData.currentPassword) {
-      newErrors.currentPassword = 'Password saat ini wajib diisi';
-    }
-
-    if (!passwordData.newPassword) {
-      newErrors.newPassword = 'Password baru wajib diisi';
-    } else if (passwordData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password baru minimal 8 karakter';
-    }
-
-    if (!passwordData.confirmPassword) {
-      newErrors.confirmPassword = 'Konfirmasi password wajib diisi';
-    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = 'Konfirmasi password tidak sama dengan password baru';
-    }
-
-    if (passwordData.currentPassword && passwordData.newPassword &&
-        passwordData.currentPassword === passwordData.newPassword) {
-      newErrors.newPassword = 'Password baru tidak boleh sama dengan password lama';
-    }
-
-    setPasswordErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }
-
-  // ── Password submit ──────────────────────────────────────────────────────────
-
-  async function handlePasswordSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validatePasswordForm()) return;
-
-    setIsSubmittingPassword(true);
-    try {
-      await updatePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-        confirmPassword: passwordData.confirmPassword,
-      });
-
-      showToast('success', 'Password berhasil diubah!', 'Password Anda telah diperbarui.');
-
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      setPasswordErrors({});
-    } catch (error) {
-      if (error instanceof ApiError) {
-        const errorMessage = error.message;
-
-        if (errorMessage.includes('Password saat ini salah')) {
-          setPasswordErrors(prev => ({ ...prev, currentPassword: errorMessage }));
-        } else if (errorMessage.includes('Password baru tidak boleh sama')) {
-          setPasswordErrors(prev => ({ ...prev, newPassword: errorMessage }));
-        } else {
-          showToast('danger', 'Gagal mengubah password', errorMessage);
-        }
-      } else {
-        showToast('danger', 'Gagal mengubah password', 'Terjadi kesalahan. Silakan coba lagi.');
-      }
-    } finally {
-      setIsSubmittingPassword(false);
-    }
-  }
-
-  // ── Password cancel ──────────────────────────────────────────────────────────
-
-  function handleCancelPassword() {
-    if (Object.values(passwordData).some((val) => val)) {
-      const confirmed = confirm('Perubahan belum disimpan. Yakin ingin membatalkan?');
-      if (!confirmed) return;
-    }
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
-    setPasswordErrors({});
   }
 
   // ── Loading skeleton ─────────────────────────────────────────────────────────
@@ -532,7 +367,7 @@ export default function UpdateInvestorProfileForm() {
 
             <div className="rounded-lg border border-gray-200 p-3">
               <div className="grid grid-cols-3 gap-2">
-                {SECTOR_OPTIONS.map(sector => (
+                {INVESTOR_SECTOR_OPTIONS.map(sector => (
                   <label
                     key={sector.value}
                     className={cn(
@@ -693,69 +528,7 @@ export default function UpdateInvestorProfileForm() {
       </div>
 
       {/* ── RIGHT: Ubah Password ── */}
-      <div className="w-[440px] shrink-0 bg-white rounded-[20px] border border-grey overflow-hidden">
-        {/* Card header */}
-        <div className="bg-primary px-4 py-3 flex justify-center items-center">
-          <span className="font-bold text-xl text-white">Ubah Password</span>
-        </div>
-
-        <form onSubmit={handlePasswordSubmit} className="p-8 space-y-5">
-          <TextInput
-            id="currentPassword"
-            label="Password Lama"
-            type="password"
-            placeholder="••••••••"
-            value={passwordData.currentPassword}
-            onChange={handlePasswordChange('currentPassword')}
-            error={passwordErrors.currentPassword}
-            required
-            disabled={isSubmittingPassword}
-          />
-          <TextInput
-            id="newPassword"
-            label="Password Baru"
-            type="password"
-            placeholder="Minimal 8 karakter"
-            value={passwordData.newPassword}
-            onChange={handlePasswordChange('newPassword')}
-            error={passwordErrors.newPassword}
-            required
-            disabled={isSubmittingPassword}
-          />
-          <TextInput
-            id="confirmPassword"
-            label="Konfirmasi Password Baru"
-            type="password"
-            placeholder="Ulangi password"
-            value={passwordData.confirmPassword}
-            onChange={handlePasswordChange('confirmPassword')}
-            error={passwordErrors.confirmPassword}
-            required
-            disabled={isSubmittingPassword}
-          />
-
-          <div className="flex gap-4 pt-2">
-            <Button
-              type="submit"
-              disabled={!isPasswordFormValid || isSubmittingPassword}
-              className="bg-action-submit hover:bg-action-submit/85"
-            >
-              <Save className="size-4" />
-              {isSubmittingPassword ? 'Mengubah...' : 'Ubah Password'}
-            </Button>
-            <Button
-              type="button"
-              variant="outlined"
-              onClick={handleCancelPassword}
-              disabled={isSubmittingPassword}
-              className="border-danger text-danger hover:bg-danger/8"
-            >
-              <X className="size-4" />
-              Batalkan
-            </Button>
-          </div>
-        </form>
-      </div>
+      <ChangePasswordCard />
     </div>
   );
 }

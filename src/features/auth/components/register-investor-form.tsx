@@ -2,43 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { TextInput, Select, type SelectOption } from '@/shared/components/form-fields';
+import { TextInput, Select } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { registerInvestor } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
+import { validateEmail } from '@/shared/lib/validation';
+import { INVESTOR_SECTOR_OPTIONS, BUDGET_OPTIONS } from '@/shared/enums/investment-options';
 import type { CreateInvestorRequest, OrganizationDTO } from '@/features/auth/types';
 import { cn } from '@/shared/lib/utils';
-
-const SECTOR_OPTIONS = [
-  { value: 'PUBLIC_TRANSPORTATION', label: 'Public Transportation' },
-  { value: 'LAND_BASED_TRANSPORT', label: 'Land Based Transport' },
-  { value: 'WASTE_MANAGEMENT', label: 'Waste Management' },
-  { value: 'TOLL_ROAD', label: 'Toll Road' },
-  { value: 'AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT', label: 'Affordable Housing' },
-  { value: 'HEALTH', label: 'Health' },
-  { value: 'WATER_RESOURCE_DRINKING_WATER_AND_IRRIGATION', label: 'Water Resource' },
-  { value: 'MARITIME', label: 'Maritime' },
-  { value: 'OIL_GAS_AND_ENERGY', label: 'Oil & Gas, Energy' },
-  { value: 'AVIATION', label: 'Aviation' },
-  { value: 'DIGITAL_AND_TELECOMMUNICATIONS', label: 'Digital & Telecom' },
-  { value: 'EDUCATION_RESEARCH_AND_DEVELOPMENT', label: 'Education, R&D' },
-  { value: 'URBAN_ECONOMICS_INFRASTRUCTURE_FACILITIES', label: 'Urban Economics' },
-];
-
-const BUDGET_OPTIONS: SelectOption[] = [
-  { value: '<1', label: '< 1 Miliar' },
-  { value: '1-5', label: '1-5 Miliar' },
-  { value: '5-10', label: '5-10 Miliar' },
-  { value: '>10', label: '> 10 Miliar' },
-];
-
-function validateEmail(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
 
 function validatePassword(value: string): string | undefined {
   if (!value) return 'Password wajib diisi';
@@ -385,7 +359,7 @@ export default function RegisterInvestorForm({
 
         <div className="rounded-lg border border-gray-200 p-3">
           <div className="grid grid-cols-3 gap-2">
-            {SECTOR_OPTIONS.map(sector => (
+            {INVESTOR_SECTOR_OPTIONS.map(sector => (
               <label
                 key={sector.value}
                 className={cn(

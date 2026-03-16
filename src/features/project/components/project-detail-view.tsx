@@ -14,15 +14,7 @@ interface ProjectDetailViewProps {
   isLoading?: boolean;
 }
 
-function SummaryItem({ label, value }: Readonly<{ label: string; value?: string | number | null }>) {
-  const displayValue = value === undefined || value === null || value === '' ? '-' : value;
-  return (
-    <div className="grid gap-1">
-      <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="text-sm text-primary">{displayValue}</p>
-    </div>
-  );
-}
+import { SummaryItem } from '@/features/project/utils/summary-formatters';
 
 export function ProjectDetailView({
   project,

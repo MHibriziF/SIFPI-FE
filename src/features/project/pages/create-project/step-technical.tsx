@@ -6,18 +6,25 @@ import { TextInput, Textarea } from '@/shared/components/form-fields';
 import { FileUploadField } from '@/features/project/components/file-upload-field';
 import { SectionCard } from '@/features/project/components/section-card';
 import { TimelineEditor } from '@/features/project/components/timeline-editor';
-import type { ProjectFormValues } from '@/features/project/types/create-project-form';
 
-export function StepTechnical() {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext<ProjectFormValues>();
+interface StepTechnicalProps {
+  existingStructureFileUrl?: string | null;
+  existingProjectFileUrl?: string | null;
+}
+
+export function StepTechnical({
+  existingStructureFileUrl,
+  existingProjectFileUrl,
+}: Readonly<StepTechnicalProps> = {}) {
+  const { register, formState } = useFormContext<any>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const errors = formState.errors as any;
+  const isEditMode = !!(existingStructureFileUrl !== undefined || existingProjectFileUrl !== undefined);
 
   return (
     <div className="space-y-5">
       <SectionCard>
-        <SectionCard.Header title="Skema Legal" />
+        <SectionCard.Header title="Skema Legal" description={isEditMode ? 'Model kerja sama dan masa konsesi proyek.' : undefined} />
         <SectionCard.Body className="grid gap-4 md:grid-cols-2">
           <TextInput
             label="Model Kerja Sama"
@@ -40,7 +47,7 @@ export function StepTechnical() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Status Teknis" />
+        <SectionCard.Header title="Status Teknis" description={isEditMode ? 'Kesiapan teknis dan dukungan pemerintah.' : undefined} />
         <SectionCard.Body className="grid gap-4">
           <TextInput
             label="Kesiapan Aset"
@@ -51,10 +58,12 @@ export function StepTechnical() {
           />
           <FileUploadField
             label="Dokumen Struktur Proyek"
-            required
+            required={!existingStructureFileUrl}
             hint="Unggah gambar struktur proyek terbaru (PNG/JPG/JPEG/WebP)"
             fileField="files.projectStructureFile"
             accept=".png,.jpg,.jpeg,.webp"
+            existingFileUrl={existingStructureFileUrl}
+            existingFileLabel="Lihat struktur proyek saat ini"
           />
           <Textarea
             label="Dukungan Pemerintah"
@@ -68,7 +77,10 @@ export function StepTechnical() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Model Bisnis & Lampiran" />
+        <SectionCard.Header
+          title="Model Bisnis & Lampiran"
+          description={isEditMode ? 'Skema pendapatan, lampiran dokumen, dan status feasibility study.' : undefined}
+        />
         <SectionCard.Body className="grid gap-4">
           <Textarea
             label="Revenue Stream"
@@ -80,10 +92,12 @@ export function StepTechnical() {
           />
           <FileUploadField
             label="Project Document"
-            required
+            required={!existingProjectFileUrl}
             hint="Dokumen ini akan dipakai sebagai lampiran utama proyek"
             fileField="files.feasibilityStudyFile"
             accept=".pdf,.doc,.docx,.xls,.xlsx"
+            existingFileUrl={existingProjectFileUrl}
+            existingFileLabel="Unduh dokumen proyek saat ini"
           />
           <label className="flex items-start gap-2 text-sm text-primary">
             <input
@@ -100,7 +114,7 @@ export function StepTechnical() {
       </SectionCard>
 
       <SectionCard>
-        <SectionCard.Header title="Timeline" />
+        <SectionCard.Header title="Timeline" description={isEditMode ? 'Tambahkan fase proyek secara berurutan.' : undefined} />
         <SectionCard.Body>
           <TimelineEditor />
         </SectionCard.Body>

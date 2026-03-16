@@ -38,7 +38,7 @@ function renderStep(
         existingProjectFileUrl={project.projectFileDownloadUrl}
       />
     );
-  if (step === 3) return <EditStepFinancial />;
+  if (step === 3) return <EditStepFinancial showDescriptions />;
   return null;
 }
 

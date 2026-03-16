@@ -4,6 +4,7 @@ import { useFormContext } from 'react-hook-form';
 
 import { SubmitProjectButton, Button } from '@/shared/components/button';
 import { SummaryCard } from '@/features/project/components/summary-card';
+import { formatCurrencyValue, formatPercentValue, SummaryItem } from '@/features/project/utils/summary-formatters';
 import type { EditProjectFormValues } from '@/features/project/types/edit-project-form';
 
 interface EditStepSummaryProps {
@@ -17,40 +18,6 @@ interface EditStepSummaryProps {
   existingMapFileUrl?: string | null;
   existingStructureFileUrl?: string | null;
   existingProjectFileUrl?: string | null;
-}
-
-const moneyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const numberFormatter = new Intl.NumberFormat('en-US', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
-
-function formatCurrencyValue(value?: number | null) {
-  if (value === undefined || value === null) return '-';
-  return moneyFormatter.format(value);
-}
-
-function formatPercentValue(value?: number | null) {
-  if (value === undefined || value === null) return '-';
-  return `${numberFormatter.format(value)}%`;
-}
-
-function SummaryItem({ label, value }: Readonly<{ label: string; value?: string | number | null }>) {
-  const displayValue =
-    value === undefined || value === null || value === '' ? '-' : value;
-
-  return (
-    <div className="grid gap-1">
-      <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="text-sm text-primary">{displayValue}</p>
-    </div>
-  );
 }
 
 function FileSummaryItem({

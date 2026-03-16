@@ -8,12 +8,8 @@ import { Notification } from '@/shared/components/info-toast';
 import { showToast } from '@/shared/components/toast';
 import { forgotPassword } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
+import { validateEmail } from '@/shared/lib/validation';
 import { MailCheck } from 'lucide-react';
-
-function validateEmail(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');

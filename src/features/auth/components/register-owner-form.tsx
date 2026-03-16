@@ -9,12 +9,8 @@ import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { registerOwner } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
+import { validateEmail } from '@/shared/lib/validation';
 import type { CreateOwnerRequest, OrganizationDTO } from '@/features/auth/types';
-
-function validateEmail(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
 
 function validatePassword(value: string): string | undefined {
   if (!value) return 'Password wajib diisi';

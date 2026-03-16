@@ -13,34 +13,13 @@ import { getCatalogueProjectById, recordProjectView } from '@/features/project/s
 import { ApiError } from '@/shared/types/api';
 import type { CatalogueProjectDetailDTO } from '@/features/project/types';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { formatIDR, formatDate, formatConcession } from '@/shared/lib/formatters';
 
-function formatIDR(value: number | null | undefined): string {
-  if (value == null) return '—';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatPercent(value: number | null | undefined): string {
   if (value == null) return '—';
   return `${value.toFixed(2)}%`;
-}
-
-function formatConcession(years: number | null | undefined): string {
-  if (years == null) return '—';
-  return `${years} Tahun`;
-}
-
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
