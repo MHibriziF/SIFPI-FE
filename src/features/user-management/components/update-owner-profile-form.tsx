@@ -11,6 +11,7 @@ import { OrganizationAutocomplete } from '@/features/auth/components/organizatio
 import { ApiError } from '@/shared/types/api';
 import { validateEmail, validatePhone } from '@/shared/lib/validation';
 import { ChangePasswordCard } from './change-password-card';
+import { ProfileFormSkeleton, handleProfileUpdateError } from './profile-form-shared';
 import type { UpdateProjectOwnerProfileRequest } from '@/features/user-management/types';
 
 // ─── Form state types ─────────────────────────────────────────────────────────
@@ -150,14 +151,7 @@ export default function UpdateOwnerProfileForm() {
       setOriginalData(formData);
       showToast('success', 'Profil berhasil diperbarui!', 'Data profil Anda telah disimpan.');
     } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 409) {
-          setErrors(prev => ({ ...prev, email: err.message }));
-        }
-        showToast('danger', 'Gagal memperbarui profil', err.message);
-      } else {
-        showToast('danger', 'Gagal memperbarui profil', 'Terjadi kesalahan. Silakan coba lagi.');
-      }
+      handleProfileUpdateError(err, msg => setErrors(prev => ({ ...prev, email: msg })));
     } finally {
       setIsSubmitting(false);
     }
@@ -173,32 +167,7 @@ export default function UpdateOwnerProfileForm() {
   // ── Loading skeleton ──────────────────────────────────────────────────────────
 
   if (isFetching) {
-    return (
-      <div className="flex gap-5 items-start">
-        <div className="flex-1 flex flex-col gap-5">
-          <div className="border border-grey rounded-[20px] overflow-hidden animate-pulse">
-            <div className="h-12 bg-primary" />
-            <div className="p-5 space-y-4">
-              {['skeleton-profile-1', 'skeleton-profile-2', 'skeleton-profile-3', 'skeleton-profile-4', 'skeleton-profile-5'].map((id) => (
-                <div key={id} className="h-10 rounded-lg bg-gray-100" />
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-5">
-            <div className="h-10 w-36 rounded-lg bg-gray-200 animate-pulse" />
-            <div className="h-10 w-52 rounded-lg bg-gray-200 animate-pulse" />
-          </div>
-        </div>
-        <div className="w-[440px] shrink-0 border border-grey rounded-[20px] overflow-hidden animate-pulse">
-          <div className="h-12 bg-primary" />
-          <div className="p-8 space-y-4">
-            {['skeleton-password-1', 'skeleton-password-2', 'skeleton-password-3'].map((id) => (
-              <div key={id} className="h-10 rounded-lg bg-gray-100" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <ProfileFormSkeleton inputCount={5} />;
   }
 
   // ── Render ────────────────────────────────────────────────────────────────────

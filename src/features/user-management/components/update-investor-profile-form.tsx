@@ -18,6 +18,7 @@ import {
   RISK_OPTIONS,
 } from '@/shared/enums/investment-options';
 import { ChangePasswordCard } from './change-password-card';
+import { PasswordCardSkeleton, handleProfileUpdateError } from './profile-form-shared';
 import type { UpdateInvestorProfileRequest } from '@/features/user-management/types';
 
 // ─── Form state types ─────────────────────────────────────────────────────────
@@ -211,19 +212,6 @@ export default function UpdateInvestorProfileForm() {
     payload.companyName = orgResponse.data?.name || companyName;
   }
 
-  // ── Handle profile update error ─────────────────────────────────────────────
-
-  function handleProfileUpdateError(err: unknown): void {
-    if (err instanceof ApiError) {
-      if (err.status === 409) {
-        setErrors(prev => ({ ...prev, email: err.message }));
-      }
-      showToast('danger', 'Gagal memperbarui profil', err.message);
-    } else {
-      showToast('danger', 'Gagal memperbarui profil', 'Terjadi kesalahan. Silakan coba lagi.');
-    }
-  }
-
   // ── Submit ───────────────────────────────────────────────────────────────────
 
   async function handleSubmit(e: React.FormEvent) {
@@ -239,7 +227,7 @@ export default function UpdateInvestorProfileForm() {
       setOriginalData(formData);
       showToast('success', 'Profil berhasil diperbarui!', 'Data profil Anda telah disimpan.');
     } catch (err) {
-      handleProfileUpdateError(err);
+      handleProfileUpdateError(err, msg => setErrors(prev => ({ ...prev, email: msg })));
     } finally {
       setIsSubmitting(false);
     }
@@ -260,19 +248,12 @@ export default function UpdateInvestorProfileForm() {
         <div className="flex-1 bg-white rounded-[20px] border border-grey overflow-hidden animate-pulse">
           <div className="h-12 bg-primary" />
           <div className="p-8 space-y-4">
-            {['skeleton-profile-1', 'skeleton-profile-2', 'skeleton-profile-3', 'skeleton-profile-4', 'skeleton-profile-5', 'skeleton-profile-6'].map((id) => (
+            {Array.from({ length: 6 }, (_, i) => `skeleton-profile-${i + 1}`).map((id) => (
               <div key={id} className="h-10 rounded-lg bg-gray-100" />
             ))}
           </div>
         </div>
-        <div className="w-[440px] shrink-0 bg-white rounded-[20px] border border-grey overflow-hidden animate-pulse">
-          <div className="h-12 bg-primary" />
-          <div className="p-8 space-y-4">
-            {['skeleton-password-1', 'skeleton-password-2', 'skeleton-password-3'].map((id) => (
-              <div key={id} className="h-10 rounded-lg bg-gray-100" />
-            ))}
-          </div>
-        </div>
+        <PasswordCardSkeleton />
       </div>
     );
   }

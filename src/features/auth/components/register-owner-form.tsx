@@ -9,19 +9,8 @@ import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { registerOwner } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
-import { validateEmail } from '@/shared/lib/validation';
+import { validateEmail, validatePassword, validateIndonesianPhone } from '@/shared/lib/validation';
 import type { CreateOwnerRequest, OrganizationDTO } from '@/features/auth/types';
-
-function validatePassword(value: string): string | undefined {
-  if (!value) return 'Password wajib diisi';
-  if (value.length < 8) return 'Password minimal 8 karakter';
-}
-
-function validatePhone(value: string): string | undefined {
-  if (!value.trim()) return 'No. Telepon wajib diisi';
-  if (!/^(\+62|0)[0-9]{9,12}$/.test(value.replace(/\s/g, '')))
-    return 'No. Telepon tidak valid';
-}
 
 interface FormErrors {
   nama?: string;
@@ -73,7 +62,7 @@ export default function RegisterOwnerForm({
     if (!formData.jabatan.trim()) next.jabatan = 'Jabatan wajib diisi';
     if (formData.jabatan.length > 100) next.jabatan = 'Jabatan maksimal 100 karakter';
 
-    const phoneError = validatePhone(formData.phone);
+    const phoneError = validateIndonesianPhone(formData.phone);
     if (phoneError) next.phone = phoneError;
 
     const passwordError = validatePassword(formData.password);
@@ -137,7 +126,7 @@ export default function RegisterOwnerForm({
           value !== currentFormData.password ? 'Password tidak cocok' : undefined;
         break;
       case 'phone':
-        next.phone = validatePhone(value);
+        next.phone = validateIndonesianPhone(value);
         break;
       case 'nama':
         next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
