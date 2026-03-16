@@ -43,3 +43,8 @@ next-env.d.ts
 
 # LLM assistants
 .claude
+
+temp
+
+# SonarQube
+.scannerwork

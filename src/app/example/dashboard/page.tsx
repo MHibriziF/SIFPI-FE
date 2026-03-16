@@ -38,8 +38,8 @@ export default function DashboardPage() {
             'User budi.santoso@example.com registered.',
             'Report #041 approved by admin.',
             'Project "Terminal Peti Kemas Bitung" status updated to Active.',
-          ].map((item, i) => (
-            <div key={i} className="flex gap-3 text-sm">
+          ].map((item) => (
+            <div key={item} className="flex gap-3 text-sm">
               <span className="mt-1.5 size-1.5 rounded-full bg-primary shrink-0" />
               <span className="text-muted-foreground">{item}</span>
             </div>

@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { LogOut, ChevronRight } from 'lucide-react';
 import { Collapsible } from 'radix-ui';
 
@@ -24,15 +25,26 @@ import {
   SidebarSeparator,
 } from '@/shared/components/sidebar/sidebar';
 import { NAV_CONFIGS, type NavItem, type NavKey } from '@/shared/components/sidebar/config/nav-configs';
+import { logout } from '@/features/auth/services';
+import { showToast } from '@/shared/components/toast';
+import { setFlashToast } from '@/shared/hooks/use-flash-toast';
+import { ApiError } from '@/shared/types/api';
 
 interface AppSidebarProps {
   navKey: NavKey;
   user?: { name: string; role: string };
 }
 
+function isPathActive(pathname: string, href?: string): boolean {
+  if (!href) return false;
+  if (pathname === href) return true;
+  if (href === '/') return pathname === '/';
+  return pathname.startsWith(`${href}/`);
+}
+
 function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
   const href = item.href ?? '';
-  const isActive = pathname === href || item.subItems?.some(s => s.href === pathname);
+  const isActive = isPathActive(pathname, href) || item.subItems?.some(s => isPathActive(pathname, s.href));
 
   if (item.subItems) {
     return (
@@ -53,7 +65,7 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
             <SidebarMenuSub>
               {item.subItems.map(sub => (
                 <SidebarMenuSubItem key={sub.href}>
-                  <SidebarMenuSubButton asChild isActive={pathname === sub.href}>
+                  <SidebarMenuSubButton asChild isActive={isPathActive(pathname, sub.href)}>
                     <Link href={sub.href}>{sub.title}</Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
@@ -67,7 +79,7 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={pathname === href} tooltip={item.title}>
+      <SidebarMenuButton asChild isActive={isPathActive(pathname, href)} tooltip={item.title}>
         <Link href={href}>
           <item.icon />
           <span>{item.title}</span>
@@ -80,27 +92,47 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
 export default function AppSidebar({ navKey, user }: AppSidebarProps) {
   const navGroups = NAV_CONFIGS[navKey];
   const pathname = usePathname() ?? '/';
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      setFlashToast({ type: 'success', title: 'Logout berhasil', description: 'Sampai jumpa lagi!' });
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : 'Terjadi kesalahan. Silakan coba lagi.';
+      showToast('danger', 'Logout gagal', message);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
 
   return (
     <Sidebar collapsible="icon">
       {/* Logo — stacked */}
-      <SidebarHeader className="items-center py-5">
-        <Link href="/" className="flex flex-col items-center gap-2">
+      <SidebarHeader className="py-5 px-8">
+        <Link href="/" className="flex flex-col items-start gap-2">
           <Image
             src="/png/ipfo-logo.png"
             alt="IPFO"
-            width={128}
-            height={128}
+            width={100}
+            height={100}
             className="shrink-0"
           />
-          <div className="text-center group-data-[collapsible=icon]:hidden">
-            <p className="font-semibold text-sm leading-tight">IPFO SIFPI</p>
+          <div className="flex text-center group-data-[collapsible=icon]:hidden">
+            <p className="font-semibold text-sm leading-tight mr-4">SIFPI</p>
             <p className="text-xs opacity-60 mt-0.5">Admin Panel</p>
           </div>
         </Link>
       </SidebarHeader>
 
-      <SidebarSeparator />
+      <div aria-hidden className="h-px bg-sidebar-border mx-2" />
 
       <SidebarContent>
         {navGroups.map(group => (
@@ -109,7 +141,7 @@ export default function AppSidebar({ navKey, user }: AppSidebarProps) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map(item => (
-                  <NavItemRow key={item.href} item={item} pathname={pathname} />
+                  <NavItemRow key={item.title} item={item} pathname={pathname} />
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
@@ -134,9 +166,11 @@ export default function AppSidebar({ navKey, user }: AppSidebarProps) {
             <SidebarMenuButton
               tooltip="Logout"
               className="text-danger hover:bg-danger/15 hover:text-danger"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
               <LogOut />
-              <span>Logout</span>
+              <span>{isLoggingOut ? 'Memproses...' : 'Logout'}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

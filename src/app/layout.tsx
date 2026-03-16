@@ -3,7 +3,7 @@ import { Toaster } from 'sonner';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'IPFO SIFPI',
+  title: 'Infrastructure Project Facilitation Office | IPFO | SIFPI',
   description: 'Sistem Informasi Fasilitasi Proyek Infrastruktur. Facilitating Indonesia infrastructure project investment to support sustainable and equitable growth. Access infrastructure projects and investment opportunities.',
   keywords: ['IPFO', 'SIFPI', 'infrastructure projects',
     'investment opportunities', 'Indonesia', 'sustainable growth',
@@ -13,10 +13,10 @@ export const metadata: Metadata = {
     'PPP projects', 'government projects', 'private projects', 'infrastructure news',],
   authors: [{ name: 'Propensi Fasilkom UI - Propen A+' }],
   openGraph: {
-    title: 'IPFO SIFPI',
+    title: 'Infrastructure Project Facilitation Office | IPFO | SIFPI',
     description: 'Sistem Informasi Fasilitasi Proyek Infrastruktur. Facilitating Indonesia infrastructure project investment to support sustainable and equitable growth. Access infrastructure projects and investment opportunities.',
     url: 'https://sifpi.up.railway.app/',
-    siteName: 'IPFO SIFPI',
+    siteName: 'IPFO - SIFPI',
   },
 };
 
@@ -25,7 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="antialiased font-sans">
         {children}
-        <Toaster position="top-center" style={{ '--width': '480px' } as React.CSSProperties} />
+        <Toaster
+          position="top-center"
+          style={{ '--width': 'min(480px, calc(100vw - 32px))' } as React.CSSProperties}
+          toastOptions={{ style: { width: 'min(480px, calc(100vw - 32px))' } }}
+        />
       </body>
     </html>
   );
