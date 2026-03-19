@@ -110,14 +110,13 @@ export default function CreateProjectPage() {
       );
       router.push('/project-owner/projects');
     } catch (error) {
-      const message =
-        error instanceof ApiError && error.isForbidden
-          ? 'Akun Anda belum diverifikasi oleh admin. Silakan tunggu verifikasi sebelum dapat mengajukan proyek.'
-          : error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : 'Gagal mengirim proyek.';
+      const message = (() => {
+        if (error instanceof ApiError && error.isForbidden)
+          return 'Akun Anda belum diverifikasi oleh admin. Silakan tunggu verifikasi sebelum dapat mengajukan proyek.';
+        if (error instanceof ApiError) return error.message;
+        if (error instanceof Error) return error.message;
+        return 'Gagal mengirim proyek.';
+      })();
       showToast('danger', 'Pengajuan gagal', message);
     } finally {
       setSubmitting(false);

@@ -43,7 +43,7 @@ function formatRole(role: string) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Card({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+function Card({ title, children, className = '' }: Readonly<{ title: string; children: React.ReactNode; className?: string }>) {
   return (
     <div className={`border border-gray-200 rounded-2xl overflow-hidden bg-white ${className}`}>
       <div className="bg-primary px-4 py-3 flex justify-center">
@@ -54,7 +54,7 @@ function Card({ title, children, className = '' }: { title: string; children: Re
   );
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
+function InfoChip({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs text-gray-500">{label}</span>
@@ -65,7 +65,7 @@ function InfoChip({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TextField({ label, value }: { label: string; value: string }) {
+function TextField({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex flex-col gap-1.5 flex-1 min-w-0">
       <span className="text-sm text-primary">{label}</span>
@@ -84,7 +84,7 @@ function AksiCard({
   canUpdate,
   canDelete,
   className = '',
-}: {
+}: Readonly<{
   email: string;
   role: string;
   isVerified: boolean;
@@ -92,7 +92,7 @@ function AksiCard({
   canUpdate: boolean;
   canDelete: boolean;
   className?: string;
-}) {
+}>) {
   const router = useRouter();
   const isProjectOwner = role === 'PROJECT_OWNER';
   const [verifyLoading, setVerifyLoading] = useState(false);
@@ -223,11 +223,11 @@ function AksiCard({
               onClick={handleDeactivate}
               disabled={deactivateLoading}
             >
-              {deactivateLoading
-                ? 'Menonaktifkan...'
-                : confirmDeactivate
-                  ? 'Konfirmasi Nonaktifkan?'
-                  : 'Nonaktifkan Akses'}
+              {(() => {
+                if (deactivateLoading) return 'Menonaktifkan...';
+                if (confirmDeactivate) return 'Konfirmasi Nonaktifkan?';
+                return 'Nonaktifkan Akses';
+              })()}
             </Button>
           )}
 
@@ -266,15 +266,15 @@ interface UserDetailViewProps {
   canDelete: boolean;
 }
 
-export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewProps) {
+export function UserDetailView({ user, canUpdate, canDelete }: Readonly<UserDetailViewProps>) {
   const isProjectOwner = user.role === 'PROJECT_OWNER';
   const isInvestor = user.role === 'INVESTOR';
 
   const isVerified = isProjectOwner
-    ? (user.owner_verified ?? false)
-    : user.email_verified;
+    ? (user.ownerVerified ?? false)
+    : user.emailVerified;
 
-  const isActive = user.is_active ?? true;
+  const isActive = user.isActive ?? true;
 
   return (
     <div className="flex flex-col gap-6 pb-8">
@@ -317,9 +317,9 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
               <div className="flex flex-wrap gap-3">
                 <InfoChip label="Role" value={formatRole(user.role)} />
                 {user.phone && <InfoChip label="Phone" value={user.phone} />}
-                <InfoChip label="Joined Date" value={formatDate(user.created_at)} />
-                {user.last_login && (
-                  <InfoChip label="Last Login" value={formatDateTime(user.last_login)} />
+                <InfoChip label="Joined Date" value={formatDate(user.createdAt)} />
+                {user.lastLogin && (
+                  <InfoChip label="Last Login" value={formatDateTime(user.lastLogin)} />
                 )}
               </div>
             </div>
@@ -331,8 +331,8 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
               <table className="w-full">
                 <tbody>
                   {[
-                    { label: 'Proyek diunggah', count: user.jumlah_proyek ?? 0 },
-                    { label: 'Inquiry masuk', count: user.inquiry_masuk ?? 0 },
+                    { label: 'Proyek diunggah', count: user.jumlahProyek ?? 0 },
+                    { label: 'Inquiry masuk', count: user.inquiryMasuk ?? 0 },
                   ].map((row) => (
                     <tr key={row.label} className="border-b border-gray-100 last:border-0">
                       <td className="py-3 px-3 text-sm text-gray-800">{row.label}</td>
@@ -360,12 +360,12 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                     </span>
                   </div>
                   <div className="bg-gray-100 border border-gray-400 rounded-lg px-4 py-2 text-sm text-black">
-                    {user.budget_range ?? '-'}
+                    {user.budgetRange ?? '-'}
                   </div>
                 </div>
 
                 {/* AUM Size */}
-                {user.aum_size && (
+                {user.aumSize && (
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-primary">AUM Size</span>
@@ -374,13 +374,13 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                       </span>
                     </div>
                     <div className="bg-gray-100 border border-gray-400 rounded-lg px-4 py-2 text-sm text-black">
-                      {user.aum_size}
+                      {user.aumSize}
                     </div>
                   </div>
                 )}
 
                 {/* Sektor Minat */}
-                {user.sector_interest && user.sector_interest.length > 0 && (
+                {user.sectorInterest && user.sectorInterest.length > 0 && (
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-primary">Sektor Minat</span>
@@ -389,7 +389,7 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {user.sector_interest.map((s) => (
+                      {user.sectorInterest.map((s) => (
                         <span
                           key={s}
                           className="bg-primary-light text-primary text-xs font-medium px-2.5 py-1 rounded-full"
@@ -454,11 +454,11 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
             <Card title="Informasi Organisasi" className="flex-1">
               <div className="flex flex-col gap-4">
                 <div className="flex gap-5">
-                  <TextField label="Nama Perusahaan" value={user.company_info?.name ?? '-'} />
-                  <TextField label="Sektor" value={user.company_info?.sector ?? '-'} />
+                  <TextField label="Nama Perusahaan" value={user.companyInfo?.name ?? '-'} />
+                  <TextField label="Sektor" value={user.companyInfo?.sector ?? '-'} />
                 </div>
-                {user.company_info?.industry_type && (
-                  <TextField label="Tipe Industri" value={user.company_info.industry_type} />
+                {user.companyInfo?.industryType && (
+                  <TextField label="Tipe Industri" value={user.companyInfo.industryType} />
                 )}
               </div>
             </Card>
@@ -479,47 +479,47 @@ export function UserDetailView({ user, canUpdate, canDelete }: UserDetailViewPro
           <Card title="Preferensi Investasi">
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {user.preferred_investment_instrument && (
-                  <TextField label="Instrumen Investasi" value={user.preferred_investment_instrument} />
+                {user.preferredInvestmentInstrument && (
+                  <TextField label="Instrumen Investasi" value={user.preferredInvestmentInstrument} />
                 )}
-                {user.engagement_model && (
-                  <TextField label="Model Keterlibatan" value={user.engagement_model} />
+                {user.engagementModel && (
+                  <TextField label="Model Keterlibatan" value={user.engagementModel} />
                 )}
-                {user.stage_preference && (
-                  <TextField label="Preferensi Tahap" value={user.stage_preference} />
+                {user.stagePreference && (
+                  <TextField label="Preferensi Tahap" value={user.stagePreference} />
                 )}
-                {user.risk_appetite && (
-                  <TextField label="Tingkat Risiko" value={user.risk_appetite} />
+                {user.riskAppetite && (
+                  <TextField label="Tingkat Risiko" value={user.riskAppetite} />
                 )}
-                {user.esg_standards && (
-                  <TextField label="Standar ESG" value={user.esg_standards} />
+                {user.esgStandards && (
+                  <TextField label="Standar ESG" value={user.esgStandards} />
                 )}
-                {user.local_presence && (
-                  <TextField label="Kehadiran Lokal" value={user.local_presence} />
+                {user.localPresence && (
+                  <TextField label="Kehadiran Lokal" value={user.localPresence} />
                 )}
               </div>
 
               {/* Consent flags */}
-              {(user.opt_in_email !== undefined || user.agree_privacy !== undefined) && (
+              {(user.optInEmail !== undefined || user.agreePrivacy !== undefined) && (
                 <div className="flex flex-wrap gap-3 pt-1 border-t border-gray-100">
-                  {user.opt_in_email !== undefined && (
+                  {user.optInEmail !== undefined && (
                     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-                      user.opt_in_email
+                      user.optInEmail
                         ? 'bg-success-light text-success'
                         : 'bg-draft-light text-draft'
                     }`}>
                       <span className="size-1.5 rounded-full bg-current" />
-                      {user.opt_in_email ? 'Opt-in Email' : 'Tidak Opt-in Email'}
+                      {user.optInEmail ? 'Opt-in Email' : 'Tidak Opt-in Email'}
                     </span>
                   )}
-                  {user.agree_privacy !== undefined && (
+                  {user.agreePrivacy !== undefined && (
                     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-                      user.agree_privacy
+                      user.agreePrivacy
                         ? 'bg-success-light text-success'
                         : 'bg-danger-light text-danger'
                     }`}>
                       <span className="size-1.5 rounded-full bg-current" />
-                      {user.agree_privacy ? 'Menyetujui Kebijakan Privasi' : 'Belum Menyetujui Kebijakan Privasi'}
+                      {user.agreePrivacy ? 'Menyetujui Kebijakan Privasi' : 'Belum Menyetujui Kebijakan Privasi'}
                     </span>
                   )}
                 </div>

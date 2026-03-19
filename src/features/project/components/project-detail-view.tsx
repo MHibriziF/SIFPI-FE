@@ -14,22 +14,14 @@ interface ProjectDetailViewProps {
   isLoading?: boolean;
 }
 
-function SummaryItem({ label, value }: { label: string; value?: string | number | null }) {
-  const displayValue = value === undefined || value === null || value === '' ? '-' : value;
-  return (
-    <div className="grid gap-1">
-      <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="text-sm text-primary">{displayValue}</p>
-    </div>
-  );
-}
+import { SummaryItem } from '@/features/project/utils/summary-formatters';
 
 export function ProjectDetailView({
   project,
   onVerify,
   onReject,
   isLoading = false,
-}: ProjectDetailViewProps) {
+}: Readonly<ProjectDetailViewProps>) {
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionNotes, setRejectionNotes] = useState('');
   const [error, setError] = useState('');
@@ -95,7 +87,7 @@ export function ProjectDetailView({
       <SummaryCard>
         <SummaryCard.Header title="Strategic Narrative / Value Proposition" />
         <SummaryCard.Body className="space-y-4">
-          <p className="text-sm text-primary">{project.valueProposition || '-'}</p>
+          <p className="text-sm text-primary">{project.valueProposition ?? '-'}</p>
           {project.locationImageUrl && (
             <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
               <img
@@ -153,7 +145,7 @@ export function ProjectDetailView({
       <SummaryCard>
         <SummaryCard.Header title="Incentives / Government Support" />
         <SummaryCard.Body>
-          <p className="text-sm text-primary">{project.governmentSupport || '-'}</p>
+          <p className="text-sm text-primary">{project.governmentSupport ?? '-'}</p>
         </SummaryCard.Body>
       </SummaryCard>
 
@@ -161,7 +153,7 @@ export function ProjectDetailView({
       <SummaryCard>
         <SummaryCard.Header title="Revenue Stream" />
         <SummaryCard.Body>
-          <p className="text-sm text-primary">{project.revenueStream || '-'}</p>
+          <p className="text-sm text-primary">{project.revenueStream ?? '-'}</p>
         </SummaryCard.Body>
       </SummaryCard>
 

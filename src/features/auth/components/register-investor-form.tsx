@@ -2,54 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { TextInput, Select, type SelectOption } from '@/shared/components/form-fields';
+import { TextInput, Select } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { registerInvestor } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
+import { validateEmail, validatePassword, validateIndonesianPhone } from '@/shared/lib/validation';
+import { INVESTOR_SECTOR_OPTIONS, BUDGET_OPTIONS } from '@/shared/enums/investment-options';
 import type { CreateInvestorRequest, OrganizationDTO } from '@/features/auth/types';
 import { cn } from '@/shared/lib/utils';
-
-const SECTOR_OPTIONS = [
-  { value: 'PUBLIC_TRANSPORTATION', label: 'Public Transportation' },
-  { value: 'LAND_BASED_TRANSPORT', label: 'Land Based Transport' },
-  { value: 'WASTE_MANAGEMENT', label: 'Waste Management' },
-  { value: 'TOLL_ROAD', label: 'Toll Road' },
-  { value: 'AFFORDABLE_HOUSING_AND_TRANSIT_ORIENTED_DEVELOPMENT', label: 'Affordable Housing' },
-  { value: 'HEALTH', label: 'Health' },
-  { value: 'WATER_RESOURCE_DRINKING_WATER_AND_IRRIGATION', label: 'Water Resource' },
-  { value: 'MARITIME', label: 'Maritime' },
-  { value: 'OIL_GAS_AND_ENERGY', label: 'Oil & Gas, Energy' },
-  { value: 'AVIATION', label: 'Aviation' },
-  { value: 'DIGITAL_AND_TELECOMMUNICATIONS', label: 'Digital & Telecom' },
-  { value: 'EDUCATION_RESEARCH_AND_DEVELOPMENT', label: 'Education, R&D' },
-  { value: 'URBAN_ECONOMICS_INFRASTRUCTURE_FACILITIES', label: 'Urban Economics' },
-];
-
-const BUDGET_OPTIONS: SelectOption[] = [
-  { value: '<1', label: '< 1 Miliar' },
-  { value: '1-5', label: '1-5 Miliar' },
-  { value: '5-10', label: '5-10 Miliar' },
-  { value: '>10', label: '> 10 Miliar' },
-];
-
-function validateEmail(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
-
-function validatePassword(value: string): string | undefined {
-  if (!value) return 'Password wajib diisi';
-  if (value.length < 8) return 'Password minimal 8 karakter';
-}
-
-function validatePhone(value: string): string | undefined {
-  if (!value.trim()) return 'No. Telepon wajib diisi';
-  if (!/^(\+62|0)[0-9]{9,12}$/.test(value.replace(/\s/g, '')))
-    return 'No. Telepon tidak valid';
-}
 
 interface FormErrors {
   nama?: string;
@@ -91,7 +54,8 @@ export default function RegisterInvestorForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
   const [loading, setLoading] = useState(false);
-  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
+  // selectedOrganization is set by OrganizationAutocomplete for potential future use
+  const [, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
 
   function validateStep1(): boolean {
     const next: FormErrors = {};
@@ -108,7 +72,7 @@ export default function RegisterInvestorForm({
     if (!formData.jabatan.trim()) next.jabatan = 'Jabatan wajib diisi';
     if (formData.jabatan.length > 100) next.jabatan = 'Jabatan maksimal 100 karakter';
 
-    const phoneError = validatePhone(formData.phone);
+    const phoneError = validateIndonesianPhone(formData.phone);
     if (phoneError) next.phone = phoneError;
 
     const passwordError = validatePassword(formData.password);
@@ -165,49 +129,59 @@ export default function RegisterInvestorForm({
     }
   }
 
+  function validateFieldInline(
+    field: keyof CreateInvestorRequest,
+    value: any,
+    currentErrors: FormErrors,
+    currentFormData: CreateInvestorRequest,
+    currentTouched: TouchedFields
+  ): FormErrors {
+    const next = { ...currentErrors };
+
+    switch (field) {
+      case 'email':
+        next.email = validateEmail(value);
+        break;
+      case 'password':
+        next.password = validatePassword(value);
+        if (currentTouched.confirmPassword && currentFormData.confirmPassword) {
+          next.confirmPassword =
+            value !== currentFormData.confirmPassword ? 'Password tidak cocok' : undefined;
+        }
+        break;
+      case 'confirmPassword':
+        next.confirmPassword =
+          value !== currentFormData.password ? 'Password tidak cocok' : undefined;
+        break;
+      case 'phone':
+        next.phone = validateIndonesianPhone(value);
+        break;
+      case 'nama':
+        next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
+        break;
+      case 'organisasi':
+        next.organisasi = value.trim() ? undefined : 'Organisasi/Instansi wajib diisi';
+        break;
+      case 'jabatan':
+        next.jabatan = value.trim() ? undefined : 'Jabatan wajib diisi';
+        break;
+      case 'budgetInvestasi':
+        next.budgetInvestasi = value ? undefined : 'Budget investasi wajib diisi';
+        break;
+      case 'sectorInterest':
+        next.sectorInterest =
+          (value as string[]).length >= 3 ? undefined : 'Pilih minimal 3 sektor';
+        break;
+    }
+
+    return next;
+  }
+
   function handleChange(field: keyof CreateInvestorRequest, value: any) {
     setFormData(prev => ({ ...prev, [field]: value }));
 
     if (touched[field]) {
-      const next = { ...errors };
-
-      switch (field) {
-        case 'email':
-          next.email = validateEmail(value);
-          break;
-        case 'password':
-          next.password = validatePassword(value);
-          if (touched.confirmPassword && formData.confirmPassword) {
-            next.confirmPassword =
-              value !== formData.confirmPassword ? 'Password tidak cocok' : undefined;
-          }
-          break;
-        case 'confirmPassword':
-          next.confirmPassword =
-            value !== formData.password ? 'Password tidak cocok' : undefined;
-          break;
-        case 'phone':
-          next.phone = validatePhone(value);
-          break;
-        case 'nama':
-          next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
-          break;
-        case 'organisasi':
-          next.organisasi = value.trim() ? undefined : 'Organisasi/Instansi wajib diisi';
-          break;
-        case 'jabatan':
-          next.jabatan = value.trim() ? undefined : 'Jabatan wajib diisi';
-          break;
-        case 'budgetInvestasi':
-          next.budgetInvestasi = value ? undefined : 'Budget investasi wajib diisi';
-          break;
-        case 'sectorInterest':
-          next.sectorInterest =
-            (value as string[]).length >= 3 ? undefined : 'Pilih minimal 3 sektor';
-          break;
-      }
-
-      setErrors(next);
+      setErrors(validateFieldInline(field, value, errors, formData, touched));
     }
   }
 
@@ -374,7 +348,7 @@ export default function RegisterInvestorForm({
 
         <div className="rounded-lg border border-gray-200 p-3">
           <div className="grid grid-cols-3 gap-2">
-            {SECTOR_OPTIONS.map(sector => (
+            {INVESTOR_SECTOR_OPTIONS.map(sector => (
               <label
                 key={sector.value}
                 className={cn(

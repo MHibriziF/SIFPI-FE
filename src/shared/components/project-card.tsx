@@ -42,7 +42,7 @@ export function ProjectCard({ project, viewDetailHref, className, hideStatusBadg
       <div className="relative w-full h-48 bg-gray-100">
         {hasValidImage ? (
           <img
-            src={project.locationImageUrl!}
+            src={project.locationImageUrl ?? ''}
             alt={project.name}
             className="w-full h-full object-cover"
           />

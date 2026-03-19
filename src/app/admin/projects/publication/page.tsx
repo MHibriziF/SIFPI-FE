@@ -45,6 +45,55 @@ const STATUS_COLORS: Record<string, string> = {
   TERPUBLIKASI: 'bg-purple-100 text-purple-800',
 };
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function filterByTab(projectsList: ProjectCardData[], tab: 'unpublished' | 'published'): ProjectCardData[] {
+  if (tab === 'published') {
+    return projectsList.filter((p) => p.status === 'TERPUBLIKASI');
+  }
+  return projectsList.filter((p) => p.status === 'TERVERIFIKASI');
+}
+
+function filterBySearchAndSector(
+  projectsList: ProjectCardData[],
+  filterParams: { search: string; sector: string }
+): ProjectCardData[] {
+  let filtered = projectsList;
+
+  if (filterParams.search.trim()) {
+    const query = filterParams.search.toLowerCase();
+    filtered = filtered.filter(
+      (p) =>
+        p.id?.toString().includes(query) ||
+        p.name.toLowerCase().includes(query) ||
+        p.ownerName?.toLowerCase().includes(query)
+    );
+  }
+
+  if (filterParams.sector) {
+    filtered = filtered.filter((p) => p.sector === filterParams.sector);
+  }
+
+  return filtered;
+}
+
+function getPublishButtonLabel(isProcessing: boolean, count: number): string {
+  if (isProcessing) return 'Processing...';
+  const countSuffix = count > 0 ? ` ${count}` : '';
+  return `Publikasikan${countSuffix} Proyek`;
+}
+
+function getUnpublishButtonLabel(isProcessing: boolean, count: number): string {
+  if (isProcessing) return 'Processing...';
+  const countSuffix = count > 0 ? ` ${count}` : '';
+  return `Batalkan publikasi${countSuffix} Proyek`;
+}
+
+function getEmptyMessage(tab: 'unpublished' | 'published'): string {
+  if (tab === 'published') return 'Belum ada proyek yang dipublikasikan';
+  return 'Belum ada proyek yang terverifikasi dan siap dipublikasikan';
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function PublicationManagementPage() {
@@ -76,27 +125,8 @@ export default function PublicationManagementPage() {
     tab: 'unpublished' | 'published',
     filterParams: typeof filters
   ) => {
-    let filtered = projectsList;
-
-    if (tab === 'published') {
-      filtered = filtered.filter((p) => p.status === 'TERPUBLIKASI');
-    } else {
-      filtered = filtered.filter((p) => p.status === 'TERVERIFIKASI');
-    }
-
-    if (filterParams.search.trim()) {
-      const query = filterParams.search.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.id?.toString().includes(query) ||
-          p.name.toLowerCase().includes(query) ||
-          p.ownerName?.toLowerCase().includes(query)
-      );
-    }
-
-    if (filterParams.sector) {
-      filtered = filtered.filter((p) => p.sector === filterParams.sector);
-    }
+    const tabFiltered = filterByTab(projectsList, tab);
+    const filtered = filterBySearchAndSector(tabFiltered, filterParams);
 
     setProjects(filtered);
     setPagination((prev) => ({
@@ -120,13 +150,13 @@ export default function PublicationManagementPage() {
       });
 
       const data = response.data;
-      const allProjectsList = data.content || [];
+      const allProjectsList = data.content ?? [];
       setAllProjects(allProjectsList);
       applyFilters(allProjectsList, activeTab, filters);
     } catch (error) {
-      console.error('❌ Error fetching projects:', error);
-      const apiError = error as ApiError;
-      showNotification('danger', 'Gagal memuat proyek', apiError.message || 'Terjadi kesalahan');
+      console.error('Error fetching projects:', error);
+      const message = error instanceof ApiError ? error.message : 'Terjadi kesalahan';
+      showNotification('danger', 'Gagal memuat proyek', message);
     } finally {
       setIsLoading(false);
     }
@@ -201,7 +231,7 @@ export default function PublicationManagementPage() {
         });
 
         const data = response.data;
-        const allProjectsList = data.content || [];
+        const allProjectsList = data.content ?? [];
         setAllProjects(allProjectsList);
         applyFilters(allProjectsList, activeTab, filters);
         setSelectedProjects(new Set());
@@ -222,11 +252,11 @@ export default function PublicationManagementPage() {
         }
       } catch (error) {
         console.error(`Failed to ${action} projects:`, error);
-        const apiError = error as ApiError;
+        const message = error instanceof ApiError ? error.message : 'Terjadi kesalahan saat melakukan operasi';
         showNotification(
           'danger',
           action === 'publish' ? 'Gagal mempublikasikan proyek' : 'Gagal melepas publikasi proyek',
-          apiError.message || 'Terjadi kesalahan saat melakukan operasi'
+          message
         );
       } finally {
         setIsProcessing(false);
@@ -326,9 +356,7 @@ export default function PublicationManagementPage() {
           ) : paginatedProjects.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">
-                {activeTab === 'published'
-                  ? 'Belum ada proyek yang dipublikasikan'
-                  : 'Belum ada proyek yang terverifikasi dan siap dipublikasikan'}
+                {getEmptyMessage(activeTab)}
               </p>
             </div>
           ) : (
@@ -462,9 +490,7 @@ export default function PublicationManagementPage() {
                   disabled={selectedProjects.size === 0 || isProcessing}
                   className="bg-green-600 hover:bg-green-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing
-                    ? 'Processing...'
-                    : `Publikasikan${selectedProjects.size > 0 ? ` ${selectedProjects.size}` : ''} Proyek`}
+                  {getPublishButtonLabel(isProcessing, selectedProjects.size)}
                 </Button>
               ) : (
                 <Button
@@ -473,9 +499,7 @@ export default function PublicationManagementPage() {
                   disabled={selectedProjects.size === 0 || isProcessing}
                   className="bg-orange-500 hover:bg-orange-600 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing
-                    ? 'Processing...'
-                    : `Batalkan publikasi${selectedProjects.size > 0 ? ` ${selectedProjects.size}` : ''} Proyek`}
+                  {getUnpublishButtonLabel(isProcessing, selectedProjects.size)}
                 </Button>
               )}
               <Button

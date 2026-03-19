@@ -27,13 +27,10 @@ const MUTATING = new Set(['post', 'put', 'patch', 'delete']);
 let csrfReady = false;
 let csrfInit: Promise<void> | null = null;
 
-api.interceptors.request.use(async config => {
-  config.url = normalizeApiUrl(config.url);
-  if (csrfReady || !MUTATING.has(config.method?.toLowerCase() ?? '')) return config;
-
+async function ensureCsrfToken(): Promise<void> {
   if (document.cookie.split(';').some(c => c.trim().startsWith('XSRF-TOKEN='))) {
     csrfReady = true;
-    return config;
+    return;
   }
 
   csrfInit ??= api
@@ -47,6 +44,16 @@ api.interceptors.request.use(async config => {
     });
 
   await csrfInit;
+}
+
+api.interceptors.request.use(async config => {
+  config.url = normalizeApiUrl(config.url);
+
+  const needsCsrf = !csrfReady && MUTATING.has(config.method?.toLowerCase() ?? '');
+  if (needsCsrf) {
+    await ensureCsrfToken();
+  }
+
   return config;
 });
 

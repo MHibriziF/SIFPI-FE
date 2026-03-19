@@ -13,40 +13,19 @@ import { getCatalogueProjectById, recordProjectView } from '@/features/project/s
 import { ApiError } from '@/shared/types/api';
 import type { CatalogueProjectDetailDTO } from '@/features/project/types';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { formatIDR, formatDate, formatConcession } from '@/shared/lib/formatters';
 
-function formatIDR(value: number | null | undefined): string {
-  if (value == null) return '—';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatPercent(value: number | null | undefined): string {
   if (value == null) return '—';
   return `${value.toFixed(2)}%`;
 }
 
-function formatConcession(years: number | null | undefined): string {
-  if (years == null) return '—';
-  return `${years} Tahun`;
-}
-
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 /** A bordered row with a pin-like icon for Project Information entries */
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: React.ReactNode }) {
+function InfoRow({ icon: Icon, label, value }: Readonly<{ icon: React.ElementType; label: string; value: React.ReactNode }>) {
   return (
     <div className="flex items-start gap-3 border-b border-gray-200 px-8 py-3.5 last:border-b-0">
       <Icon className="mt-0.5 size-5 flex-shrink-0 text-primary" />
@@ -64,12 +43,12 @@ function FinancialRow({
   value,
   sub,
   isLast = false,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   sub?: string;
   isLast?: boolean;
-}) {
+}>) {
   return (
     <div className={`flex flex-col gap-0.5 px-8 py-3.5 ${isLast ? '' : 'border-b border-gray-200'}`}>
       <span className="text-xs text-gray-500">{label}</span>
@@ -80,7 +59,7 @@ function FinancialRow({
 }
 
 /** Timeline item card */
-function TimelineChip({ timeRange, phaseDescription }: { timeRange: string; phaseDescription: string }) {
+function TimelineChip({ timeRange, phaseDescription }: Readonly<{ timeRange: string; phaseDescription: string }>) {
   return (
     <div className="min-w-[190px] overflow-hidden rounded-xl border-2 border-primary bg-primary-light flex-shrink-0">
       <div className="flex items-center justify-center bg-primary px-4 py-2.5">
@@ -102,7 +81,7 @@ interface TooltipButtonProps {
   className?: string;
 }
 
-function TooltipButton({ tooltip, children, className }: TooltipButtonProps) {
+function TooltipButton({ tooltip, children, className }: Readonly<TooltipButtonProps>) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -115,9 +94,13 @@ function TooltipButton({ tooltip, children, className }: TooltipButtonProps) {
   return (
     <div
       ref={ref}
+      role="button"
+      tabIndex={0}
       className={className}
       onMouseEnter={handleEnter}
       onMouseLeave={() => setPos(null)}
+      onFocus={handleEnter}
+      onBlur={() => setPos(null)}
     >
       {children}
       {pos &&
@@ -179,7 +162,7 @@ interface PublicProjectDetailViewProps {
   isLoggedIn: boolean;
 }
 
-export default function PublicProjectDetailView({ projectId, isLoggedIn }: PublicProjectDetailViewProps) {
+export default function PublicProjectDetailView({ projectId, isLoggedIn }: Readonly<PublicProjectDetailViewProps>) {
   const [project, setProject] = useState<CatalogueProjectDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

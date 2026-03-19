@@ -163,6 +163,22 @@ export async function getMyProjects(params: GetMyProjectsParams): Promise<BaseRe
   return apiGet<PagedProjectsResponse>('/api/projects/my-projects', queryParams);
 }
 
+// ─── Get My Project Status Counts (Project Owner) ───────────────────────────
+
+export interface ProjectStatusCountResponse {
+  draft: number;
+  diajukan: number;
+  inReview: number;
+  terverifikasi: number;
+  terpublikasi: number;
+  perbaikanData: number;
+  total: number;
+}
+
+export async function getMyProjectStatusCounts(): Promise<BaseResponse<ProjectStatusCountResponse>> {
+  return apiGet<ProjectStatusCountResponse>('/api/projects/my-projects/status-counts');
+}
+
 // ─── Get All Projects (Admin) ───────────────────────────────────────────────
 
 export interface GetAllProjectsParams {
@@ -191,7 +207,7 @@ export async function getAllProjects(params: GetAllProjectsParams): Promise<Base
     queryParams.sector = params.sector;
   }
 
-  if (params.search && params.search.trim()) {
+  if (params.search?.trim()) {
     queryParams.search = params.search.trim();
   }
 
@@ -265,7 +281,7 @@ export async function getPublishedProjects(params: GetPublishedProjectsParams): 
     queryParams.maxBudget = params.maxBudget;
   }
 
-  if (params.search && params.search.trim()) {
+  if (params.search?.trim()) {
     queryParams.search = params.search.trim();
   }
 

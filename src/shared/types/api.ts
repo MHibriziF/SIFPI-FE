@@ -20,11 +20,9 @@ export class ApiError extends Error {
 
   /** Make `instanceof` resilient to duplicate class copies across chunks. */
   static [Symbol.hasInstance](instance: unknown): instance is ApiError {
-    return (
-      instance instanceof Error &&
-      (instance as Error).name === 'ApiError' &&
-      'status' in (instance as object)
-    );
+    if (!(instance instanceof Error)) return false;
+    const err: Error = instance;
+    return err.name === 'ApiError' && 'status' in err;
   }
 
   constructor(status: number, message: string, timestamp?: string, details?: unknown) {

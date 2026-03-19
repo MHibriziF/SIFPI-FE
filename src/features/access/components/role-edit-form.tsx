@@ -2,17 +2,12 @@
 
 import React, { useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Search, ChevronLeft as PrevIcon, ChevronRight, Info, UserPlus, UserMinus } from 'lucide-react';
+import { ChevronLeft, Info, UserPlus, UserMinus } from 'lucide-react';
 import { Button } from '@/shared/components/button';
-import { TextInput, Textarea, Select } from '@/shared/components/form-fields';
 import type { RoleDetail, RoleUserItem } from '../types';
-import {
-  useEditRoleForm,
-  PERMISSION_MODULES,
-  ROLE_STATUS_OPTIONS,
-  PAGE_SIZE_OPTIONS,
-} from '../hooks/use-edit-role-form';
+import { useEditRoleForm } from '../hooks/use-edit-role-form';
 import { RoleEditConfirmModal } from './role-edit-confirm-modal';
+import { RoleInfoSection, PermissionMatrixSection, UserFilterSection, UserPagination } from './role-form-sections';
 
 interface RoleEditFormProps {
   role: RoleDetail;
@@ -20,7 +15,7 @@ interface RoleEditFormProps {
   totalUsers: number;
 }
 
-export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFormProps) {
+export function RoleEditForm({ role, initialRoleUsers, totalUsers }: Readonly<RoleEditFormProps>) {
   const {
     name, setName,
     status, setStatus,
@@ -75,42 +70,12 @@ export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFor
         <h2 className="bg-primary text-white text-lg font-semibold px-6 py-3 text-center">
           Informasi Role
         </h2>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextInput
-              label="Nama Role"
-              required
-              id="role-name"
-              placeholder="Contoh: Finance Manager"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={errors.name}
-              hint="Berikan nama role yang deskriptif dan tidak ambigu."
-            />
-            <Select
-              label="Status Role"
-              required
-              id="role-status"
-              options={ROLE_STATUS_OPTIONS}
-              value={status}
-              onValueChange={setStatus}
-              error={errors.status}
-              hint="Hanya role aktif yang memiliki akses ke semua modul/resource alur ini."
-            />
-          </div>
-          <div className="mt-4">
-            <Textarea
-              label="Deskripsi Role"
-              id="role-description"
-              required
-              placeholder="Deskripsi role menjelaskan apa yang dilakukan oleh role ini"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              error={errors.description}
-              hint="Deskripsi role menjelaskan apa yang dilakukan oleh role ini."
-            />
-          </div>
-        </div>
+        <RoleInfoSection
+          name={name} setName={setName}
+          status={status} setStatus={setStatus}
+          description={description} setDescription={setDescription}
+          errors={errors}
+        />
       </div>
 
       {/* ── Section: Permission Matrix ───────────────────────────────────── */}
@@ -118,82 +83,12 @@ export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFor
         <h2 className="bg-primary text-white text-lg font-semibold px-6 py-3 text-center">
           Matriks Kontrol Akses (Permissions)
         </h2>
-        <div className="p-6">
-          <div className="overflow-x-auto rounded-lg">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Modul / Fitur Sistem
-                  </th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Dapat Akses
-                  </th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Tambah (Create)
-                  </th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Ubah (Edit)
-                  </th>
-                  <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Hapus (Delete)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {PERMISSION_MODULES.map((mod) => {
-                  const perm = permissions[mod.module];
-                  return (
-                    <tr key={mod.module} className="border-b border-gray-100">
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-primary">{mod.label}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">{mod.description}</div>
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <input
-                          type="checkbox"
-                          checked={perm.canAccess}
-                          onChange={() => togglePermission(mod.module, 'canAccess')}
-                          className="size-4 rounded border-gray-300 accent-primary cursor-pointer"
-                        />
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <input
-                          type="checkbox"
-                          checked={perm.canCreate}
-                          onChange={() => togglePermission(mod.module, 'canCreate')}
-                          className="size-4 rounded border-gray-300 accent-primary cursor-pointer"
-                          disabled={!perm.canAccess}
-                        />
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <input
-                          type="checkbox"
-                          checked={perm.canUpdate}
-                          onChange={() => togglePermission(mod.module, 'canUpdate')}
-                          className="size-4 rounded border-gray-300 accent-primary cursor-pointer"
-                          disabled={!perm.canAccess}
-                        />
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <input
-                          type="checkbox"
-                          checked={perm.canDelete}
-                          onChange={() => togglePermission(mod.module, 'canDelete')}
-                          className="size-4 rounded border-gray-300 accent-primary cursor-pointer"
-                          disabled={!perm.canAccess}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {errors.permissions && (
-            <p className="mt-3 text-xs text-danger">{errors.permissions}</p>
-          )}
-        </div>
+        <PermissionMatrixSection
+          permissions={permissions}
+          togglePermission={togglePermission}
+          permissionsError={errors.permissions}
+          disableSubPermissions
+        />
       </div>
 
       {/* ── Section: Akun Terdaftar ──────────────────────────────────────── */}
@@ -211,29 +106,10 @@ export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFor
           </p>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari nama atau email"
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 text-sm text-black border border-gray-300 rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-              />
-            </div>
-            <select
-              value={userRoleFilter}
-              onChange={(e) => setUserRoleFilter(e.target.value)}
-              className="w-44 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-            >
-              <option value="">Semua Role</option>
-              <option value="ADMIN">Admin</option>
-              <option value="PROJECT_OWNER">Project Owner</option>
-              <option value="INVESTOR">Investor</option>
-              <option value="EXECUTIVE">Executive</option>
-            </select>
-          </div>
+          <UserFilterSection
+            userSearch={userSearch} setUserSearch={setUserSearch}
+            userRoleFilter={userRoleFilter} setUserRoleFilter={setUserRoleFilter}
+          />
 
           {/* Table + side panel */}
           <div className="flex gap-4 items-start">
@@ -257,22 +133,24 @@ export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFor
                     </tr>
                   </thead>
                   <tbody>
-                    {usersLoading ? (
-                      Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, i) => (
-                        <tr key={i} className="border-b border-gray-100">
+                    {usersLoading && (
+                      Array.from({ length: pageSize > 5 ? 5 : pageSize }, (_, i) => `skeleton-edit-${i}`).map((skeletonId) => (
+                        <tr key={skeletonId} className="border-b border-gray-100">
                           <td className="py-3 px-4"><div className="size-4 bg-gray-200 rounded animate-pulse" /></td>
                           <td className="py-3 px-4"><div className="h-4 w-32 bg-gray-200 rounded animate-pulse" /></td>
                           <td className="py-3 px-4"><div className="h-4 w-44 bg-gray-200 rounded animate-pulse" /></td>
                           <td className="py-3 px-4"><div className="h-4 w-28 bg-gray-200 rounded animate-pulse" /></td>
                         </tr>
                       ))
-                    ) : users.length === 0 ? (
+                    )}
+                    {!usersLoading && users.length === 0 && (
                       <tr>
                         <td colSpan={4} className="text-center py-8 text-gray-400 text-sm">
                           Tidak ada pengguna ditemukan
                         </td>
                       </tr>
-                    ) : (
+                    )}
+                    {!usersLoading && users.length > 0 && (
                       users.map((user) => {
                         const checked = isUserChecked(user);
                         const isCurrentMember = initialAssignedEmails.has(user.email);
@@ -309,44 +187,17 @@ export function RoleEditForm({ role, initialRoleUsers, totalUsers }: RoleEditFor
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <span>
-                    {usersTotalElements === 0
-                      ? 'Tidak ada data'
-                      : `Showing ${startItem}–${endItem} of ${usersTotalElements} pengguna`}
-                  </span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  >
-                    {PAGE_SIZE_OPTIONS.map((n) => (
-                      <option key={n} value={n}>{n} / halaman</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={userPage <= 1 || usersLoading}
-                    onClick={() => setUserPage(userPage - 1)}
-                  >
-                    <PrevIcon className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={userPage >= usersTotalPages || usersLoading}
-                    onClick={() => setUserPage(userPage + 1)}
-                  >
-                    <ChevronRight className="size-4" />
-                  </Button>
-                </div>
-              </div>
+              <UserPagination
+                usersTotalElements={usersTotalElements}
+                startItem={startItem}
+                endItem={endItem}
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                userPage={userPage}
+                usersTotalPages={usersTotalPages}
+                usersLoading={usersLoading}
+                setUserPage={setUserPage}
+              />
             </div>
 
             {/* Side panel: add/remove summary */}

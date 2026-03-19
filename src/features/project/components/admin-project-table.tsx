@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Trash2, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { Button } from '@/shared/components/button';
+import { Pagination } from '@/shared/components/pagination';
 import { Select, TextInput } from '@/shared/components/form-fields';
 import { StatCard } from '@/shared/components/stat-card';
 import { showToast } from '@/shared/components/toast';
@@ -113,13 +114,9 @@ export default function AdminReadProjects() {
         growthPercentage: 12, // Mock data - should come from backend
       });
     } catch (error) {
-      console.error('❌ Error fetching admin projects:', error);
-      const apiError = error as ApiError;
-      showToast(
-        'danger',
-        'Gagal memuat proyek',
-        apiError.message || 'Terjadi kesalahan'
-      );
+      console.error('Error fetching admin projects:', error);
+      const message = error instanceof ApiError ? error.message : 'Terjadi kesalahan';
+      showToast('danger', 'Gagal memuat proyek', message);
     } finally {
       setIsLoading(false);
     }
@@ -137,11 +134,7 @@ export default function AdminReadProjects() {
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
+    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' });
   };
 
   // ── Render ──────────────────────────────────────────────────────────────
@@ -235,16 +228,23 @@ export default function AdminReadProjects() {
           </div>
 
           {/* Table */}
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-              <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Belum ada proyek yang diajukan</p>
-            </div>
-          ) : (
+          {(() => {
+            if (isLoading) {
+              return (
+                <div className="text-center py-12">
+                  <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
+                </div>
+              );
+            }
+            if (projects.length === 0) {
+              return (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Belum ada proyek yang diajukan</p>
+                </div>
+              );
+            }
+            return (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -323,44 +323,17 @@ export default function AdminReadProjects() {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
-                <span>
-                  Showing {pagination.page * pagination.size + 1}-
-                  {Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of{' '}
-                  {pagination.totalElements} entries
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={pagination.page <= 0}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                  >
-                    <ChevronLeft className="size-4" />
-                  </Button>
-                  {Array.from({ length: pagination.totalPages }, (_, i) => (
-                    <Button
-                      key={i}
-                      variant={pagination.page === i ? 'filled' : 'ghost'}
-                      size="icon-sm"
-                      onClick={() => setPagination((prev) => ({ ...prev, page: i }))}
-                      className="text-xs"
-                    >
-                      {i + 1}
-                    </Button>
-                  ))}
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={pagination.page >= pagination.totalPages - 1}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                  >
-                    <ChevronRight className="size-4" />
-                  </Button>
-                </div>
-              </div>
+              <Pagination
+                page={pagination.page}
+                totalPages={pagination.totalPages}
+                totalElements={pagination.totalElements}
+                pageSize={pagination.size}
+                onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+                className="mt-4 pt-4 border-t border-gray-200"
+              />
             </>
-          )}
+            );
+          })()}
 
           {/* Action Buttons */}
         <div className="flex justify-between items-center mt-6 pt-6 border-gray-200">

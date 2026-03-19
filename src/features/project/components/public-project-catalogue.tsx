@@ -5,8 +5,9 @@ import Image from "next/image";
 import { ProjectCard } from "@/shared/components/project-card";
 import { getPublishedProjects } from "@/features/project/services";
 import type { ProjectCardData } from "@/shared/components/project-card";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "@/shared/components/button";
+import { Pagination } from "@/shared/components/pagination";
 import { Select, TextInput } from "@/shared/components/form-fields";
 import { SECTOR_OPTIONS } from "@/shared/enums";
 
@@ -164,25 +165,35 @@ export function PublicProjectCatalogue() {
         </div>
 
         {/* Projects Grid */}
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary"></div>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center">
-            <p className="font-medium">{error}</p>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-16 text-center">
-            <Search size={56} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No projects found
-            </h3>
-            <p className="text-gray-600">
-              Try adjusting your filters or search keywords
-            </p>
-          </div>
-        ) : (
+        {(() => {
+          if (loading) {
+            return (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary"></div>
+              </div>
+            );
+          }
+          if (error) {
+            return (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg text-center">
+                <p className="font-medium">{error}</p>
+              </div>
+            );
+          }
+          if (projects.length === 0) {
+            return (
+              <div className="bg-white border border-gray-200 rounded-lg p-16 text-center">
+                <Search size={56} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No projects found
+                </h3>
+                <p className="text-gray-600">
+                  Try adjusting your filters or search keywords
+                </p>
+              </div>
+            );
+          }
+          return (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {projects.map((project) => (
@@ -197,44 +208,16 @@ export function PublicProjectCatalogue() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>
-                Showing {currentPage * pageSize + 1}-
-                {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
-                {totalElements} entries
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={currentPage <= 0}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <Button
-                    key={i}
-                    variant={currentPage === i ? "filled" : "ghost"}
-                    size="icon-sm"
-                    onClick={() => handlePageChange(i)}
-                    className="text-xs"
-                  >
-                    {i + 1}
-                  </Button>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={currentPage >= totalPages - 1}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalElements={totalElements}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+            />
           </>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

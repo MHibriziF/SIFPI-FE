@@ -30,7 +30,7 @@ interface RoleDetailViewProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function RoleDetailView({ role, initialUsers, totalUsers, canUpdate }: RoleDetailViewProps) {
+export function RoleDetailView({ role, initialUsers, totalUsers, canUpdate }: Readonly<RoleDetailViewProps>) {
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(1);
 

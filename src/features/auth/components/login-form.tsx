@@ -10,11 +10,7 @@ import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { login } from '@/features/auth/services';
 import { ApiError } from '@/shared/types/api';
 import { getRoleHome } from '@/shared/lib/role-home';
-
-function validateEmailValue(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
+import { validateEmail as validateEmailValue } from '@/shared/lib/validation';
 
 export default function LoginForm() {
   const router = useRouter();

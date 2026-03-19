@@ -41,50 +41,67 @@ export function parseBoolean(value: string): boolean | null {
 // CSV parsing (RFC 4180 compliant, handles quoted fields)
 // ---------------------------------------------------------------------------
 
+function isNewlineChar(char: string): boolean {
+  return char === '\n' || char === '\r';
+}
+
+interface CsvParserState {
+  rows: string[][];
+  row: string[];
+  cell: string;
+  inQuotes: boolean;
+  advance: number;
+}
+
+function processQuote(state: CsvParserState, next: string | undefined): void {
+  if (state.inQuotes && next === '"') {
+    state.cell += '"';
+    state.advance = 1;
+  } else {
+    state.inQuotes = !state.inQuotes;
+  }
+}
+
+function processDelimiter(state: CsvParserState): void {
+  state.row.push(state.cell);
+  state.cell = '';
+}
+
+function processNewline(state: CsvParserState, char: string, next: string | undefined): void {
+  state.row.push(state.cell);
+  state.rows.push(state.row);
+  state.row = [];
+  state.cell = '';
+  if (char === '\r' && next === '\n') state.advance = 1;
+}
+
 export function parseCsvRows(csvText: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = '';
-  let inQuotes = false;
+  const state: CsvParserState = { rows: [], row: [], cell: '', inQuotes: false, advance: 0 };
 
   for (let i = 0; i < csvText.length; i += 1) {
     const char = csvText[i];
     const next = csvText[i + 1];
+    state.advance = 0;
 
     if (char === '"') {
-      if (inQuotes && next === '"') {
-        cell += '"';
-        i += 1;
-      } else {
-        inQuotes = !inQuotes;
-      }
-      continue;
+      processQuote(state, next);
+    } else if (char === ',' && !state.inQuotes) {
+      processDelimiter(state);
+    } else if (isNewlineChar(char) && !state.inQuotes) {
+      processNewline(state, char, next);
+    } else {
+      state.cell += char;
     }
 
-    if (char === ',' && !inQuotes) {
-      row.push(cell);
-      cell = '';
-      continue;
-    }
-
-    if ((char === '\n' || char === '\r') && !inQuotes) {
-      if (char === '\r' && next === '\n') i += 1;
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = '';
-      continue;
-    }
-
-    cell += char;
+    i += state.advance;
   }
 
-  if (cell.length > 0 || row.length > 0) {
-    row.push(cell);
-    rows.push(row);
+  if (state.cell.length > 0 || state.row.length > 0) {
+    state.row.push(state.cell);
+    state.rows.push(state.row);
   }
 
-  return rows;
+  return state.rows;
 }
 
 // ---------------------------------------------------------------------------

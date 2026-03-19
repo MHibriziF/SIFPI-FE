@@ -9,23 +9,8 @@ import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { registerOwner } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
+import { validateEmail, validatePassword, validateIndonesianPhone } from '@/shared/lib/validation';
 import type { CreateOwnerRequest, OrganizationDTO } from '@/features/auth/types';
-
-function validateEmail(value: string): string | undefined {
-  if (!value.trim()) return 'Email wajib diisi';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format email tidak valid';
-}
-
-function validatePassword(value: string): string | undefined {
-  if (!value) return 'Password wajib diisi';
-  if (value.length < 8) return 'Password minimal 8 karakter';
-}
-
-function validatePhone(value: string): string | undefined {
-  if (!value.trim()) return 'No. Telepon wajib diisi';
-  if (!/^(\+62|0)[0-9]{9,12}$/.test(value.replace(/\s/g, '')))
-    return 'No. Telepon tidak valid';
-}
 
 interface FormErrors {
   nama?: string;
@@ -59,7 +44,8 @@ export default function RegisterOwnerForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
   const [loading, setLoading] = useState(false);
-  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
+  // selectedOrganization is set by OrganizationAutocomplete for potential future use
+  const [, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
 
   function validate(): boolean {
     const next: FormErrors = {};
@@ -76,7 +62,7 @@ export default function RegisterOwnerForm({
     if (!formData.jabatan.trim()) next.jabatan = 'Jabatan wajib diisi';
     if (formData.jabatan.length > 100) next.jabatan = 'Jabatan maksimal 100 karakter';
 
-    const phoneError = validatePhone(formData.phone);
+    const phoneError = validateIndonesianPhone(formData.phone);
     if (phoneError) next.phone = phoneError;
 
     const passwordError = validatePassword(formData.password);
@@ -115,42 +101,52 @@ export default function RegisterOwnerForm({
     }
   }
 
+  function validateFieldInline(
+    field: keyof CreateOwnerRequest,
+    value: string,
+    currentErrors: FormErrors,
+    currentFormData: CreateOwnerRequest,
+    currentTouched: TouchedFields
+  ): FormErrors {
+    const next = { ...currentErrors };
+
+    switch (field) {
+      case 'email':
+        next.email = validateEmail(value);
+        break;
+      case 'password':
+        next.password = validatePassword(value);
+        if (currentTouched.confirmPassword && currentFormData.confirmPassword) {
+          next.confirmPassword =
+            value !== currentFormData.confirmPassword ? 'Password tidak cocok' : undefined;
+        }
+        break;
+      case 'confirmPassword':
+        next.confirmPassword =
+          value !== currentFormData.password ? 'Password tidak cocok' : undefined;
+        break;
+      case 'phone':
+        next.phone = validateIndonesianPhone(value);
+        break;
+      case 'nama':
+        next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
+        break;
+      case 'organisasi':
+        next.organisasi = value.trim() ? undefined : 'Organisasi/Instansi wajib diisi';
+        break;
+      case 'jabatan':
+        next.jabatan = value.trim() ? undefined : 'Jabatan wajib diisi';
+        break;
+    }
+
+    return next;
+  }
+
   function handleChange(field: keyof CreateOwnerRequest, value: string) {
     setFormData(prev => ({ ...prev, [field]: value }));
 
     if (touched[field]) {
-      const next = { ...errors };
-
-      switch (field) {
-        case 'email':
-          next.email = validateEmail(value);
-          break;
-        case 'password':
-          next.password = validatePassword(value);
-          if (touched.confirmPassword && formData.confirmPassword) {
-            next.confirmPassword =
-              value !== formData.confirmPassword ? 'Password tidak cocok' : undefined;
-          }
-          break;
-        case 'confirmPassword':
-          next.confirmPassword =
-            value !== formData.password ? 'Password tidak cocok' : undefined;
-          break;
-        case 'phone':
-          next.phone = validatePhone(value);
-          break;
-        case 'nama':
-          next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
-          break;
-        case 'organisasi':
-          next.organisasi = value.trim() ? undefined : 'Organisasi/Instansi wajib diisi';
-          break;
-        case 'jabatan':
-          next.jabatan = value.trim() ? undefined : 'Jabatan wajib diisi';
-          break;
-      }
-
-      setErrors(next);
+      setErrors(validateFieldInline(field, value, errors, formData, touched));
     }
   }
 

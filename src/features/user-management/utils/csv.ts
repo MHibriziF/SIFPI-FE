@@ -23,13 +23,69 @@ const EXPECTED_HEADERS: Array<keyof BulkInsertUserRequest> = [
   'role',
   'organisasi',
   'phone',
-  'is_active',
+  'isActive',
 ];
 
-const REQUIRED_FIELDS: Array<keyof BulkInsertUserRequest> = ['email', 'nama', 'is_active'];
+const REQUIRED_FIELDS: Array<keyof BulkInsertUserRequest> = ['email', 'nama', 'isActive'];
 
 function sanitizePhone(value: string): string {
   return value.replace(/[\s()-]/g, '');
+}
+
+function validateRequiredFields(
+  email: string,
+  nama: string,
+  isActive: boolean | null,
+  organisasi: string,
+  roleRaw: string,
+): string[] {
+  const errors: string[] = [];
+
+  if (!email) errors.push('Email wajib diisi.');
+  else if (!EMAIL_REGEX.test(email)) errors.push('Format email tidak valid.');
+
+  if (!nama) errors.push('Nama wajib diisi.');
+
+  if (isActive === null) {
+    errors.push('isActive wajib diisi dengan nilai true/false.');
+  } else if (isActive) {
+    if (!organisasi) errors.push('Organisasi wajib diisi ketika isActive bernilai true.');
+    if (!roleRaw) errors.push('Role wajib diisi ketika isActive bernilai true.');
+  }
+
+  return errors;
+}
+
+function buildRowDto(
+  csvRow: string[],
+  headerMap: Record<keyof BulkInsertUserRequest, number | null>,
+): { dto: BulkInsertUserRequest; email: string; nama: string; organisasi: string; roleRaw: string; isActive: boolean | null; errors: string[] } {
+  const email = getCell(csvRow, headerMap.email).toLowerCase();
+  const nama = getCell(csvRow, headerMap.nama);
+  const organisasi = getCell(csvRow, headerMap.organisasi);
+  const roleRaw = getCell(csvRow, headerMap.role).toUpperCase();
+  const phoneRaw = getCell(csvRow, headerMap.phone);
+  const isActiveRaw = getCell(csvRow, headerMap.isActive);
+  const isActive = parseBoolean(isActiveRaw);
+
+  const dto: BulkInsertUserRequest = {
+    email,
+    nama,
+    isActive: isActive ?? false,
+  };
+
+  if (organisasi) dto.organisasi = organisasi;
+  if (roleRaw) dto.role = roleRaw;
+  if (phoneRaw) dto.phone = sanitizePhone(phoneRaw);
+
+  if (isActive !== null) dto.isActive = isActive;
+
+  const errors = validateRequiredFields(email, nama, isActive, organisasi, roleRaw);
+  if (dto.phone && !PHONE_REGEX.test(dto.phone)) {
+    errors.push('Nomor telepon tidak valid.');
+  }
+
+  return { dto, email, nama, organisasi, roleRaw, isActive, errors };
 }
 
 export function parseAndValidateBulkUserCsv(csvText: string): ParseResult<ParsedBulkUserRow> {
@@ -44,50 +100,7 @@ export function parseAndValidateBulkUserCsv(csvText: string): ParseResult<Parsed
 
   const parsed: ParsedBulkUserRow[] = dataRows.map((csvRow, idx) => {
     const rowNumber = idx + 2;
-    const email = getCell(csvRow, headerMap.email).toLowerCase();
-    const nama = getCell(csvRow, headerMap.nama);
-    const organisasi = getCell(csvRow, headerMap.organisasi);
-    const roleRaw = getCell(csvRow, headerMap.role).toUpperCase();
-    const phoneRaw = getCell(csvRow, headerMap.phone);
-    const isActiveRaw = getCell(csvRow, headerMap.is_active);
-    const isActive = parseBoolean(isActiveRaw);
-
-    const dto: BulkInsertUserRequest = {
-      email,
-      nama,
-      is_active: isActive ?? false,
-    };
-
-    if (organisasi) dto.organisasi = organisasi;
-    if (roleRaw) dto.role = roleRaw;
-
-    if (phoneRaw) {
-      dto.phone = sanitizePhone(phoneRaw);
-    }
-
-    const errors: string[] = [];
-
-    if (!email) errors.push('Email wajib diisi.');
-    else if (!EMAIL_REGEX.test(email)) errors.push('Format email tidak valid.');
-
-    if (!nama) errors.push('Nama wajib diisi.');
-    if (isActive === null) {
-      errors.push('is_active wajib diisi dengan nilai true/false.');
-    } else {
-      dto.is_active = isActive;
-      if (isActive) {
-        if (!organisasi) {
-          errors.push('Organisasi wajib diisi ketika is_active bernilai true.');
-        }
-        if (!roleRaw) {
-          errors.push('Role wajib diisi ketika is_active bernilai true.');
-        }
-      }
-    }
-
-    if (dto.phone && !PHONE_REGEX.test(dto.phone)) {
-      errors.push('Nomor telepon tidak valid.');
-    }
+    const { dto, errors } = buildRowDto(csvRow, headerMap);
 
     return {
       rowNumber,
@@ -135,8 +148,8 @@ export function clearBulkImportDraft(): void {
 
 export function buildTemplateCsv(): string {
   return [
-    'email,nama,role,organisasi,phone,is_active,keterangan',
+    'email,nama,role,organisasi,phone,isActive,keterangan',
     'budi.santoso@example.com,Budi Santoso,INVESTOR,PT Infrastructure Development,+6281248724912,true,"Role valid: ADMIN, PROJECT_OWNER, INVESTOR, EXECUTIVE"',
-    'siti.rahma@example.com,Siti Rahma,,PT Infrastruktur Nusantara,+6281332211000,false,"Jika is_active=false, role dan organisasi boleh kosong"',
+    'siti.rahma@example.com,Siti Rahma,,PT Infrastruktur Nusantara,+6281332211000,false,"Jika isActive=false, role dan organisasi boleh kosong"',
   ].join('\n');
 }
