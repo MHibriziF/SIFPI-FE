@@ -42,6 +42,21 @@ export interface BatchUploadProjectResultDTO {
   errors: BatchUploadProjectError[];
 }
 
+export interface BatchUploadJobDTO {
+  jobId: string;
+  total: number;
+}
+
+export interface BatchUploadStatusDTO {
+  jobId: string;
+  status: 'PROCESSING' | 'COMPLETED' | 'PARTIAL' | 'FAILED';
+  total: number;
+  processedCount: number;
+  successCount: number;
+  failedCount: number;
+  errors: BatchUploadProjectError[] | null;
+}
+
 export interface ParsedBulkProjectRow {
   rowNumber: number;
   dto: BatchUploadProjectRequest;

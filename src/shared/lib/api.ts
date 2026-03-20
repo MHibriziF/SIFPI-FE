@@ -79,7 +79,7 @@ api.interceptors.response.use(
     const url = error.config?.url ?? '';
     if (
       status === 401 &&
-      typeof window !== 'undefined' &&
+      typeof globalThis !== 'undefined' &&
       !AUTH_ENDPOINTS.some(path => url.includes(path))
     ) {
       setFlashToast({
@@ -87,7 +87,7 @@ api.interceptors.response.use(
         title: 'Session expired',
         description: 'Please log in again.',
       });
-      window.location.href = '/login';
+      globalThis.location.href = '/login';
     }
 
     return Promise.reject(

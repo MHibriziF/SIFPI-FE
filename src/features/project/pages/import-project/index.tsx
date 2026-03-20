@@ -1,19 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, ArrowLeft, CheckCircle2, Download, TriangleAlert } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2, TriangleAlert } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
-import { batchUploadProjects } from '@/features/project/services';
+import { submitBulkInsert, getBatchUploadStatus } from '@/features/project/services';
 import { BulkImportProjectTrigger } from '@/features/project/components/bulk-import-project-trigger';
 import { ImportConfirmModal } from '@/features/project/components/import-confirm-modal';
 import { ImportProjectTable } from '@/features/project/components/import-project-table';
 import type {
   BulkProjectImportDraft,
-  BatchUploadProjectRequest,
-  BatchUploadProjectError,
+  BatchUploadStatusDTO,
   RowView,
 } from '@/features/project/types/import-project';
 import { ApiError } from '@/shared/types/api';
@@ -31,8 +30,7 @@ import {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 10;
-const CHUNK_SIZE = 5;
+const POLL_INTERVAL_MS = 2000;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -44,6 +42,10 @@ export default function ImportProjectPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [processedCount, setProcessedCount] = useState(0);
+
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Global import progress — survives client-side navigation
   const importProgress = useSyncExternalStore(
@@ -54,7 +56,8 @@ export default function ImportProjectPage() {
 
   const isImportRunning = importProgress?.status === 'running';
 
-  // Warn only on page refresh / tab close (which actually kills the fetches)
+  // Warn on page refresh while submitting (the actual job is safe server-side,
+  // but refreshing stops the polling loop)
   useEffect(() => {
     if (!isSubmitting) return;
     const handle = (e: BeforeUnloadEvent) => { e.preventDefault(); };
@@ -68,13 +71,106 @@ export default function ImportProjectPage() {
     applyDraft(draftData);
   }, []);
 
+  // Resume polling if the user navigated away while an import was running
+  useEffect(() => {
+    if (importProgress?.status === 'running') {
+      setIsSubmitting(true);
+      startPolling(importProgress.jobId, importProgress.submittedRows);
+    }
+    return () => stopPolling();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── Polling helpers ────────────────────────────────────────────────────────
+
+  function stopPolling() {
+    if (pollingRef.current !== null) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }
+
+  function startPolling(jobId: string, submittedRows: RowView[]) {
+    stopPolling();
+    pollingRef.current = setInterval(async () => {
+      try {
+        const response = await getBatchUploadStatus(jobId);
+        const statusData = response.data;
+        if (statusData.status === 'PROCESSING') {
+          setProcessedCount(statusData.processedCount ?? 0);
+          return;
+        }
+
+        stopPolling();
+        setIsSubmitting(false);
+        completeBatchImport(statusData, submittedRows);
+      } catch {
+        stopPolling();
+        setIsSubmitting(false);
+        setImportProgressState({ status: 'completed', totalSuccess: 0, totalFailed: 0, hadErrors: true });
+        showToast('danger', 'Koneksi terputus', 'Gagal memperoleh hasil import. Silakan periksa daftar proyek.');
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  function completeBatchImport(statusData: BatchUploadStatusDTO, submittedRows: RowView[]) {
+    const { successCount, failedCount } = statusData;
+    const errors = statusData.errors ?? [];
+
+    const backendMessagesByRow = new Map<number, string[]>();
+    errors.forEach(err => {
+      const csvRowNumber = resolveBackendErrorRow(err.row, submittedRows);
+      if (csvRowNumber === null) return;
+      const messages = err.reasons.length > 0 ? err.reasons : ['Baris tidak valid.'];
+      const existing = backendMessagesByRow.get(csvRowNumber) ?? [];
+      backendMessagesByRow.set(csvRowNumber, [...new Set([...existing, ...messages])]);
+    });
+
+    const processedRowNumbers = new Set(submittedRows.map(r => r.rowNumber));
+    setRows(prev =>
+      prev.map(row => {
+        if (!processedRowNumbers.has(row.rowNumber)) return row;
+        const errs = backendMessagesByRow.get(row.rowNumber);
+        if (errs && errs.length > 0) {
+          return { ...row, errors: [...new Set([...row.errors, ...errs])], selected: false };
+        }
+        return { ...row, errors: [], selected: false };
+      })
+    );
+
+    const sourceFileName = importProgress?.status === 'running'
+      ? importProgress.sourceFileName
+      : (draft?.sourceFileName ?? 'import');
+
+    if (backendMessagesByRow.size > 0) {
+      downloadImportLog(submittedRows, backendMessagesByRow, [], sourceFileName);
+    }
+
+    setImportProgressState({
+      status: 'completed',
+      totalSuccess: successCount,
+      totalFailed: failedCount,
+      hadErrors: failedCount > 0,
+    });
+
+    if (failedCount === 0) {
+      clearBulkProjectImportDraft();
+      showToast('success', 'Import proyek berhasil', `${successCount} proyek berhasil diimpor.`);
+      router.push('/admin/projects');
+    } else if (successCount > 0) {
+      showToast('warning', 'Import sebagian berhasil', `${successCount} proyek berhasil, ${failedCount} gagal. Log kesalahan diunduh otomatis.`);
+    } else {
+      showToast('danger', 'Import gagal', 'Semua baris gagal diimpor. Log kesalahan diunduh otomatis.');
+    }
+  }
+
   // ─── Derived state ─────────────────────────────────────────────────────────
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
 
   const paginatedRows = useMemo(
-    () => rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [rows, currentPage]
+    () => rows.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [rows, currentPage, pageSize]
   );
 
   const selectedRows = useMemo(() => rows.filter(r => r.selected), [rows]);
@@ -84,8 +180,8 @@ export default function ImportProjectPage() {
   const hasNoSelection = selectedRows.length === 0;
   const hasValidationError = selectedInvalidRows.length > 0;
 
-  const startItem = (currentPage - 1) * PAGE_SIZE + 1;
-  const endItem = Math.min(currentPage * PAGE_SIZE, rows.length);
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, rows.length);
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -106,94 +202,26 @@ export default function ImportProjectPage() {
   const handleImport = async () => {
     setShowConfirmModal(false);
     setIsSubmitting(true);
-    setImportProgressState({ status: 'running', done: 0, total: selectedValidRows.length, sourceFileName: draft!.sourceFileName });
 
-    const chunks: RowView[][] = [];
-    for (let i = 0; i < selectedValidRows.length; i += CHUNK_SIZE) {
-      chunks.push(selectedValidRows.slice(i, i + CHUNK_SIZE));
-    }
-
-    let totalSuccess = 0;
-    let totalFailed = 0;
-    const backendMessagesByRow = new Map<number, string[]>();
-    let networkError: string | null = null;
-    let processedRows: RowView[] = [];
+    const rowsToSubmit = selectedValidRows;
+    const payload = rowsToSubmit.map(r => r.dto);
 
     try {
-      for (const chunk of chunks) {
-        const payload: BatchUploadProjectRequest[] = chunk.map(r => r.dto);
-        const response = await batchUploadProjects(payload);
-        const { successCount, failedCount, errors } = response.data;
+      const response = await submitBulkInsert(payload);
+      const { jobId, total } = response.data;
 
-        totalSuccess += successCount;
-        totalFailed += failedCount;
-        processedRows = [...processedRows, ...chunk];
-
-        errors.forEach((err: BatchUploadProjectError) => {
-          const csvRowNumber = resolveBackendErrorRow(err.row, chunk);
-          if (csvRowNumber === null) return;
-          const messages = err.reasons.length > 0 ? err.reasons : ['Baris tidak valid.'];
-          const existing = backendMessagesByRow.get(csvRowNumber) ?? [];
-          backendMessagesByRow.set(csvRowNumber, [...new Set([...existing, ...messages])]);
-        });
-
-        setImportProgressState({
-          status: 'running',
-          done: processedRows.length,
-          total: selectedValidRows.length,
-          sourceFileName: draft!.sourceFileName,
-        });
-      }
-    } catch (error) {
-      networkError = error instanceof ApiError ? error.message : 'Koneksi terputus saat mengimpor.';
-    } finally {
-      setIsSubmitting(false);
-    }
-
-    if (networkError !== null) {
-      const unprocessedRows = selectedValidRows.filter(
-        r => !processedRows.some(p => p.rowNumber === r.rowNumber)
-      );
-      if (processedRows.length > 0) {
-        downloadImportLog(processedRows, backendMessagesByRow, unprocessedRows, draft!.sourceFileName);
-      }
       setImportProgressState({
-        status: 'completed',
-        totalSuccess,
-        totalFailed: selectedValidRows.length - processedRows.length + totalFailed,
-        hadErrors: true,
+        status: 'running',
+        jobId,
+        total,
+        sourceFileName: draft!.sourceFileName,
+        submittedRows: rowsToSubmit,
       });
-      const savedNote = totalSuccess > 0 ? ` ${totalSuccess} proyek sudah tersimpan — log diunduh otomatis.` : '';
-      showToast('danger', 'Koneksi terputus', networkError + savedNote);
-      return;
-    }
 
-    if (backendMessagesByRow.size > 0) {
-      setRows(prev =>
-        prev.map(row => {
-          const deduped = backendMessagesByRow.get(row.rowNumber);
-          if (!deduped || deduped.length === 0) return row;
-          return { ...row, errors: [...new Set([...row.errors, ...deduped])], selected: false };
-        })
-      );
-      downloadImportLog(processedRows, backendMessagesByRow, [], draft!.sourceFileName);
-    }
-
-    setImportProgressState({
-      status: 'completed',
-      totalSuccess,
-      totalFailed,
-      hadErrors: totalFailed > 0,
-    });
-
-    if (totalFailed === 0) {
-      clearBulkProjectImportDraft();
-      showToast('success', 'Import proyek berhasil', `${totalSuccess} proyek berhasil diimpor.`);
-      router.push('/admin/projects');
-    } else if (totalSuccess > 0) {
-      showToast('warning', 'Import sebagian berhasil', `${totalSuccess} proyek berhasil, ${totalFailed} gagal. Log kesalahan diunduh otomatis.`);
-    } else {
-      showToast('danger', 'Import gagal', 'Semua baris gagal diimpor. Log kesalahan diunduh otomatis.');
+      startPolling(jobId, rowsToSubmit);
+    } catch (error) {
+      setIsSubmitting(false);
+      showToast('danger', 'Gagal memulai import', error instanceof ApiError ? error.message : 'Terjadi kesalahan.');
     }
   };
 
@@ -243,7 +271,7 @@ export default function ImportProjectPage() {
         </div>
 
         {/* ── Background import in progress (user navigated away and came back) ── */}
-        {isImportRunning && importProgress.status === 'running' && (
+        {isImportRunning && !isSubmitting && importProgress.status === 'running' && (
           <div className="space-y-3">
             <div className="flex items-start gap-2 rounded-lg border border-warning bg-warning/10 px-4 py-3 text-warning">
               <AlertCircle className="mt-0.5 size-4 shrink-0" />
@@ -251,22 +279,11 @@ export default function ImportProjectPage() {
                 Import sedang berjalan di background. Jangan refresh halaman — cukup tunggu di sini atau navigasi bebas.
               </p>
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>Mengimpor proyek...</span>
-                <span className="font-medium">{importProgress.done} / {importProgress.total}</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
-                  style={{ width: `${(importProgress.done / importProgress.total) * 100}%` }}
-                />
-              </div>
-            </div>
+            <ImportProgress processed={processedCount} total={importProgress.total} />
           </div>
         )}
 
-        {/* ── Completed result banner (shown when user comes back after completion) ── */}
+        {/* ── Completed result banner ── */}
         {importProgress?.status === 'completed' && (
           <div className={`flex items-start justify-between gap-3 rounded-lg border px-4 py-3 ${
             importProgress.hadErrors
@@ -319,9 +336,11 @@ export default function ImportProjectPage() {
                 totalPages={totalPages}
                 startItem={startItem}
                 endItem={endItem}
+                pageSize={pageSize}
                 onToggleRow={toggleRow}
                 onToggleAll={toggleAllRows}
                 onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
               />
 
               <div className={validationCardClass}>
@@ -358,19 +377,8 @@ export default function ImportProjectPage() {
             </div>
 
             {/* ── Active progress bar (this component started the import) ── */}
-            {isImportRunning && importProgress.status === 'running' && isSubmitting && (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>Mengimpor proyek...</span>
-                  <span className="font-medium">{importProgress.done} / {importProgress.total}</span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
-                    style={{ width: `${(importProgress.done / importProgress.total) * 100}%` }}
-                  />
-                </div>
-              </div>
+            {isImportRunning && isSubmitting && importProgress.status === 'running' && (
+              <ImportProgress processed={processedCount} total={importProgress.total} />
             )}
 
             <div className="flex flex-col gap-3 md:flex-row">
@@ -386,12 +394,6 @@ export default function ImportProjectPage() {
               >
                 Kembali
               </Button>
-              {isImportRunning && (
-                <p className="flex items-center gap-1.5 text-xs text-gray-400 self-center">
-                  <Download className="size-3.5" />
-                  Import berjalan di background
-                </p>
-              )}
             </div>
           </>
         )}
@@ -400,10 +402,35 @@ export default function ImportProjectPage() {
       <ImportConfirmModal
         isOpen={showConfirmModal}
         projectCount={selectedValidRows.length}
-        chunkSize={CHUNK_SIZE}
         onConfirm={handleImport}
         onClose={() => setShowConfirmModal(false)}
       />
     </main>
+  );
+}
+
+// ─── Import progress bar ──────────────────────────────────────────────────────
+
+function ImportProgress({ processed, total }: Readonly<{ processed: number; total: number }>) {
+  const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+  const hasProgress = processed > 0;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-sm text-gray-600">
+        <span>Memproses {total} proyek...</span>
+        {hasProgress && <span>{processed} / {total} tervalidasi</span>}
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+        {hasProgress ? (
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        ) : (
+          <div className="h-full w-1/3 rounded-full bg-primary animate-[slide_1.4s_ease-in-out_infinite]" />
+        )}
+      </div>
+    </div>
   );
 }

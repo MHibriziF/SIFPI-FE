@@ -62,24 +62,8 @@ function parseProjectId(id: string | string[] | undefined): number {
     : parseInt(id);
 }
 
-function applyCacheBusting(data: AdminProjectDetailDTO): void {
-  const timestamp = `?t=${Date.now()}`;
-  if (data.locationImageUrl) {
-    data.locationImageUrl += timestamp;
-  }
-  if (data.projectStructureImageUrl) {
-    data.projectStructureImageUrl += timestamp;
-  }
-  if (data.projectFileDownloadUrl) {
-    data.projectFileDownloadUrl += timestamp;
-  }
-}
-
-async function refreshProjectWithCacheBusting(id: number): Promise<AdminProjectDetailDTO | null> {
+async function refreshProject(id: number): Promise<AdminProjectDetailDTO | null> {
   const updatedRes = await getProjectDetail(id);
-  if (updatedRes.data) {
-    applyCacheBusting(updatedRes.data);
-  }
   return updatedRes.data;
 }
 
@@ -125,7 +109,6 @@ export default function ProjectDetailPage() {
         setError(null);
         const res = await getProjectDetail(projectId);
         if (res.data) {
-          applyCacheBusting(res.data);
           setProject(res.data);
         } else {
           setError(res.message ?? 'Gagal memuat detail proyek');
@@ -144,7 +127,7 @@ export default function ProjectDetailPage() {
       setIsVerifying(true);
       const res = await approveProject(projectId);
       if (res.data) {
-        const refreshedProject = await refreshProjectWithCacheBusting(projectId);
+        const refreshedProject = await refreshProject(projectId);
         setProject(refreshedProject);
         showNotification('success', 'Berhasil', 'Proyek telah diverifikasi');
         setTimeout(() => router.push('/admin/projects'), 1500);
@@ -167,7 +150,7 @@ export default function ProjectDetailPage() {
       setIsRejecting(true);
       const res = await rejectProject(projectId, rejectionNotes);
       if (res.data) {
-        const refreshedProject = await refreshProjectWithCacheBusting(projectId);
+        const refreshedProject = await refreshProject(projectId);
         setProject(refreshedProject);
         showNotification('success', 'Berhasil', 'Proyek telah ditolak');
         setTimeout(() => router.push('/admin/projects'), 1500);

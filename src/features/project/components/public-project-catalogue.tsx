@@ -50,7 +50,7 @@ export function PublicProjectCatalogue() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 12;
+  const [pageSize, setPageSize] = useState(12);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -208,13 +208,26 @@ export function PublicProjectCatalogue() {
             </div>
 
             {/* Pagination */}
-            <Pagination
-              page={currentPage}
-              totalPages={totalPages}
-              totalElements={totalElements}
-              pageSize={pageSize}
-              onPageChange={handlePageChange}
-            />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span>Tampilkan</span>
+                <select
+                  className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(0); }}
+                >
+                  {[12, 24, 48].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <span>per halaman</span>
+              </div>
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalElements={totalElements}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+              />
+            </div>
           </>
           );
         })()}

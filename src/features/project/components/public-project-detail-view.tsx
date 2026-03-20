@@ -196,7 +196,7 @@ export default function PublicProjectDetailView({ projectId, isLoggedIn }: Reado
 
   // ── Share handler ──────────────────────────────────────────────────────────
   function handleShare() {
-    const url = window.location.href;
+    const url = globalThis.location.href;
     if (navigator.share) {
       navigator.share({ title: project?.name ?? 'Project Detail', url });
     } else {
@@ -222,9 +222,9 @@ export default function PublicProjectDetailView({ projectId, isLoggedIn }: Reado
     );
   }
 
-  const locationImageSrc = `/api/catalogue/${projectId}/location-image`;
-  const structureImageSrc = `/api/catalogue/${projectId}/structure-image`;
-  const fileDownloadHref = `/api/catalogue/${projectId}/file`;
+  const locationImageSrc = project.locationImageUrl ?? `/api/catalogue/${projectId}/location-image`;
+  const structureImageSrc = project.projectStructureImageUrl ?? `/api/catalogue/${projectId}/structure-image`;
+  const fileDownloadHref = project.projectFileDownloadUrl ?? `/api/catalogue/${projectId}/file`;
 
   return (
     <div className="min-h-screen bg-white font-sans">

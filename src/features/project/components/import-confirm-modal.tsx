@@ -6,7 +6,6 @@ import { Button } from '@/shared/components/button';
 interface ImportConfirmModalProps {
   isOpen: boolean;
   projectCount: number;
-  chunkSize: number;
   onConfirm: () => void;
   onClose: () => void;
 }
@@ -14,10 +13,9 @@ interface ImportConfirmModalProps {
 export function ImportConfirmModal({
   isOpen,
   projectCount,
-  chunkSize,
   onConfirm,
   onClose,
-}: ImportConfirmModalProps) {
+}: Readonly<ImportConfirmModalProps>) {
   if (!isOpen) return null;
 
   return (
@@ -38,12 +36,10 @@ export function ImportConfirmModal({
               <p className="mt-1 text-sm text-gray-500">
                 Proses ini tidak dapat dibatalkan setelah dimulai. Pastikan data sudah benar sebelum melanjutkan.
               </p>
-              {projectCount > chunkSize && (
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
-                  <Download className="size-3.5" />
-                  Log hasil import akan diunduh otomatis jika ada proyek yang gagal.
-                </p>
-              )}
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
+                <Download className="size-3.5" />
+                Log hasil import akan diunduh otomatis jika ada proyek yang gagal.
+              </p>
             </div>
           </div>
           <div className="mt-6 flex justify-end gap-3">

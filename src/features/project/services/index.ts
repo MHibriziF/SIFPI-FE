@@ -10,7 +10,8 @@ import type {
 } from '@/features/project/types';
 import type {
   BatchUploadProjectRequest,
-  BatchUploadProjectResultDTO,
+  BatchUploadJobDTO,
+  BatchUploadStatusDTO,
 } from '@/features/project/types/import-project';
 import type {
   AdminProjectDetailDTO,
@@ -125,8 +126,12 @@ export async function exportProjectCatalogue(payload: CatalogueExportRequest) {
   } as CatalogueExportFile;
 }
 
-export async function batchUploadProjects(payload: BatchUploadProjectRequest[]) {
-  return apiPost<BatchUploadProjectResultDTO>('/api/admin/projects/batch-upload', payload);
+export async function submitBulkInsert(payload: BatchUploadProjectRequest[]) {
+  return apiPost<BatchUploadJobDTO>('/api/admin/projects/batch-upload', payload);
+}
+
+export async function getBatchUploadStatus(jobId: string) {
+  return apiGet<BatchUploadStatusDTO>(`/api/admin/projects/batch-upload/${jobId}`);
 }
 // ─── Get My Projects (Project Owner) ────────────────────────────────────────
 
