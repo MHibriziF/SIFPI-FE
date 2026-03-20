@@ -27,7 +27,7 @@ export function handleProfileUpdateError(
 /** Right-column skeleton — password card (identical across all profile forms) */
 export function PasswordCardSkeleton() {
   return (
-    <div className="w-[440px] shrink-0 border border-grey rounded-[20px] overflow-hidden animate-pulse">
+    <div className="w-110 shrink-0 border border-grey rounded-[20px] overflow-hidden animate-pulse">
       <div className="h-12 bg-primary" />
       <div className="p-8 space-y-4">
         {['skeleton-password-1', 'skeleton-password-2', 'skeleton-password-3'].map((id) => (

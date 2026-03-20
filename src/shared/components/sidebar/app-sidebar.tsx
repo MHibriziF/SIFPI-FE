@@ -42,7 +42,7 @@ function isPathActive(pathname: string, href?: string): boolean {
   return pathname.startsWith(`${href}/`);
 }
 
-function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavItemRow({ item, pathname }: Readonly<{ item: NavItem; pathname: string }>) {
   const href = item.href ?? '';
   const isActive = isPathActive(pathname, href) || item.subItems?.some(s => isPathActive(pathname, s.href));
 
@@ -89,7 +89,7 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export default function AppSidebar({ navKey, user }: AppSidebarProps) {
+export default function AppSidebar({ navKey, user }: Readonly<AppSidebarProps>) {
   const navGroups = NAV_CONFIGS[navKey];
   const pathname = usePathname() ?? '/';
   const router = useRouter();

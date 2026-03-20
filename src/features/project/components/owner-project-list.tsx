@@ -253,13 +253,26 @@ export default function OwnerReadAllProjects() {
             </div>
 
             {/* Pagination */}
-            <Pagination
-              page={pagination.page}
-              totalPages={pagination.totalPages}
-              totalElements={pagination.totalElements}
-              pageSize={pagination.size}
-              onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
-            />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span>Tampilkan</span>
+                <select
+                  className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={pagination.size}
+                  onChange={(e) => setPagination((prev) => ({ ...prev, size: Number(e.target.value), page: 0 }))}
+                >
+                  {[10, 20, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <span>per halaman</span>
+              </div>
+              <Pagination
+                page={pagination.page}
+                totalPages={pagination.totalPages}
+                totalElements={pagination.totalElements}
+                pageSize={pagination.size}
+                onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+              />
+            </div>
           </>
           );
         })()}

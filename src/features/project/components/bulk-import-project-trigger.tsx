@@ -32,7 +32,7 @@ export function BulkImportProjectTrigger({
   buttonVariant = 'filled',
   redirectPath = '/admin/projects/import',
   onDraftReady,
-}: BulkImportProjectTriggerProps) {
+}: Readonly<BulkImportProjectTriggerProps>) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -56,7 +56,7 @@ export function BulkImportProjectTrigger({
         onClick={() => router.push('/admin/projects/import')}
       >
         <Loader2 className="size-4 animate-spin" />
-        {' '}Lihat Progress ({importProgress.done}/{importProgress.total})
+        {' '}Lihat Progress ({importProgress.total} proyek)
       </Button>
     );
   }
@@ -166,8 +166,7 @@ export function BulkImportProjectTrigger({
             <div className="space-y-6 p-8">
               <div>
                 <label htmlFor="bulk-import-project-file" className="text-lg font-medium text-primary">
-                  Pilih file CSV
-                  <span className="ml-1 text-danger">*</span>
+                  Pilih file CSV <span className="ml-1 text-danger">*</span>
                 </label>
                 <div className="mt-2 rounded-xl border border-gray-300 px-4 py-3">
                   <input

@@ -89,14 +89,14 @@ function extractProjects(payload: unknown): ProjectListItemDTO[] {
 }
 
 function downloadPdf(blob: Blob, filename = 'project-catalogue.pdf') {
-  const objectUrl = window.URL.createObjectURL(blob);
+  const objectUrl = globalThis.URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = objectUrl;
   anchor.download = filename;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  window.URL.revokeObjectURL(objectUrl);
+  globalThis.URL.revokeObjectURL(objectUrl);
 }
 
 export default function AdminProjectsPage() {
