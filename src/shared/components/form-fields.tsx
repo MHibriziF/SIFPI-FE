@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Select as RadixSelect, Label } from 'radix-ui';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
 
@@ -276,7 +276,10 @@ function Select({
               'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2'
             )}
           >
-            <RadixSelect.Viewport className="p-1">
+            <RadixSelect.ScrollUpButton className="flex items-center justify-center py-1 text-gray-400">
+              <ChevronUp className="size-4" />
+            </RadixSelect.ScrollUpButton>
+            <RadixSelect.Viewport className="max-h-[min(var(--radix-select-content-available-height),256px)] overflow-y-auto p-1">
               {options.map(option => (
                 <RadixSelect.Item
                   key={option.value}
@@ -298,6 +301,9 @@ function Select({
                 </RadixSelect.Item>
               ))}
             </RadixSelect.Viewport>
+            <RadixSelect.ScrollDownButton className="flex items-center justify-center py-1 text-gray-400">
+              <ChevronDown className="size-4" />
+            </RadixSelect.ScrollDownButton>
           </RadixSelect.Content>
         </RadixSelect.Portal>
       </RadixSelect.Root>

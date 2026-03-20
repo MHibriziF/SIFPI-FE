@@ -12,7 +12,7 @@ import SuccessModal from '@/features/auth/components/register-succes-modal';
 type RegisterType = 'owner' | 'investor';
 
 export default function RegisterPage() {
-  const [selectedRole, setSelectedRole] = useState<RegisterType>('owner');
+  const [selectedRole, setSelectedRole] = useState<RegisterType>('investor');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successEmail, setSuccessEmail] = useState('');
 
@@ -47,16 +47,6 @@ export default function RegisterPage() {
           <div className="bg-white px-8 pt-6 pb-2">
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setSelectedRole('owner')}
-                className={`py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-200 border-2 leading-snug
-                  ${selectedRole === 'owner'
-                    ? 'bg-primary text-white border-primary shadow-md'
-                    : 'bg-white text-primary border-primary/30 hover:border-primary/60'
-                  }`}
-              >
-                Daftar sebagai<br />Project Owner
-              </button>
-              <button
                 onClick={() => setSelectedRole('investor')}
                 className={`py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-200 border-2 leading-snug
                   ${selectedRole === 'investor'
@@ -66,15 +56,25 @@ export default function RegisterPage() {
               >
                 Daftar sebagai<br />Investor
               </button>
+              <button
+                onClick={() => setSelectedRole('owner')}
+                className={`py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-200 border-2 leading-snug
+                  ${selectedRole === 'owner'
+                    ? 'bg-primary text-white border-primary shadow-md'
+                    : 'bg-white text-primary border-primary/30 hover:border-primary/60'
+                  }`}
+              >
+                Daftar sebagai<br />Project Owner
+              </button>
             </div>
           </div>
 
           {/* Form Content */}
-          {selectedRole === 'owner' && (
-            <RegisterOwnerForm onSuccess={handleSuccess} />
-          )}
           {selectedRole === 'investor' && (
             <RegisterInvestorForm onSuccess={handleSuccess} />
+          )}
+          {selectedRole === 'owner' && (
+            <RegisterOwnerForm onSuccess={handleSuccess} />
           )}
         </div>
       </div>

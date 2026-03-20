@@ -210,6 +210,7 @@ export default function ImportProjectPage() {
       const response = await submitBulkInsert(payload);
       const { jobId, total } = response.data;
 
+      setProcessedCount(0);
       setImportProgressState({
         status: 'running',
         jobId,
@@ -413,23 +414,18 @@ export default function ImportProjectPage() {
 
 function ImportProgress({ processed, total }: Readonly<{ processed: number; total: number }>) {
   const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
-  const hasProgress = processed > 0;
 
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm text-gray-600">
         <span>Memproses {total} proyek...</span>
-        {hasProgress && <span>{processed} / {total} tervalidasi</span>}
+        <span>{processed} / {total} tervalidasi</span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-        {hasProgress ? (
-          <div
-            className="h-full rounded-full bg-primary transition-[width] duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        ) : (
-          <div className="h-full w-1/3 rounded-full bg-primary animate-[slide_1.4s_ease-in-out_infinite]" />
-        )}
+        <div
+          className="h-full rounded-full bg-primary transition-[width] duration-500"
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );

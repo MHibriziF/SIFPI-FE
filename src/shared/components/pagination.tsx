@@ -50,8 +50,8 @@ export function Pagination({
   const pageNumbers = getPageNumbers(page, totalPages);
 
   return (
-    <div className={`flex items-center justify-between text-sm text-gray-500 ${className}`}>
-      <span>
+    <div className={`flex flex-col items-center gap-2 text-sm text-gray-500 sm:flex-row sm:justify-between ${className}`}>
+      <span className="shrink-0">
         {totalElements === 0
           ? 'Tidak ada data'
           : `Showing ${start}-${end} of ${totalElements} entries`}
@@ -67,19 +67,22 @@ export function Pagination({
         </Button>
         {pageNumbers.map((p, idx) =>
           p === '...' ? (
-            <span key={`ellipsis-${idx}`} className="px-1 text-gray-400 select-none">…</span>
+            <span key={`ellipsis-${idx}`} className="hidden px-1 text-gray-400 select-none sm:inline">…</span>
           ) : (
             <Button
               key={p}
               variant={page === p ? 'filled' : 'ghost'}
               size="icon-sm"
               onClick={() => onPageChange(p)}
-              className="text-xs"
+              className="hidden text-xs sm:inline-flex"
             >
               {p + 1}
             </Button>
           )
         )}
+        <span className="text-xs text-gray-500 sm:hidden">
+          {page + 1} / {totalPages}
+        </span>
         <Button
           variant="ghost"
           size="icon-sm"

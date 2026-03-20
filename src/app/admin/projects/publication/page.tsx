@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Eye, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/shared/components/button';
+import { Pagination } from '@/shared/components/pagination';
 import { showNotification } from '@/shared/components/info-toast';
 import { getAllProjects, publishProjects, unpublishProjects } from '@/features/project/services';
 import { ApiError } from '@/shared/types/api';
@@ -378,7 +379,6 @@ export default function PublicationManagementPage() {
                       <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Owner</th>
                       <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Sector</th>
                       <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Submitted</th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Funding</th>
                       <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                       <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -441,38 +441,30 @@ export default function PublicationManagementPage() {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600">
-                  Showing {pagination.page * pagination.size + 1}-
-                  {Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of{' '}
-                  {pagination.totalElements} projects
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outlined"
-                    onClick={() => setPagination((prev) => ({ ...prev, page: Math.max(0, prev.page - 1) }))}
-                    disabled={pagination.page === 0}
-                    className="border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <span>Tampilkan</span>
+                  <select
+                    className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={pagination.size}
+                    onChange={(e) => setPagination((prev) => ({
+                      ...prev,
+                      size: Number(e.target.value),
+                      page: 0,
+                      totalPages: Math.ceil(prev.totalElements / Number(e.target.value)),
+                    }))}
                   >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-gray-600">
-                    Page {pagination.page + 1} of {pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="outlined"
-                    onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: Math.min(prev.totalPages - 1, prev.page + 1),
-                      }))
-                    }
-                    disabled={pagination.page >= pagination.totalPages - 1}
-                    className="border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </Button>
+                    {[10, 20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                  <span>per halaman</span>
                 </div>
+                <Pagination
+                  page={pagination.page}
+                  totalPages={pagination.totalPages}
+                  totalElements={pagination.totalElements}
+                  pageSize={pagination.size}
+                  onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+                />
               </div>
             </>
           )}
