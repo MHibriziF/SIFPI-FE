@@ -1,7 +1,7 @@
 'use client';
 
-import type { RowView } from '@/features/project/types/import-project';
-import { formatFundingDisplay } from '@/features/project/utils/csv';
+import { useState, useRef, useEffect } from 'react';
+import type { RowView, BatchUploadProjectRequest } from '@/features/project/types/import-project';
 
 interface ImportProjectTableProps {
   rows: RowView[];
@@ -16,7 +16,75 @@ interface ImportProjectTableProps {
   onToggleAll: (checked: boolean) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
+  onUpdateRow: (rowNumber: number, field: keyof BatchUploadProjectRequest, value: string) => void;
 }
+
+// ─── Editable cell ────────────────────────────────────────────────────────────
+
+type CellId = `${number}-${string}`;
+
+function EditableCell({
+  value,
+  rowNumber,
+  field,
+  className,
+  title,
+  onCommit,
+  editingCell,
+  setEditingCell,
+}: Readonly<{
+  value: string;
+  rowNumber: number;
+  field: keyof BatchUploadProjectRequest;
+  className: string;
+  title?: string;
+  onCommit: (rowNumber: number, field: keyof BatchUploadProjectRequest, value: string) => void;
+  editingCell: CellId | null;
+  setEditingCell: (cell: CellId | null) => void;
+}>) {
+  const cellId: CellId = `${rowNumber}-${field}`;
+  const isEditing = editingCell === cellId;
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) inputRef.current?.focus();
+  }, [isEditing]);
+
+  if (isEditing) {
+    return (
+      <td className={className}>
+        <input
+          ref={inputRef}
+          defaultValue={value}
+          className="w-full min-w-24 rounded border border-primary/40 bg-white px-1.5 py-0.5 text-sm outline-none focus:ring-1 focus:ring-primary/30"
+          onBlur={(e) => {
+            onCommit(rowNumber, field, e.target.value);
+            setEditingCell(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onCommit(rowNumber, field, (e.target as HTMLInputElement).value);
+              setEditingCell(null);
+            }
+            if (e.key === 'Escape') setEditingCell(null);
+          }}
+        />
+      </td>
+    );
+  }
+
+  return (
+    <td
+      className={`${className} cursor-pointer hover:bg-primary/5`}
+      title={title ?? value}
+      onDoubleClick={() => setEditingCell(cellId)}
+    >
+      {value || '-'}
+    </td>
+  );
+}
+
+// ─── Table ────────────────────────────────────────────────────────────────────
 
 export function ImportProjectTable({
   rows,
@@ -31,7 +99,10 @@ export function ImportProjectTable({
   onToggleAll,
   onPageChange,
   onPageSizeChange,
-}: ImportProjectTableProps) {
+  onUpdateRow,
+}: Readonly<ImportProjectTableProps>) {
+  const [editingCell, setEditingCell] = useState<CellId | null>(null);
+
   return (
     <div className="min-w-0">
       <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -70,7 +141,7 @@ export function ImportProjectTable({
               <th className="whitespace-nowrap px-4 py-3">Location Image</th>
               <th className="whitespace-nowrap px-4 py-3">Structure Image</th>
               <th className="whitespace-nowrap px-4 py-3">Project File</th>
-              <th className="sticky right-0 z-10 min-w-[200px] whitespace-nowrap bg-gray-50 px-4 py-3 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
+              <th className="sticky right-0 z-10 min-w-50 whitespace-nowrap bg-gray-50 px-4 py-3 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
                 Status Validasi
               </th>
             </tr>
@@ -80,6 +151,7 @@ export function ImportProjectTable({
               const isInvalid = row.errors.length > 0;
               const textColor = isInvalid ? 'text-danger' : 'text-primary';
               const rowBg = isInvalid ? 'bg-red-50' : 'bg-white';
+              const cellBase = `px-4 py-3 align-top ${textColor}`;
 
               return (
                 <tr key={row.rowNumber} className={rowBg}>
@@ -90,70 +162,30 @@ export function ImportProjectTable({
                       onChange={() => onToggleRow(row.rowNumber)}
                     />
                   </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top font-medium ${textColor}`}>
-                    {row.dto.name || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.ownerEmail || '-'}
-                  </td>
-                  <td className={`max-w-[200px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.description}>
-                    {row.dto.description || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.sector || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.location || '-'}
-                  </td>
-                  <td className={`max-w-[200px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.valueProposition}>
-                    {row.dto.valueProposition || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.ownerInstitution || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.contactPersonName || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.contactPersonEmail || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.contactPersonPhone || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.cooperationModel || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.concessionPeriod ? `${row.dto.concessionPeriod} tahun` : '-'}
-                  </td>
-                  <td className={`max-w-[200px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.assetReadiness}>
-                    {row.dto.assetReadiness || '-'}
-                  </td>
-                  <td className={`max-w-[200px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.governmentSupport}>
-                    {row.dto.governmentSupport || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.totalCapex ? formatFundingDisplay(row.dto.totalCapex) : '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.totalOpex ? formatFundingDisplay(row.dto.totalOpex) : '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.npv ? formatFundingDisplay(row.dto.npv) : '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
-                    {row.dto.irr ? `${row.dto.irr}%` : '-'}
-                  </td>
-                  <td className={`max-w-[200px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.revenueStream}>
-                    {row.dto.revenueStream || '-'}
-                  </td>
-                  <td className={`whitespace-nowrap px-4 py-3 align-top ${textColor}`}>
+                  <EditableCell value={row.dto.name || ''} rowNumber={row.rowNumber} field="name" className={`whitespace-nowrap font-medium ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.ownerEmail || ''} rowNumber={row.rowNumber} field="ownerEmail" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.description || ''} rowNumber={row.rowNumber} field="description" className={`max-w-50 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.sector || ''} rowNumber={row.rowNumber} field="sector" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.location || ''} rowNumber={row.rowNumber} field="location" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.valueProposition || ''} rowNumber={row.rowNumber} field="valueProposition" className={`max-w-50 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.ownerInstitution || ''} rowNumber={row.rowNumber} field="ownerInstitution" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.contactPersonName || ''} rowNumber={row.rowNumber} field="contactPersonName" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.contactPersonEmail || ''} rowNumber={row.rowNumber} field="contactPersonEmail" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.contactPersonPhone || ''} rowNumber={row.rowNumber} field="contactPersonPhone" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.cooperationModel || ''} rowNumber={row.rowNumber} field="cooperationModel" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.concessionPeriod ? String(row.dto.concessionPeriod) : ''} rowNumber={row.rowNumber} field="concessionPeriod" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.assetReadiness || ''} rowNumber={row.rowNumber} field="assetReadiness" className={`max-w-50 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.governmentSupport || ''} rowNumber={row.rowNumber} field="governmentSupport" className={`max-w-50 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.totalCapex ? String(row.dto.totalCapex) : ''} rowNumber={row.rowNumber} field="totalCapex" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.totalOpex ? String(row.dto.totalOpex) : ''} rowNumber={row.rowNumber} field="totalOpex" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.npv ? String(row.dto.npv) : ''} rowNumber={row.rowNumber} field="npv" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.irr ? String(row.dto.irr) : ''} rowNumber={row.rowNumber} field="irr" className={`whitespace-nowrap ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.revenueStream || ''} rowNumber={row.rowNumber} field="revenueStream" className={`max-w-50 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <td className={`whitespace-nowrap ${cellBase}`}>
                     {row.dto.isFeasibilityStudy ? 'Ya' : 'Tidak'}
                   </td>
-                  <td className={`max-w-[200px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.additionalInfo ?? ''}>
-                    {row.dto.additionalInfo || '-'}
-                  </td>
-                  <td className={`px-4 py-3 align-top ${textColor}`}>
+                  <EditableCell value={row.dto.additionalInfo || ''} rowNumber={row.rowNumber} field="additionalInfo" className={`max-w-50 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <td className={cellBase}>
                     {row.dto.timelines && row.dto.timelines.length > 0 ? (
                       <ul className="space-y-1 text-xs">
                         {row.dto.timelines.map((t, i) => (
@@ -169,16 +201,10 @@ export function ImportProjectTable({
                       </ul>
                     ) : '-'}
                   </td>
-                  <td className={`max-w-[150px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.locationImageUrl ?? ''}>
-                    {row.dto.locationImageUrl || '-'}
-                  </td>
-                  <td className={`max-w-[150px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.projectStructureImageUrl ?? ''}>
-                    {row.dto.projectStructureImageUrl || '-'}
-                  </td>
-                  <td className={`max-w-[150px] truncate px-4 py-3 align-top ${textColor}`} title={row.dto.projectFileUrl ?? ''}>
-                    {row.dto.projectFileUrl || '-'}
-                  </td>
-                  <td className={`sticky right-0 z-10 min-w-[200px] px-4 py-3 align-top ${rowBg} shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]`}>
+                  <EditableCell value={row.dto.locationImageUrl || ''} rowNumber={row.rowNumber} field="locationImageUrl" className={`max-w-37.5 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.projectStructureImageUrl || ''} rowNumber={row.rowNumber} field="projectStructureImageUrl" className={`max-w-37.5 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <EditableCell value={row.dto.projectFileUrl || ''} rowNumber={row.rowNumber} field="projectFileUrl" className={`max-w-37.5 truncate ${cellBase}`} onCommit={onUpdateRow} editingCell={editingCell} setEditingCell={setEditingCell} />
+                  <td className={`sticky right-0 z-10 min-w-50 px-4 py-3 align-top ${rowBg} shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]`}>
                     {isInvalid ? (
                       <div className="space-y-0.5">
                         {row.errors.map((err, i) => (
@@ -209,7 +235,7 @@ export function ImportProjectTable({
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
           >
-            {[10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+            {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
           <span>per halaman</span>
         </div>

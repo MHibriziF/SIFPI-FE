@@ -12,6 +12,7 @@ import { ImportConfirmModal } from '@/features/project/components/import-confirm
 import { ImportProjectTable } from '@/features/project/components/import-project-table';
 import type {
   BulkProjectImportDraft,
+  BatchUploadProjectRequest,
   BatchUploadStatusDTO,
   RowView,
 } from '@/features/project/types/import-project';
@@ -21,6 +22,7 @@ import {
   getBulkProjectImportDraft,
   resolveBackendErrorRow,
   downloadImportLog,
+  revalidateDto,
 } from '@/features/project/utils/csv';
 import {
   getImportProgressState,
@@ -128,14 +130,16 @@ export default function ImportProjectPage() {
 
     const processedRowNumbers = new Set(submittedRows.map(r => r.rowNumber));
     setRows(prev =>
-      prev.map(row => {
-        if (!processedRowNumbers.has(row.rowNumber)) return row;
-        const errs = backendMessagesByRow.get(row.rowNumber);
-        if (errs && errs.length > 0) {
-          return { ...row, errors: [...new Set([...row.errors, ...errs])], selected: false };
-        }
-        return { ...row, errors: [], selected: false };
-      })
+      prev
+        .map(row => {
+          if (!processedRowNumbers.has(row.rowNumber)) return row;
+          const errs = backendMessagesByRow.get(row.rowNumber);
+          if (errs && errs.length > 0) {
+            return { ...row, errors: [...new Set([...row.errors, ...errs])], selected: false };
+          }
+          return null; // successfully imported — remove from table
+        })
+        .filter((row): row is RowView => row !== null)
     );
 
     const sourceFileName = importProgress?.status === 'running'
@@ -197,6 +201,28 @@ export default function ImportProjectPage() {
 
   function toggleAllRows(checked: boolean) {
     setRows(prev => prev.map(r => ({ ...r, selected: checked })));
+  }
+
+  function updateRow(rowNumber: number, field: keyof BatchUploadProjectRequest, raw: string) {
+    setRows(prev =>
+      prev.map(r => {
+        if (r.rowNumber !== rowNumber) return r;
+
+        const numericFields = new Set<keyof BatchUploadProjectRequest>([
+          'concessionPeriod', 'totalCapex', 'totalOpex', 'npv', 'irr',
+        ]);
+
+        let value: string | number | boolean = raw;
+        if (numericFields.has(field)) {
+          value = raw === '' ? 0 : Number(raw);
+          if (Number.isNaN(value as number)) value = 0;
+        }
+
+        const updatedDto = { ...r.dto, [field]: value };
+        const errors = revalidateDto(updatedDto);
+        return { ...r, dto: updatedDto, errors };
+      })
+    );
   }
 
   const handleImport = async () => {
@@ -342,6 +368,7 @@ export default function ImportProjectPage() {
                 onToggleAll={toggleAllRows}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+                onUpdateRow={updateRow}
               />
 
               <div className={validationCardClass}>

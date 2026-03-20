@@ -343,6 +343,39 @@ function extractRowFields(
   };
 }
 
+/** Re-validate a DTO after inline edits (no raw CSV fields needed). */
+export function revalidateDto(dto: BatchUploadProjectRequest): string[] {
+  const errors: string[] = [];
+
+  validateEmail(errors, dto.ownerEmail, 'ownerEmail');
+  validateRequiredText(errors, dto.name, 'Nama proyek');
+  validateRequiredText(errors, dto.description, 'Deskripsi');
+  validateRequiredText(errors, dto.sector, 'Sektor');
+  validateRequiredText(errors, dto.location, 'Lokasi');
+  validateRequiredText(errors, dto.valueProposition, 'Value proposition');
+  validateRequiredText(errors, dto.ownerInstitution, 'Owner institution');
+  validateRequiredText(errors, dto.contactPersonName, 'Nama kontak');
+  validateEmail(errors, dto.contactPersonEmail, 'Email kontak');
+  validatePhone(errors, dto.contactPersonPhone);
+  validateRequiredText(errors, dto.cooperationModel, 'Model kerjasama');
+
+  if (dto.concessionPeriod == null || dto.concessionPeriod <= 0) errors.push('Periode konsesi harus lebih dari 0.');
+
+  validateRequiredText(errors, dto.assetReadiness, 'Kesiapan aset');
+  validateRequiredText(errors, dto.governmentSupport, 'Dukungan pemerintah');
+  if (dto.totalCapex != null && dto.totalCapex < 0) errors.push('Total CAPEX tidak boleh negatif.');
+  if (dto.totalOpex != null && dto.totalOpex < 0) errors.push('Total OPEX tidak boleh negatif.');
+  validateRequiredText(errors, dto.revenueStream, 'Revenue stream');
+
+  if (dto.isFeasibilityStudy == null) errors.push('isFeasibilityStudy wajib diisi (true/false).');
+
+  validateUrl(errors, dto.locationImageUrl ?? '', 'URL gambar lokasi proyek');
+  validateUrl(errors, dto.projectStructureImageUrl ?? '', 'URL gambar struktur proyek');
+  validateUrl(errors, dto.projectFileUrl ?? '', 'URL dokumen proyek');
+
+  return errors;
+}
+
 export function parseAndValidateBulkProjectCsv(csvText: string): ParseResult<ParsedBulkProjectRow> {
   const pre = preValidateCsv(csvText, REQUIRED_FIELDS, headerRow =>
     mapHeadersWithAliases(headerRow, EXPECTED_HEADERS, HEADER_ALIASES)
