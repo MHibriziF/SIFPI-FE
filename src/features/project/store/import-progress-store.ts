@@ -1,8 +1,10 @@
 // Module-level store — survives client-side navigation, cleared on page refresh.
 // Page refresh also kills in-flight fetches, so no inconsistency.
 
+import type { RowView } from '@/features/project/types/import-project';
+
 export type ImportProgressState =
-  | { status: 'running'; done: number; total: number; sourceFileName: string }
+  | { status: 'running'; jobId: string; total: number; sourceFileName: string; submittedRows: RowView[] }
   | { status: 'completed'; totalSuccess: number; totalFailed: number; hadErrors: boolean }
   | null;
 

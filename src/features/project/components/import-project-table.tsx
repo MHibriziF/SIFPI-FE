@@ -11,9 +11,11 @@ interface ImportProjectTableProps {
   totalPages: number;
   startItem: number;
   endItem: number;
+  pageSize: number;
   onToggleRow: (rowNumber: number) => void;
   onToggleAll: (checked: boolean) => void;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }
 
 export function ImportProjectTable({
@@ -24,9 +26,11 @@ export function ImportProjectTable({
   totalPages,
   startItem,
   endItem,
+  pageSize,
   onToggleRow,
   onToggleAll,
   onPageChange,
+  onPageSizeChange,
 }: ImportProjectTableProps) {
   return (
     <div className="min-w-0">
@@ -195,8 +199,20 @@ export function ImportProjectTable({
         </table>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
-        <p>Showing {startItem}–{endItem} of {rows.length} projects</p>
+      <div className="mt-3 flex items-center justify-between gap-4 text-sm text-gray-500">
+        <div className="flex items-center gap-2">
+          <span>Showing {startItem}–{endItem} of {rows.length} projects</span>
+          <span>·</span>
+          <span>Tampilkan</span>
+          <select
+            className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          >
+            {[10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+          <span>per halaman</span>
+        </div>
         <div className="flex gap-3">
           <button
             type="button"

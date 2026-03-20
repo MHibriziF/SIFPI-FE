@@ -287,7 +287,7 @@ export default function AdminReadProjects() {
                         <td className="py-4 text-sm text-gray-900">{project.name}</td>
                         <td className="py-4 text-sm text-gray-600">{project.ownerName || 'N/A'}</td>
                         <td className="py-4 text-sm text-gray-600">
-                          {project.sector?.replace(/_/g, ' ') || 'N/A'}
+                          {project.sector?.replaceAll('_', ' ') || 'N/A'}
                         </td>
                         <td className="py-4 text-sm text-gray-600">{formatDate(project.createdAt)}</td>
                         <td className="py-4">
@@ -296,7 +296,7 @@ export default function AdminReadProjects() {
                               STATUS_COLORS[project.status] || 'bg-gray-100 text-gray-800'
                             }`}
                           >
-                            {PROJECT_STATUS_LABELS[project.status as ProjectStatus] || project.status}
+                            {PROJECT_STATUS_LABELS[project.status] || project.status}
                           </span>
                         </td>
                         <td className="py-4">
@@ -323,14 +323,26 @@ export default function AdminReadProjects() {
               </div>
 
               {/* Pagination */}
-              <Pagination
-                page={pagination.page}
-                totalPages={pagination.totalPages}
-                totalElements={pagination.totalElements}
-                pageSize={pagination.size}
-                onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
-                className="mt-4 pt-4 border-t border-gray-200"
-              />
+              <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <span>Tampilkan</span>
+                  <select
+                    className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={pagination.size}
+                    onChange={(e) => setPagination((prev) => ({ ...prev, size: Number(e.target.value), page: 0 }))}
+                  >
+                    {[10, 20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                  <span>per halaman</span>
+                </div>
+                <Pagination
+                  page={pagination.page}
+                  totalPages={pagination.totalPages}
+                  totalElements={pagination.totalElements}
+                  pageSize={pagination.size}
+                  onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+                />
+              </div>
             </>
             );
           })()}
