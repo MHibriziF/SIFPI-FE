@@ -1,34 +1,26 @@
 import type { NextConfig } from 'next';
 
+const imageHostnames = (
+  process.env.NEXT_PUBLIC_IMAGE_HOSTNAMES ?? 'images.unsplash.com,*.r2.dev,*.cloudflarestorage.com'
+)
+  .split(',')
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.r2.dev',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.cloudflarestorage.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
+    remotePatterns: imageHostnames.map(hostname => ({
+      protocol: 'https' as const,
+      hostname,
+      port: '',
+      pathname: '/**',
+    })),
   },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
+        destination: `${process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
       },
     ];
   },
