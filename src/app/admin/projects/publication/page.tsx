@@ -284,6 +284,136 @@ export default function PublicationManagementPage() {
     paginatedProjects.length > 0 &&
     paginatedProjects.every((p) => selectedProjects.has(p.id.toString()));
 
+  // ── Render helpers ──────────────────────────────────────────────────────
+
+  function renderTableContent() {
+    if (isLoading) {
+      return (
+        <div className="text-center py-12">
+          <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
+        </div>
+      );
+    }
+
+    if (paginatedProjects.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-500">{getEmptyMessage(activeTab)}</p>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200 text-left">
+                <th className="pb-3 pr-4">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="w-4 h-4 cursor-pointer accent-primary"
+                  />
+                </th>
+                <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Project ID</th>
+                <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Project Name</th>
+                <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Owner</th>
+                <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Sector</th>
+                <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Submitted</th>
+                <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedProjects.map((project, index) => (
+                <tr
+                  key={project.id}
+                  className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                  }`}
+                >
+                  <td className="py-4 pr-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedProjects.has(project.id.toString())}
+                      onChange={() => handleCheckboxChange(project.id.toString())}
+                      className="w-4 h-4 cursor-pointer accent-primary"
+                    />
+                  </td>
+                  <td className="py-4 text-sm text-gray-900 font-medium">
+                    PRJ-{String(project.id).padStart(4, '0')}
+                  </td>
+                  <td className="py-4 text-sm text-gray-900">{project.name}</td>
+                  <td className="py-4 text-sm text-gray-600">{project.ownerName || 'N/A'}</td>
+                  <td className="py-4 text-sm text-gray-600">
+                    {project.sector?.replace(/_/g, ' ') || 'N/A'}
+                  </td>
+                  <td className="py-4 text-sm text-gray-600">{formatDate(project.createdAt)}</td>
+                  <td className="py-4">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        STATUS_COLORS[project.status] || 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {STATUS_LABELS[project.status] || project.status}
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => router.push(`/admin/projects/PRJ-${String(project.id).padStart(4, '0')}`)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="View"
+                      >
+                        <Eye className="size-4" />
+                      </button>
+                      <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="Edit">
+                        <Edit className="size-4" />
+                      </button>
+                      <button className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>Tampilkan</span>
+            <select
+              className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
+              value={pagination.size}
+              onChange={(e) => setPagination((prev) => ({
+                ...prev,
+                size: Number(e.target.value),
+                page: 0,
+                totalPages: Math.ceil(prev.totalElements / Number(e.target.value)),
+              }))}
+            >
+              {[10, 20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <span>per halaman</span>
+          </div>
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            totalElements={pagination.totalElements}
+            pageSize={pagination.size}
+            onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+          />
+        </div>
+      </>
+    );
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
@@ -349,125 +479,7 @@ export default function PublicationManagementPage() {
           </div>
 
           {/* Table */}
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-              <p className="mt-4 text-sm text-gray-600">Memuat proyek...</p>
-            </div>
-          ) : paginatedProjects.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">
-                {getEmptyMessage(activeTab)}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 text-left">
-                      <th className="pb-3 pr-4">
-                        <input
-                          type="checkbox"
-                          checked={isAllSelected}
-                          onChange={(e) => handleSelectAll(e.target.checked)}
-                          className="w-4 h-4 cursor-pointer accent-primary"
-                        />
-                      </th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Project ID</th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Project Name</th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Owner</th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Sector</th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Submitted</th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                      <th className="pb-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedProjects.map((project, index) => (
-                      <tr
-                        key={project.id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                        }`}
-                      >
-                        <td className="py-4 pr-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedProjects.has(project.id.toString())}
-                            onChange={() => handleCheckboxChange(project.id.toString())}
-                            className="w-4 h-4 cursor-pointer accent-primary"
-                          />
-                        </td>
-                        <td className="py-4 text-sm text-gray-900 font-medium">
-                          PRJ-{String(project.id).padStart(4, '0')}
-                        </td>
-                        <td className="py-4 text-sm text-gray-900">{project.name}</td>
-                        <td className="py-4 text-sm text-gray-600">{project.ownerName || 'N/A'}</td>
-                        <td className="py-4 text-sm text-gray-600">
-                          {project.sector?.replace(/_/g, ' ') || 'N/A'}
-                        </td>
-                        <td className="py-4 text-sm text-gray-600">{formatDate(project.createdAt)}</td>
-                        <td className="py-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                              STATUS_COLORS[project.status] || 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {STATUS_LABELS[project.status] || project.status}
-                          </span>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex items-center gap-2">
-                            <button 
-                              onClick={() => router.push(`/admin/projects/PRJ-${String(project.id).padStart(4, '0')}`)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" 
-                              title="View"
-                            >
-                              <Eye className="size-4" />
-                            </button>
-                            <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="Edit">
-                              <Edit className="size-4" />
-                            </button>
-                            <button className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-                              <Trash2 className="size-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <span>Tampilkan</span>
-                  <select
-                    className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
-                    value={pagination.size}
-                    onChange={(e) => setPagination((prev) => ({
-                      ...prev,
-                      size: Number(e.target.value),
-                      page: 0,
-                      totalPages: Math.ceil(prev.totalElements / Number(e.target.value)),
-                    }))}
-                  >
-                    {[10, 20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
-                  </select>
-                  <span>per halaman</span>
-                </div>
-                <Pagination
-                  page={pagination.page}
-                  totalPages={pagination.totalPages}
-                  totalElements={pagination.totalElements}
-                  pageSize={pagination.size}
-                  onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
-                />
-              </div>
-            </>
-          )}
+          {renderTableContent()}
 
           {/* Action Buttons Footer */}
           <div className="mt-6 pt-6 border-t border-gray-200">
