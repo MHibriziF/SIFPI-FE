@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Save, X } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/components/button';
-import { TextInput, Select } from '@/shared/components/form-fields';
+import { TextInput, Select, PhoneInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getMyProfile, updateInvestorProfile } from '@/features/user-management/services';
 import { getOrCreateOrganization } from '@/features/auth/services';
@@ -296,13 +296,12 @@ export default function UpdateInvestorProfileForm() {
               error={errors.email}
               disabled={isSubmitting}
             />
-            <TextInput
+            <PhoneInput
               id="phoneNumber"
               label="Nomor Telepon"
-              placeholder="+628123456789"
               required
               value={formData.phoneNumber}
-              onChange={e => handleChange('phoneNumber', e.target.value)}
+              onChange={v => handleChange('phoneNumber', v)}
               error={errors.phoneNumber}
               disabled={isSubmitting}
             />

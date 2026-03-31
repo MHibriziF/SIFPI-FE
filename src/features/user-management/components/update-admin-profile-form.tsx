@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Save, X } from 'lucide-react';
 import { Button } from '@/shared/components/button';
-import { TextInput } from '@/shared/components/form-fields';
+import { TextInput, PhoneInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getMyProfile, updateAdminProfile } from '@/features/user-management/services';
 import { ApiError } from '@/shared/types/api';
@@ -171,13 +171,12 @@ export default function UpdateAdminProfileForm() {
                   error={errors.email}
                   disabled={isSubmitting}
                 />
-                <TextInput
+                <PhoneInput
                   id="phoneNumber"
                   label="Nomor telepon"
-                  placeholder="+628123456789"
                   required
                   value={formData.phoneNumber}
-                  onChange={e => handleChange('phoneNumber', e.target.value)}
+                  onChange={v => handleChange('phoneNumber', v)}
                   error={errors.phoneNumber}
                   disabled={isSubmitting}
                 />

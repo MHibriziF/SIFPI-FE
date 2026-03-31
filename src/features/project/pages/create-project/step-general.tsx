@@ -2,7 +2,7 @@
 
 import { Controller, useFormContext } from 'react-hook-form';
 
-import { Select, TextInput, Textarea } from '@/shared/components/form-fields';
+import { Select, TextInput, Textarea, PhoneInput } from '@/shared/components/form-fields';
 import { SECTOR_OPTIONS } from '@/shared/enums';
 import { FileUploadField } from '@/features/project/components/file-upload-field';
 import { SectionCard } from '@/features/project/components/section-card';
@@ -110,12 +110,19 @@ export function StepGeneral({ existingMapFileUrl }: Readonly<StepGeneralProps> =
             error={errors.general?.email?.message}
             {...register('general.email')}
           />
-          <TextInput
-            label="Nomor Telepon"
-            required
-            placeholder="+62 ..."
-            error={errors.general?.phone?.message}
-            {...register('general.phone')}
+          <Controller
+            control={control}
+            name="general.phone"
+            render={({ field }) => (
+              <PhoneInput
+                label="Nomor Telepon"
+                required
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.general?.phone?.message}
+              />
+            )}
           />
         </SectionCard.Body>
       </SectionCard>

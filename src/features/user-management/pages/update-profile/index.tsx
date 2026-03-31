@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, X } from 'lucide-react';
 import { Button } from '@/shared/components/button';
-import { TextInput } from '@/shared/components/form-fields';
+import { TextInput, PhoneInput } from '@/shared/components/form-fields';
 import { showToast } from '@/shared/components/toast';
 import { getCurrentUser } from '@/features/user-management/services';
 import { updatePassword } from '@/features/auth/services';
@@ -309,12 +309,14 @@ export default function UpdateProfilePage() {
                   disabled={isLoadingProfile}
                 />
 
-                <TextInput
+                <PhoneInput
                   id="phone"
                   label="Nomor telepon"
-                  placeholder="+628123456789"
                   value={profileData.phone}
-                  onChange={handleProfileChange('phone')}
+                  onChange={v => {
+                    setProfileData(prev => ({ ...prev, phone: v }));
+                    setErrors(prev => ({ ...prev, phone: undefined }));
+                  }}
                   error={errors.phone}
                   disabled={isLoadingProfile}
                 />
