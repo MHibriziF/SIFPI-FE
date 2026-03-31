@@ -31,7 +31,7 @@ const VARIANT_MAP: Record<Variant, { lightBg: string; color: string; defaultLabe
   [ProjectStatus.TERPUBLIKASI]:   { lightBg: 'bg-success-light', color: 'text-success',     defaultLabel: PROJECT_STATUS_LABELS[ProjectStatus.TERPUBLIKASI] },
 };
 
-export function StatusBadge({ variant, children, className = '' }: StatusBadgeProps) {
+export function StatusBadge({ variant, children, className = '' }: Readonly<StatusBadgeProps>) {
   const classes = VARIANT_MAP[variant] ?? VARIANT_MAP.draft;
 
   return (

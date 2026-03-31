@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { TextInput, Select } from '@/shared/components/form-fields';
+import { TextInput, Select, PhoneInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { registerInvestor } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
-import { validateEmail, validatePassword, validateIndonesianPhone } from '@/shared/lib/validation';
+import { validateEmail, validatePassword, validatePhone } from '@/shared/lib/validation';
 import { INVESTOR_SECTOR_OPTIONS, BUDGET_OPTIONS } from '@/shared/enums/investment-options';
 import type { CreateInvestorRequest, OrganizationDTO } from '@/features/auth/types';
 import { cn } from '@/shared/lib/utils';
@@ -33,9 +33,9 @@ interface TouchedFields {
 
 export default function RegisterInvestorForm({
   onSuccess,
-}: {
+}: Readonly<{
   onSuccess?: (email: string) => void;
-}) {
+}>) {
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState<CreateInvestorRequest>({
     nama: '',
@@ -72,7 +72,7 @@ export default function RegisterInvestorForm({
     if (!formData.jabatan.trim()) next.jabatan = 'Jabatan wajib diisi';
     if (formData.jabatan.length > 100) next.jabatan = 'Jabatan maksimal 100 karakter';
 
-    const phoneError = validateIndonesianPhone(formData.phone);
+    const phoneError = validatePhone(formData.phone);
     if (phoneError) next.phone = phoneError;
 
     const passwordError = validatePassword(formData.password);
@@ -146,15 +146,15 @@ export default function RegisterInvestorForm({
         next.password = validatePassword(value);
         if (currentTouched.confirmPassword && currentFormData.confirmPassword) {
           next.confirmPassword =
-            value !== currentFormData.confirmPassword ? 'Password tidak cocok' : undefined;
+            value === currentFormData.confirmPassword ? undefined : 'Password tidak cocok';
         }
         break;
       case 'confirmPassword':
         next.confirmPassword =
-          value !== currentFormData.password ? 'Password tidak cocok' : undefined;
+          value === currentFormData.password ? undefined : 'Password tidak cocok';
         break;
       case 'phone':
-        next.phone = validateIndonesianPhone(value);
+        next.phone = validatePhone(value);
         break;
       case 'nama':
         next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
@@ -263,13 +263,12 @@ export default function RegisterInvestorForm({
             onBlur={() => handleBlur('jabatan')}
             error={errors.jabatan}
           />
-          <TextInput
+          <PhoneInput
             id="phone"
             label="No. Telepon"
-            placeholder="+62812xxxxxxx"
             required
             value={formData.phone}
-            onChange={e => handleChange('phone', e.target.value)}
+            onChange={v => handleChange('phone', v)}
             onBlur={() => handleBlur('phone')}
             error={errors.phone}
           />

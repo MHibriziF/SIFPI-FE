@@ -1,7 +1,7 @@
 const ROLE_HOME: Record<string, string> = {
   ADMIN: '/admin/dashboard',
   PROJECT_OWNER: '/project-owner/dashboard',
-  INVESTOR: '/catalogue',
+  INVESTOR: '/projects',
   EXECUTIVE: '/admin/insights',
 };
 

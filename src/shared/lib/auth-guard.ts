@@ -10,8 +10,6 @@ export type Resource = 'PROJECT' | 'NEWS' | 'INQUIRY' | 'USER' | 'VERIFICATION';
 export type Action = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
 const KNOWN_ROLES = new Set(['ADMIN', 'OWNER', 'INVESTOR', 'EXECUTIVE']);
 
-export { getRoleHome };
-
 /**
  * Server-side route guard for known roles.
  * Redirects to /login if unauthenticated.
@@ -76,3 +74,5 @@ export function withPermission(resource: Resource, action: Action) {
     };
   };
 }
+
+export { getRoleHome } from './role-home';

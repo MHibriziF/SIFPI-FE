@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Plus, X } from 'lucide-react';
-import { TextInput } from '@/shared/components/form-fields';
+import { TextInput, PhoneInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { createExecutive } from '@/features/user-management/services';
@@ -68,7 +68,7 @@ export default function CreateExecutiveAccountPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -177,13 +177,14 @@ export default function CreateExecutiveAccountPage() {
                     disabled={isLoading}
                   />
 
-                  <TextInput
+                  <PhoneInput
                     id="phone"
-                    type="tel"
                     label="Nomor telepon"
-                    placeholder="e.g. +6281xxxxxxxxx"
                     value={formData.phone}
-                    onChange={handleChange('phone')}
+                    onChange={v => {
+                      setFormData(prev => ({ ...prev, phone: v }));
+                      if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }));
+                    }}
                     error={errors.phone}
                     required
                     disabled={isLoading}

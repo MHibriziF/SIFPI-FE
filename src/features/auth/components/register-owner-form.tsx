@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { TextInput } from '@/shared/components/form-fields';
+import { TextInput, PhoneInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { setFlashToast } from '@/shared/hooks/use-flash-toast';
 import { registerOwner } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
-import { validateEmail, validatePassword, validateIndonesianPhone } from '@/shared/lib/validation';
+import { validateEmail, validatePassword, validatePhone } from '@/shared/lib/validation';
 import type { CreateOwnerRequest, OrganizationDTO } from '@/features/auth/types';
 
 interface FormErrors {
@@ -62,7 +62,7 @@ export default function RegisterOwnerForm({
     if (!formData.jabatan.trim()) next.jabatan = 'Jabatan wajib diisi';
     if (formData.jabatan.length > 100) next.jabatan = 'Jabatan maksimal 100 karakter';
 
-    const phoneError = validateIndonesianPhone(formData.phone);
+    const phoneError = validatePhone(formData.phone);
     if (phoneError) next.phone = phoneError;
 
     const passwordError = validatePassword(formData.password);
@@ -126,7 +126,7 @@ export default function RegisterOwnerForm({
           value !== currentFormData.password ? 'Password tidak cocok' : undefined;
         break;
       case 'phone':
-        next.phone = validateIndonesianPhone(value);
+        next.phone = validatePhone(value);
         break;
       case 'nama':
         next.nama = value.trim() ? undefined : 'Nama lengkap wajib diisi';
@@ -206,13 +206,12 @@ export default function RegisterOwnerForm({
           onBlur={() => handleBlur('jabatan')}
           error={errors.jabatan}
         />
-        <TextInput
+        <PhoneInput
           id="phone"
           label="No. Telepon"
-          placeholder="+6281xxxxxxxx"
           required
           value={formData.phone}
-          onChange={e => handleChange('phone', e.target.value)}
+          onChange={v => handleChange('phone', v)}
           onBlur={() => handleBlur('phone')}
           error={errors.phone}
         />

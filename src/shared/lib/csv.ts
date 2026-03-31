@@ -211,14 +211,16 @@ export function preValidateCsv<K extends string>(
   requiredFields: K[],
   headerMapper: (headerRow: string[]) => Record<K, number | null>,
   maxRows: number = MAX_ROWS_DEFAULT
-): {
-  ok: false;
-  globalErrors: string[];
-} | {
-  ok: true;
-  headerMap: Record<K, number | null>;
-  dataRows: string[][];
-} {
+):
+  | {
+      ok: false;
+      globalErrors: string[];
+    }
+  | {
+      ok: true;
+      headerMap: Record<K, number | null>;
+      dataRows: string[][];
+    } {
   const rows = parseCsvRows(csvText);
   if (rows.length === 0) {
     return { ok: false, globalErrors: ['File CSV kosong.'] };
