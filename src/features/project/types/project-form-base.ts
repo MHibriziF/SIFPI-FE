@@ -16,6 +16,7 @@ export const optionalFiniteNumber = (label: string) =>
   z
     .number({ message: `${label} wajib berupa angka.` })
     .refine(value => Number.isFinite(value), `${label} wajib berupa angka valid.`)
+    .refine(value => value > 0, `${label} wajib berupa angka positif.`)
     .optional();
 
 export const generalSectionSchema = z.object({

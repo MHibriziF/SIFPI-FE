@@ -10,6 +10,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { ApiError } from '@/shared/types/api';
+import { ProjectStatus } from '@/shared/enums/project-status';
 import { ProjectSubmissionStepper } from '@/features/project/components/project-submission-stepper';
 import { createProject } from '@/features/project/services';
 import {
@@ -96,6 +97,7 @@ export default function CreateProjectPage() {
           isFeasibilityStudy: values.technical.isFeasibilityStudy,
           additionalInfo: values.financial.additionalInfo,
           timelines: values.timelines,
+          status: isSubmitted ? ProjectStatus.DIAJUKAN : ProjectStatus.DRAFT,
           isSubmitted,
         },
         mapFile: values.files.mapFile as File,
