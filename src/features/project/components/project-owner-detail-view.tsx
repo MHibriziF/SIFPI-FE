@@ -30,6 +30,19 @@ function formatPercent(value: number | null | undefined): string {
   return `${(value * 100).toFixed(2)}%`;
 }
 
+function resolveAssetUrl(url: string | null | undefined, fallbackPath: string): string {
+  const raw = (url ?? '').trim();
+  const base =
+    raw.length === 0 || raw === 'null' || raw.startsWith('null/') || raw.startsWith('null\\')
+      ? fallbackPath
+      : raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')
+        ? raw
+        : `/${raw}`;
+
+  const joiner = base.includes('?') ? '&' : '?';
+  return `${base}${joiner}t=${Date.now()}`;
+}
+
 // ─── Approval Timeline ────────────────────────────────────────────────────────
 
 const TIMELINE_STEPS: { status: ProjectStatus; label: string }[] = [
@@ -164,6 +177,8 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<
   const [history, setHistory] = useState<ProjectHistoryItemDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [locationImageError, setLocationImageError] = useState(false);
+  const [structureImageError, setStructureImageError] = useState(false);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -174,6 +189,8 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<
       ]);
       setProject(projectRes.data);
       setHistory(historyRes.data);
+      setLocationImageError(false);
+      setStructureImageError(false);
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 404) {
@@ -232,6 +249,16 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<
   }
 
   if (!project) return null;
+
+  const locationImageSrc = resolveAssetUrl(
+    project.locationImageUrl,
+    `/api/projects/${projectId}/location-image`
+  );
+  const structureImageSrc = resolveAssetUrl(
+    project.projectStructureImageUrl,
+    `/api/projects/${projectId}/structure-image`
+  );
+  const projectFileHref = resolveAssetUrl(project.projectFileDownloadUrl, `/api/projects/${projectId}/file`);
 
   // Button is only shown when the user has UPDATE permission AND the project
   // is in DRAFT or PERBAIKAN_DATA state (editable statuses).
@@ -361,7 +388,7 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<
                   <tr>
                     <td className="py-2 text-gray-900 font-medium" colSpan={2}>
                       <a
-                        href={`/api/projects/${projectId}/file`}
+                        href={projectFileHref}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-primary underline"
@@ -389,16 +416,16 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<
             <SectionCard.Header title="Strategic Narrative / Value Proposition" />
             <SectionCard.Body className="flex gap-8 items-start">
               <div className="w-48 h-48 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center">
-                <img
-                  src={`/api/projects/${projectId}/location-image`}
-                  alt="Location"
-                  className="w-full h-full object-cover"
-                  onError={e => {
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML =
-                      '<span class="text-gray-400 text-sm">Gambar belum tersedia</span>';
-                  }}
-                />
+                {!locationImageError ? (
+                  <img
+                    src={locationImageSrc}
+                    alt="Location"
+                    className="w-full h-full object-cover"
+                    onError={() => setLocationImageError(true)}
+                  />
+                ) : (
+                  <span className="text-gray-400 text-sm">Gambar belum tersedia</span>
+                )}
               </div>
               <p className="text-sm leading-relaxed text-gray-800 flex-1">
                 {project.valueProposition || '—'}
@@ -411,16 +438,16 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<
             <SectionCard.Header title="Project Structure" />
             <SectionCard.Body>
               <div className="rounded-xl overflow-hidden aspect-video w-full bg-gray-100 flex items-center justify-center">
-                <img
-                  src={`/api/projects/${projectId}/structure-image`}
-                  alt="Project Structure"
-                  className="w-full h-full object-cover"
-                  onError={e => {
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML =
-                      '<span class="text-gray-400 text-sm">Gambar belum tersedia</span>';
-                  }}
-                />
+                {!structureImageError ? (
+                  <img
+                    src={structureImageSrc}
+                    alt="Project Structure"
+                    className="w-full h-full object-cover"
+                    onError={() => setStructureImageError(true)}
+                  />
+                ) : (
+                  <span className="text-gray-400 text-sm">Gambar belum tersedia</span>
+                )}
               </div>
             </SectionCard.Body>
           </SectionCard>
