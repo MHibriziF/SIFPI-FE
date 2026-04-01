@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useEffect, useId, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import { FileInput } from '@/shared/components/form-fields';
@@ -32,6 +32,20 @@ export function FileUploadField({
   const { setValue, watch, formState: { errors } } = useFormContext<any>();
 
   const file = watch(fileField);
+  const fileObjectUrl = useMemo(() => (file ? URL.createObjectURL(file) : ''), [file]);
+  const fileSizeLabel = useMemo(() => {
+    if (!file?.size) return '';
+    const sizeInMb = file.size / (1024 * 1024);
+    if (sizeInMb >= 1) return `${sizeInMb.toFixed(1)} MB`;
+    const sizeInKb = file.size / 1024;
+    return `${Math.round(sizeInKb)} KB`;
+  }, [file]);
+
+  useEffect(() => {
+    return () => {
+      if (fileObjectUrl) URL.revokeObjectURL(fileObjectUrl);
+    };
+  }, [fileObjectUrl]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filesErrors = (errors as any).files;
@@ -76,7 +90,15 @@ export function FileUploadField({
       />
       {file?.name ? (
         <p className="text-xs text-gray-500">
-          {existingFileUrl ? 'File baru terpilih' : 'File terpilih'}: {file.name}
+          {existingFileUrl ? 'File baru terpilih' : 'File terpilih'}:{' '}
+          <a
+            href={fileObjectUrl}
+            download={file.name}
+            className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+          >
+            {file.name}
+          </a>
+          {fileSizeLabel ? ` (${fileSizeLabel})` : null}
         </p>
       ) : null}
     </div>

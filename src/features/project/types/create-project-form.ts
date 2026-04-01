@@ -8,8 +8,18 @@ import {
   feasibilityStudyRefinement,
 } from './project-form-base';
 
-const requiredFileSchema = (message: string) =>
-  z.custom<File | null>(value => value instanceof File, { message }).nullable().refine(Boolean, message);
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_PDF_SIZE = 10 * 1024 * 1024;
+
+const requiredFileSchema = (message: string, maxSize?: number, maxSizeMessage?: string) =>
+  z
+    .custom<File | null>(value => value instanceof File, { message })
+    .nullable()
+    .refine(Boolean, message)
+    .refine(
+      file => !file || !maxSize || file.size <= maxSize,
+      maxSizeMessage ?? 'Ukuran file melebihi batas.'
+    );
 
 export const projectFormSchema = z
   .object({
@@ -19,9 +29,21 @@ export const projectFormSchema = z
     timelines: timelinesSchema,
     confirmation: confirmationSchema,
     files: z.object({
-      mapFile: requiredFileSchema('File peta wajib diunggah.'),
-      projectStructureFile: requiredFileSchema('Dokumen struktur proyek wajib diunggah.'),
-      feasibilityStudyFile: requiredFileSchema('Dokumen feasibility study wajib diunggah.'),
+      mapFile: requiredFileSchema(
+        'File peta wajib diunggah.',
+        MAX_IMAGE_SIZE,
+        'Ukuran gambar maksimal 5 MB.'
+      ),
+      projectStructureFile: requiredFileSchema(
+        'Dokumen struktur proyek wajib diunggah.',
+        MAX_IMAGE_SIZE,
+        'Ukuran gambar maksimal 5 MB.'
+      ),
+      feasibilityStudyFile: requiredFileSchema(
+        'Dokumen feasibility study wajib diunggah.',
+        MAX_PDF_SIZE,
+        'Ukuran file PDF maksimal 10 MB.'
+      ),
     }),
   })
   .superRefine(feasibilityStudyRefinement);
