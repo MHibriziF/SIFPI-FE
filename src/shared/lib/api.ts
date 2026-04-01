@@ -1,6 +1,10 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { ApiError, type BaseResponse } from '@/shared/types/api';
 import { setFlashToast } from '../hooks/use-flash-toast';
+
+interface RetryableConfig extends InternalAxiosRequestConfig {
+  _csrfRetried?: boolean;
+}
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 export const api = axios.create({
@@ -60,17 +64,29 @@ api.interceptors.request.use(async config => {
 
 api.interceptors.response.use(
   response => response,
-  (error: AxiosError<BaseResponse>) => {
+  async (error: AxiosError<BaseResponse>) => {
     if (!error.response) {
-      return Promise.reject(new ApiError(0, 'Network error. Please check your connection.'));
+      throw new ApiError(0, 'Network error. Please check your connection.');
     }
 
     const { status, data } = error.response;
 
-    // 403 on a mutating request may mean a stale CSRF token — reset so the next
-    // request re-bootstraps. Harmless if the 403 was actually a permission denial.
-    if (status === 403 && MUTATING.has(error.config?.method?.toLowerCase() ?? '')) {
+    // 403 on a mutating request may mean a stale CSRF token. Auto-retry once:
+    // re-fetch the token and replay the original request transparently.
+    // The _csrfRetried flag prevents infinite loops; if the retry also 403s
+    // it's a real permission denial and the error propagates normally.
+    const config = error.config as RetryableConfig | undefined;
+    if (
+      status === 403 &&
+      MUTATING.has(config?.method?.toLowerCase() ?? '') &&
+      !config?._csrfRetried
+    ) {
       csrfReady = false;
+      await ensureCsrfToken();
+      if (config) {
+        config._csrfRetried = true;
+        return api(config);
+      }
     }
 
     // 401 means the session has expired. Redirect to root so the proxy enforces
@@ -91,8 +107,11 @@ api.interceptors.response.use(
       globalThis.location.href = '/login';
     }
 
-    return Promise.reject(
-      new ApiError(status, data?.message ?? 'Unexpected error', data?.timestamp, data?.data ?? data)
+    throw new ApiError(
+      status,
+      data?.message ?? 'Unexpected error',
+      data?.timestamp,
+      data?.data ?? data
     );
   }
 );
