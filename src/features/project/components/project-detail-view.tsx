@@ -6,6 +6,7 @@ import { ChevronLeft, FileText } from 'lucide-react';
 import { SummaryCard } from './summary-card';
 import { SectionCard } from './section-card';
 import type { AdminProjectDetailDTO } from '../types/admin-detail';
+import { safeUrl } from '@/shared/lib/formatters';
 
 interface ProjectDetailViewProps {
   project: AdminProjectDetailDTO;
@@ -227,7 +228,7 @@ export function ProjectDetailView({
           <SummaryCard.Header title="Project Documents" />
           <SummaryCard.Body>
             <a
-              href={project.projectFileDownloadUrl}
+              href={safeUrl(project.projectFileDownloadUrl)}
               target="_blank"
               rel="noopener noreferrer"
               download

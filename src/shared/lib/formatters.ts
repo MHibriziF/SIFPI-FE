@@ -20,3 +20,9 @@ export function formatConcession(years: number | null | undefined): string {
   if (years == null) return '—';
   return `${years} Tahun`;
 }
+
+export function safeUrl(url: string | null | undefined): string {
+  if (!url) return '#';
+  if (url.startsWith('https://') || url.startsWith('http://') || url.startsWith('/')) return url;
+  return '#';
+}

@@ -19,6 +19,7 @@ import type {
   AdminProjectDetailDTO,
 } from '@/features/project/types/admin-detail';
 import { showNotification } from '@/shared/components/info-toast';
+import { safeUrl } from '@/shared/lib/formatters';
 import { ApiError } from '@/shared/types/api';
 
 /* ─────────────────────────────────────────
@@ -462,7 +463,7 @@ export default function ProjectDetailPage() {
                           const s = statusLabel[sh.status] ?? { label: sh.status, color: 'text-[#0f2d5e]', dot: 'bg-[#0f2d5e]' };
                           return (
                             <div key={`sh-${sh.id}`} className="flex gap-4 relative">
-                              <div className={`flex-shrink-0 w-8 h-8 rounded-full ${s.dot} flex items-center justify-center z-10`}>
+                              <div className={`shrink-0 w-8 h-8 rounded-full ${s.dot} flex items-center justify-center z-10`}>
                                 <div className="w-3 h-3 rounded-full bg-white" />
                               </div>
                               <div className="flex-1 pt-1">
@@ -489,7 +490,7 @@ export default function ProjectDetailPage() {
                           const s = verifStyle[v.action] ?? { label: v.action, color: 'text-[#0f2d5e]', bg: 'bg-[#0f2d5e]', icon: <CheckCircle className="w-4 h-4 text-white" /> };
                           return (
                             <div key={`v-${v.id}`} className="flex gap-4 relative">
-                              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${s.bg}`}>
+                              <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${s.bg}`}>
                                 {s.icon}
                               </div>
                               <div className="flex-1 pt-1">
@@ -523,13 +524,13 @@ export default function ProjectDetailPage() {
                   <div className="px-5 py-3">
                     <p className="text-xs text-gray-500 mb-0.5">Total Investment / Total Capex</p>
                     <p className="text-sm font-semibold text-gray-800">
-                      {project.totalCapex != null ? `USD ${project.totalCapex.toLocaleString('en-US')} Billion` : '-'}
+                      {project.totalCapex == null ? '-' : `USD ${project.totalCapex.toLocaleString('en-US')} Billion`}
                     </p>
                   </div>
                   <div className="px-5 py-3">
                     <p className="text-xs text-gray-500 mb-0.5">Additional Cost / Total Opex</p>
                     <p className="text-sm font-semibold text-gray-800">
-                      {project.totalOpex != null ? `USD ${project.totalOpex.toLocaleString('en-US')} Million` : '-'}
+                      {project.totalOpex == null ? '-' : `USD ${project.totalOpex.toLocaleString('en-US')} Million`}
                     </p>
                   </div>
                   <div className="px-5 py-3">
@@ -561,7 +562,7 @@ export default function ProjectDetailPage() {
                         href={`mailto:${project.contactPersonEmail}`}
                         className="flex items-center gap-2 text-sm text-[#0f2d5e] hover:underline"
                       >
-                        <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                        <Mail className="w-3.5 h-3.5 shrink-0" />
                         {project.contactPersonEmail}
                       </a>
                     ) : (
@@ -576,7 +577,7 @@ export default function ProjectDetailPage() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-sm text-[#0f2d5e] hover:underline"
                       >
-                        <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                        <Phone className="w-3.5 h-3.5 shrink-0" />
                         {project.contactPersonPhone}
                       </a>
                     ) : (
@@ -592,11 +593,11 @@ export default function ProjectDetailPage() {
                 <div className="p-5">
                   {project.projectFileDownloadUrl ? (
                     <a
-                      href={project.projectFileDownloadUrl ?? ''}
+                      href={safeUrl(project.projectFileDownloadUrl)}
                       download={`project-${projectId}-document`}
                       className="flex items-center gap-2 text-sm text-[#0f2d5e] font-medium hover:underline"
                     >
-                      <Download className="w-4 h-4 flex-shrink-0" />
+                      <Download className="w-4 h-4 shrink-0" />
                       Download Project File
                     </a>
                   ) : (
@@ -621,7 +622,7 @@ export default function ProjectDetailPage() {
                         href={`mailto:${project.ownerEmail}`}
                         className="flex-1 flex items-center gap-2 text-xs text-[#0f2d5e] font-medium hover:underline border border-gray-200 rounded-md px-3 py-2"
                       >
-                        <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                        <Mail className="w-3.5 h-3.5 shrink-0" />
                         Hubungi via Email
                       </a>
                     )}
@@ -632,7 +633,7 @@ export default function ProjectDetailPage() {
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center gap-2 text-xs text-[#0f2d5e] font-medium hover:underline border border-gray-200 rounded-md px-3 py-2"
                       >
-                        <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                        <Phone className="w-3.5 h-3.5 shrink-0" />
                         Hubungi via Whatsapp
                       </a>
                     )}
@@ -666,7 +667,7 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Right: 3 buttons stacked */}
-                  <div className="flex flex-col gap-2 w-52 flex-shrink-0 pt-6">
+                  <div className="flex flex-col gap-2 w-52 shrink-0 pt-6">
                     <button
                       onClick={handleApprove}
                       disabled={isVerifying}

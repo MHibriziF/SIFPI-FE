@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ChevronLeft, Download, Share2, MapPin, Building, Clock, Mail, Phone, Info, Layers, CalendarDays, TrendingUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SectionCard } from '@/features/project/components/section-card';
+import { safeUrl } from '@/shared/lib/formatters';
 import { Button } from '@/shared/components/button';
 import { showToast } from '@/shared/components/toast';
 import { getCatalogueProjectById, recordProjectView } from '@/features/project/services';
@@ -224,7 +225,7 @@ export default function PublicProjectDetailView({ projectId, isLoggedIn }: Reado
 
   const locationImageSrc = project.locationImageUrl ?? `/api/catalogue/${projectId}/location-image`;
   const structureImageSrc = project.projectStructureImageUrl ?? `/api/catalogue/${projectId}/structure-image`;
-  const fileDownloadHref = project.projectFileDownloadUrl ?? `/api/catalogue/${projectId}/file`;
+  const fileDownloadHref = safeUrl(project.projectFileDownloadUrl) || `/api/catalogue/${projectId}/file`;
 
   return (
     <div className="min-h-screen bg-white font-sans">

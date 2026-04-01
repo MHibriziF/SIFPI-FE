@@ -4,6 +4,7 @@ import { useId } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import { FileInput } from '@/shared/components/form-fields';
+import { safeUrl } from '@/shared/lib/formatters';
 
 interface FileUploadFieldProps {
   label: string;
@@ -51,7 +52,7 @@ export function FileUploadField({
         <div className="flex items-center gap-2 rounded-md border border-primary/15 bg-primary/5 px-3 py-2">
           <span className="text-xs text-gray-600">File saat ini:</span>
           <a
-            href={existingFileUrl}
+            href={safeUrl(existingFileUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-medium text-primary underline underline-offset-2 hover:text-primary/80"
