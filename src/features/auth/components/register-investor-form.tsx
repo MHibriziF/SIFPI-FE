@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TextInput, Select, PhoneInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
@@ -68,6 +68,55 @@ export default function RegisterInvestorForm({
   const [loading, setLoading] = useState(false);
   // selectedOrganization is set by OrganizationAutocomplete for potential future use
   const [, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const widgetIdRef = useRef<string | null>(null);
+
+  // Load script once on mount
+  useEffect(() => {
+    if (window.turnstile) {
+      setScriptLoaded(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.onload = () => setScriptLoaded(true);
+    document.head.appendChild(script);
+  }, []);
+
+  // Render/remove widget when step or script readiness changes
+  useEffect(() => {
+    if (step !== 3) {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+      return;
+    }
+
+    if (!scriptLoaded) return;
+
+    const container = document.getElementById('turnstile-widget');
+    if (!container || widgetIdRef.current) return;
+
+    widgetIdRef.current = window.turnstile.render(container, {
+      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
+      theme: 'light',
+      callback: (token: string) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(''),
+      'error-callback': () => setTurnstileToken(''),
+    });
+  }, [step, scriptLoaded]);
+
+  useEffect(() => {
+    return () => {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, []);
 
   function validateStep1(): boolean {
     const next: FormErrors = {};
@@ -135,11 +184,15 @@ export default function RegisterInvestorForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validateStep3()) return;
+    if (!turnstileToken) {
+      showToast('danger', 'Verifikasi CAPTCHA', 'Silakan selesaikan verifikasi CAPTCHA terlebih dahulu.');
+      return;
+    }
 
     setLoading(true);
     try {
       // Register investor - backend akan handle organisasi creation dalam transaksi
-      await registerInvestor(formData);
+      await registerInvestor({ ...formData, turnstileToken });
       setFlashToast({
         type: 'success',
         title: 'Akun berhasil dibuat!',
@@ -615,6 +668,9 @@ export default function RegisterInvestorForm({
       {errors.agreePrivacy && (
         <p className="text-xs text-danger -mt-2">{errors.agreePrivacy}</p>
       )}
+
+      {/* Cloudflare Turnstile */}
+      <div id="turnstile-widget" />
 
       {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3 mt-2">

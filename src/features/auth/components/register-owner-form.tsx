@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TextInput, PhoneInput } from '@/shared/components/form-fields';
 import { Button } from '@/shared/components/button';
@@ -46,6 +46,39 @@ export default function RegisterOwnerForm({
   const [loading, setLoading] = useState(false);
   // selectedOrganization is set by OrganizationAutocomplete for potential future use
   const [, setSelectedOrganization] = useState<OrganizationDTO | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const widgetIdRef = useRef<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const render = () => {
+      if (!containerRef.current || widgetIdRef.current) return;
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
+        theme: 'light',
+        callback: (token: string) => setTurnstileToken(token),
+        'expired-callback': () => setTurnstileToken(''),
+        'error-callback': () => setTurnstileToken(''),
+      });
+    };
+
+    if (window.turnstile) {
+      render();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      script.async = true;
+      script.onload = render;
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, []);
 
   function validate(): boolean {
     const next: FormErrors = {};
@@ -81,11 +114,15 @@ export default function RegisterOwnerForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
+    if (!turnstileToken) {
+      showToast('danger', 'Verifikasi CAPTCHA', 'Silakan selesaikan verifikasi CAPTCHA terlebih dahulu.');
+      return;
+    }
 
     setLoading(true);
     try {
       // Register owner - backend akan handle organisasi creation dalam transaksi
-      await registerOwner(formData);
+      await registerOwner({ ...formData, turnstileToken });
       setFlashToast({
         type: 'success',
         title: 'Akun berhasil dibuat!',
@@ -242,6 +279,9 @@ export default function RegisterOwnerForm({
         onBlur={() => handleBlur('confirmPassword')}
         error={errors.confirmPassword}
       />
+
+      {/* Cloudflare Turnstile */}
+      <div ref={containerRef} />
 
       {/* Submit */}
       <Button type="submit" className="w-full mt-2" size="lg" disabled={loading}>

@@ -74,3 +74,8 @@ export async function forgotPassword(data: ForgotPasswordRequest): Promise<BaseR
 export async function resetPassword(data: ResetPasswordRequest): Promise<BaseResponse<null>> {
   return apiPost<null>('/api/auth/reset-password', data);
 }
+
+// Email verification
+export async function verifyEmail(token: string): Promise<BaseResponse<null>> {
+  return apiGet<null>(`/api/auth/register/verify-email?token=${encodeURIComponent(token)}`);
+}

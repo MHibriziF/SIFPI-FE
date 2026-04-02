@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { verifyEmail } from "@/features/auth/services";
+import { ApiError } from "@/shared/types/api";
 
 type VerificationStatus = "loading" | "success" | "error" | "no-token";
 
@@ -21,42 +23,23 @@ export default function VerifyEmailPage() {
       return;
     }
 
-    const verifyEmail = async () => {
+    const doVerify = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const res = await fetch(
-          `${apiUrl}/api/auth/register/verify-email?token=${token}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const data = await res.json();
-
-        if (res.ok) {
-          setStatus("success");
-          setMessage("Email berhasil diverifikasi!");
-          setTimeout(() => router.push("/login"), 2000);
-        } else {
-          setStatus("error");
-          setMessage(
-            data.message ||
-              "Verifikasi gagal. Token tidak valid atau sudah kadaluarsa."
-          );
-        }
-      } catch (error) {
+        await verifyEmail(token);
+        setStatus("success");
+        setMessage("Email berhasil diverifikasi!");
+        setTimeout(() => router.push("/login"), 2000);
+      } catch (err) {
         setStatus("error");
         setMessage(
-          "Terjadi kesalahan saat memverifikasi email. Silakan coba lagi."
+          err instanceof ApiError
+            ? err.message
+            : "Terjadi kesalahan saat memverifikasi email. Silakan coba lagi."
         );
-        console.error("Verification error:", error);
       }
     };
 
-    verifyEmail();
+    doVerify();
   }, [searchParams, router]);
 
   return (

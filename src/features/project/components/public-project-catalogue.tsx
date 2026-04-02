@@ -6,7 +6,6 @@ import { ProjectCard } from "@/shared/components/project-card";
 import { getPublishedProjects } from "@/features/project/services";
 import type { ProjectCardData } from "@/shared/components/project-card";
 import { Search } from "lucide-react";
-import { Button } from "@/shared/components/button";
 import { Pagination } from "@/shared/components/pagination";
 import { Select, TextInput } from "@/shared/components/form-fields";
 import { SECTOR_OPTIONS } from "@/shared/enums";

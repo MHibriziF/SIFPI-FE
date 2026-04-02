@@ -1,26 +1,45 @@
-import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
+'use client';
 
-import { withPermission, hasPermission } from '@/shared/lib/auth-guard';
+import { useState, useEffect } from 'react';
+import { useParams, notFound } from 'next/navigation';
+import { getRoleDetail, getRoleUsers } from '@/features/access/services';
+import { apiGet } from '@/shared/lib/api';
+import type { RoleDetail, RoleUserItem } from '@/features/access/types';
+import type { AuthResponse } from '@/features/auth/types';
 import { RoleDetailView } from '@/features/access/components/role-detail';
-import { serverGetRoleDetail, serverGetRoleUsers } from '@/features/access/services';
 
-export default withPermission('USER', 'READ')(
-  async ({ params }: { params: Promise<{ id: string }> }, session) => {
-    const { id } = await params;
+export default function RoleDetailPage() {
+  const { id } = useParams<{ id: string }>();
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get('SIFPI_TOKEN')?.value ?? '';
+  const [role, setRole]           = useState<RoleDetail | null>(null);
+  const [users, setUsers]         = useState<RoleUserItem[]>([]);
+  const [total, setTotal]         = useState(0);
+  const [canUpdate, setCanUpdate] = useState(false);
+  const [missing, setMissing]     = useState(false);
 
-    const [role, { users, total }] = await Promise.all([
-      serverGetRoleDetail(id, token),
-      serverGetRoleUsers(id, token),
-    ]);
+  useEffect(() => {
+    Promise.all([
+      getRoleDetail(id),
+      getRoleUsers(id),
+      apiGet<AuthResponse>('/api/me'),
+    ]).then(([roleRes, usersRes, sessionRes]) => {
+      if (!roleRes.data) { setMissing(true); return; }
+      setRole(roleRes.data);
+      setUsers(usersRes.data?.content ?? []);
+      setTotal(usersRes.data?.totalElements ?? 0);
+      setCanUpdate(sessionRes.data?.permissions?.['USER']?.includes('UPDATE') ?? false);
+    }).catch(() => setMissing(true));
+  }, [id]);
 
-    if (!role) notFound();
+  if (missing) notFound();
+  if (!role) return null;
 
-    const canUpdate = hasPermission(session, 'USER', 'UPDATE');
-
-    return <RoleDetailView role={role} initialUsers={users} totalUsers={total} canUpdate={canUpdate} />;
-  },
-);
+  return (
+    <RoleDetailView
+      role={role}
+      initialUsers={users}
+      totalUsers={total}
+      canUpdate={canUpdate}
+    />
+  );
+}

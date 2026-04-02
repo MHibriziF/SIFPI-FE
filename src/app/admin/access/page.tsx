@@ -1,34 +1,49 @@
-import { cookies } from 'next/headers';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { withPermission, hasPermission } from '@/shared/lib/auth-guard';
+import { getUsers, getRoles } from '@/features/access/services';
+import { apiGet } from '@/shared/lib/api';
+import type { AdminUser, Role } from '@/features/access/types';
+import type { AuthResponse } from '@/features/auth/types';
 import { UserTable } from '@/features/access/components/user-table';
 import { RoleTable } from '@/features/access/components/role-table';
-import { serverGetAdminUsers, serverGetRoles } from '@/features/access/services';
 import { BulkImportTrigger } from '@/features/user-management/components/bulk-import-trigger';
 
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+export default function AccessPage() {
+  const searchParams = useSearchParams();
+  const page   = Math.max(0, parseInt(searchParams.get('page')   ?? '0',  10));
+  const size   = Math.max(1, parseInt(searchParams.get('size')   ?? '10', 10));
+  const role   = searchParams.get('role')   ?? '';
+  const search = searchParams.get('search') ?? '';
 
-export default withPermission('USER', 'READ')(async (props: { searchParams?: SearchParams }, session) => {
-  const sp = props.searchParams ? await props.searchParams : {};
-  const page   = Math.max(0, parseInt((sp.page   as string) ?? '0',  10));
-  const size   = Math.max(1, parseInt((sp.size   as string) ?? '10', 10));
-  const role   = (sp.role   as string) ?? '';
-  const search = (sp.search as string) ?? '';
+  const [users, setUsers]           = useState<AdminUser[]>([]);
+  const [roles, setRoles]           = useState<Role[]>([]);
+  const [total, setTotal]           = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [canCreate, setCanCreate]   = useState(false);
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get('SIFPI_TOKEN')?.value ?? '';
+  // Roles and permissions only need to load once
+  useEffect(() => {
+    getRoles().then(res => setRoles(res.data ?? []));
+    apiGet<AuthResponse>('/api/me').then(res => {
+      setCanCreate(res.data?.permissions?.['USER']?.includes('CREATE') ?? false);
+    });
+  }, []);
 
-  const [roles, { users, total, totalPages }] = await Promise.all([
-    serverGetRoles(token),
-    serverGetAdminUsers(token, { page, size, role: role || undefined, search: search || undefined }),
-  ]);
-
-  const canCreate = hasPermission(session, 'USER', 'CREATE');
+  // Users re-fetch whenever pagination or filters change
+  useEffect(() => {
+    getUsers({ page, size, role: role || undefined, search: search || undefined }).then(res => {
+      setUsers((res.data?.content ?? []) as AdminUser[]);
+      setTotal(res.data?.totalElements ?? 0);
+      setTotalPages(res.data?.totalPages ?? 0);
+    });
+  }, [page, size, role, search]);
 
   return (
     <div className="p-6 space-y-8">
-      {/* User Management Section */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-primary">User Management</h2>
@@ -47,6 +62,7 @@ export default withPermission('USER', 'READ')(async (props: { searchParams?: Sea
           )}
         </div>
       </div>
+
       <UserTable
         users={users}
         totalEntries={total}
@@ -55,11 +71,7 @@ export default withPermission('USER', 'READ')(async (props: { searchParams?: Sea
         pageSize={size}
       />
 
-      {/* Role / Access Management Section */}
-      <RoleTable
-        roles={roles}
-        canCreate={canCreate}
-      />
+      <RoleTable roles={roles} canCreate={canCreate} />
     </div>
   );
-});
+}
