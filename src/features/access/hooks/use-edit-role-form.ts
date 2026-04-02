@@ -11,7 +11,7 @@ import {
   PAGE_SIZE_OPTIONS,
   type PermissionState,
 } from './use-create-role-form';
-import type { RoleDetail, RoleUserItem, UserDTO } from '../types';
+import type { RoleDetail, RoleUserItem, AdminUser } from '../types';
 
 /** Convert API permissions map → internal PermissionState map */
 function parsePermissions(apiPerms: Record<string, string[]>): Record<string, PermissionState> {
@@ -63,7 +63,7 @@ export function useEditRoleForm(
   const [pageSize, setPageSize] = useState(10);
 
   // ── Users from BE ──────────────────────────────────────────────────────────
-  const [users, setUsers] = useState<UserDTO[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersTotalPages, setUsersTotalPages] = useState(1);
   const [usersTotalElements, setUsersTotalElements] = useState(0);
@@ -116,14 +116,7 @@ export function useEditRoleForm(
       setUsersTotalPages(res.data.totalPages);
       setUsersTotalElements(res.data.totalElements);
 
-      // Update email→id map with any IDs we receive
-      setEmailToIdMap((prev) => {
-        const next = new Map(prev);
-        fetched.forEach((u) => {
-          if (u.id) next.set(u.email, u.id);
-        });
-        return next;
-      });
+
     } catch {
       setUsers([]);
       setUsersTotalPages(1);
@@ -157,16 +150,16 @@ export function useEditRoleForm(
   }
 
   // ── User selection ────────────────────────────────────────────────────────
-  function isUserChecked(user: UserDTO): boolean {
+  function isUserChecked(user: AdminUser): boolean {
     const assigned = initialAssignedEmails.has(user.email);
     const inRemove = toRemoveDetails.has(user.email);
     const inAdd = toAddDetails.has(user.email);
     return (assigned && !inRemove) || (!assigned && inAdd);
   }
 
-  function toggleUserSelection(user: UserDTO) {
+  function toggleUserSelection(user: AdminUser) {
     const { email, nama } = user;
-    const id = user.id ?? emailToIdMap.get(email) ?? '';
+    const id = emailToIdMap.get(email) ?? '';
     const isInitiallyAssigned = initialAssignedEmails.has(email);
 
     if (isInitiallyAssigned) {

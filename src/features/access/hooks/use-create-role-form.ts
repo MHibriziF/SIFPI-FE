@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createRole, getUsers } from '../services';
 import { ApiError } from '@/shared/types/api';
 import { showToast } from '@/shared/components/toast';
-import type { UserDTO } from '../types';
+import type { AdminUser } from '../types';
 
 export interface PermissionState {
   canAccess: boolean;
@@ -77,7 +77,7 @@ export function useCreateRoleForm() {
   const [pageSize, setPageSize] = useState(10);
 
   // Users fetched from BE
-  const [users, setUsers] = useState<UserDTO[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersTotalPages, setUsersTotalPages] = useState(1);
   const [usersTotalElements, setUsersTotalElements] = useState(0);
@@ -144,7 +144,7 @@ export function useCreateRoleForm() {
     });
   }
 
-  function toggleEmailSelection(user: UserDTO) {
+  function toggleEmailSelection(user: AdminUser) {
     const { email, nama, role } = user;
     setSelectedEmails(prev => {
       const next = new Set(prev);
