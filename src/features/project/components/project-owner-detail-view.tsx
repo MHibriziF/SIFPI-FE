@@ -252,13 +252,13 @@ export default function ProjectOwnerDetailView({ projectId, canEdit }: Readonly<
 
   const locationImageSrc = resolveAssetUrl(
     project.locationImageUrl,
-    `/api/projects/${projectId}/location-image`
+    `/api/catalogue/${projectId}/location-image`
   );
   const structureImageSrc = resolveAssetUrl(
     project.projectStructureImageUrl,
-    `/api/projects/${projectId}/structure-image`
+    `/api/catalogue/${projectId}/structure-image`
   );
-  const projectFileHref = resolveAssetUrl(project.projectFileDownloadUrl, `/api/projects/${projectId}/file`);
+  const projectFileHref = resolveAssetUrl(project.projectFileDownloadUrl, `/api/catalogue/${projectId}/file`);
 
   // Button is only shown when the user has UPDATE permission AND the project
   // is in DRAFT or PERBAIKAN_DATA state (editable statuses).
