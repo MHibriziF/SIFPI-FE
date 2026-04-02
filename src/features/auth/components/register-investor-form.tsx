@@ -10,7 +10,12 @@ import { registerInvestor } from '@/features/auth/services';
 import { OrganizationAutocomplete } from './organization-autocomplete';
 import { ApiError } from '@/shared/types/api';
 import { validateEmail, validatePassword, validatePhone } from '@/shared/lib/validation';
-import { INVESTOR_SECTOR_OPTIONS, BUDGET_OPTIONS } from '@/shared/enums/investment-options';
+import {
+  INVESTOR_SECTOR_OPTIONS,
+  BUDGET_OPTIONS,
+  STAGE_OPTIONS,
+  RISK_OPTIONS,
+} from '@/shared/enums/investment-options';
 import type { CreateInvestorRequest, OrganizationDTO } from '@/features/auth/types';
 import { cn } from '@/shared/lib/utils';
 
@@ -36,7 +41,7 @@ export default function RegisterInvestorForm({
 }: Readonly<{
   onSuccess?: (email: string) => void;
 }>) {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [formData, setFormData] = useState<CreateInvestorRequest>({
     nama: '',
     email: '',
@@ -47,6 +52,13 @@ export default function RegisterInvestorForm({
     confirmPassword: '',
     budgetInvestasi: '',
     sectorInterest: [],
+    preferredInvestmentInstrument: '',
+    engagementModel: '',
+    stagePreference: '',
+    riskAppetite: '',
+    esgStandards: '',
+    localPresence: '',
+    aumSize: '',
     optInEmail: false,
     agreePrivacy: false,
   });
@@ -94,6 +106,14 @@ export default function RegisterInvestorForm({
     if (!formData.budgetInvestasi) next.budgetInvestasi = 'Budget investasi wajib diisi';
     if (!formData.sectorInterest || formData.sectorInterest.length < 3)
       next.sectorInterest = 'Pilih minimal 3 sektor interest';
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
+  function validateStep3(): boolean {
+    const next: FormErrors = {};
+
     if (!formData.agreePrivacy) next.agreePrivacy = 'Anda harus menyetujui kebijakan privasi';
 
     setErrors(next);
@@ -106,9 +126,15 @@ export default function RegisterInvestorForm({
     }
   }
 
+  function handleNextStep2() {
+    if (validateStep2()) {
+      setStep(3);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validateStep2()) return;
+    if (!validateStep3()) return;
 
     setLoading(true);
     try {
@@ -197,6 +223,53 @@ export default function RegisterInvestorForm({
     handleChange('sectorInterest', updated);
   }
 
+  /* ─── Step indicator ─── */
+  function StepIndicator() {
+    const steps = [
+      { number: 1, label: 'Data Diri' },
+      { number: 2, label: 'Preferensi' },
+      { number: 3, label: 'Detail Profil' },
+    ];
+    return (
+      <div className="flex items-center justify-center gap-0 pt-2 pb-1 px-8">
+        {steps.map((s, i) => (
+          <div key={s.number} className="flex items-center">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={cn(
+                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
+                  step === s.number
+                    ? 'bg-primary text-white'
+                    : step > s.number
+                      ? 'bg-primary/30 text-primary'
+                      : 'bg-gray-200 text-gray-400'
+                )}
+              >
+                {s.number}
+              </div>
+              <span
+                className={cn(
+                  'text-[10px] font-medium whitespace-nowrap',
+                  step === s.number ? 'text-primary' : 'text-gray-400'
+                )}
+              >
+                {s.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div
+                className={cn(
+                  'h-px w-12 mx-1 mb-4 transition-colors',
+                  step > s.number ? 'bg-primary/30' : 'bg-gray-200'
+                )}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   /* ─── STEP 1 ─── */
   if (step === 1) {
     return (
@@ -207,6 +280,8 @@ export default function RegisterInvestorForm({
         }}
         className="bg-white px-8 pt-4 pb-8 space-y-4"
       >
+        <StepIndicator />
+
         {/* Section title */}
         <div className="pb-1">
           <h3 className="text-sm font-semibold text-primary mb-2">Data Diri dan Organisasi</h3>
@@ -316,72 +391,189 @@ export default function RegisterInvestorForm({
   }
 
   /* ─── STEP 2 ─── */
+  if (step === 2) {
+    return (
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          handleNextStep2();
+        }}
+        className="bg-white px-8 pt-4 pb-8 space-y-4"
+      >
+        <StepIndicator />
+
+        {/* Section title */}
+        <div className="pb-1">
+          <h3 className="text-sm font-semibold text-primary mb-2">
+            Preferensi Investasi &amp; Komunikasi
+          </h3>
+          <div className="h-px bg-gray-200" />
+        </div>
+
+        {/* Budget Investasi */}
+        <Select
+          id="budgetInvestasi"
+          label="Budget Investasi"
+          placeholder="Pilih rentang budget"
+          required
+          options={BUDGET_OPTIONS}
+          value={formData.budgetInvestasi}
+          onValueChange={value => handleChange('budgetInvestasi', value)}
+          error={errors.budgetInvestasi}
+        />
+
+        {/* Sektor Prioritas */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1">
+            <label className="text-sm font-medium text-primary">Sektor Prioritas</label>
+            <span className="text-danger text-sm">*</span>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-3">
+            <div className="grid grid-cols-3 gap-2">
+              {INVESTOR_SECTOR_OPTIONS.map(sector => (
+                <label
+                  key={sector.value}
+                  className={cn(
+                    'flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors text-xs',
+                    formData.sectorInterest?.includes(sector.value)
+                      ? 'text-primary font-medium'
+                      : 'text-gray-600 hover:text-primary'
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.sectorInterest?.includes(sector.value) || false}
+                    onChange={() => toggleSector(sector.value)}
+                    className="rounded border-gray-300 cursor-pointer accent-primary flex-shrink-0"
+                  />
+                  <span className="leading-tight">{sector.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400">
+            Pilih minimal 3 sektor
+            {formData.sectorInterest?.length > 0 && (
+              <span className="ml-1 text-primary font-medium">
+                ({formData.sectorInterest.length} dipilih)
+              </span>
+            )}
+          </p>
+
+          {errors.sectorInterest && (
+            <p className="text-xs text-danger">{errors.sectorInterest}</p>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <Button
+            type="button"
+            variant="outlined"
+            size="lg"
+            onClick={() => setStep(1)}
+          >
+            Kembali
+          </Button>
+          <Button type="submit" size="lg">
+            Lanjutkan
+          </Button>
+        </div>
+
+        <p className="text-center text-sm text-gray-500">
+          Sudah punya akun?{' '}
+          <Link href="/login" className="text-primary font-semibold hover:underline">
+            Login di sini
+          </Link>
+        </p>
+      </form>
+    );
+  }
+
+  /* ─── STEP 3 ─── */
   return (
     <form onSubmit={handleSubmit} className="bg-white px-8 pt-4 pb-8 space-y-4">
+      <StepIndicator />
+
       {/* Section title */}
       <div className="pb-1">
         <h3 className="text-sm font-semibold text-primary mb-2">
-          Preferensi Investasi &amp; Komunikasi
+          Detail Profil Investor{' '}
+          <span className="text-gray-400 font-normal">(Opsional)</span>
         </h3>
         <div className="h-px bg-gray-200" />
-      </div>
-
-      {/* Budget Investasi */}
-      <Select
-        id="budgetInvestasi"
-        label="Budget Investasi"
-        placeholder="Pilih rentang budget"
-        required
-        options={BUDGET_OPTIONS}
-        value={formData.budgetInvestasi}
-        onValueChange={value => handleChange('budgetInvestasi', value)}
-        error={errors.budgetInvestasi}
-      />
-
-      {/* Sektor Prioritas */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-1">
-          <label className="text-sm font-medium text-primary">Sektor Prioritas</label>
-          <span className="text-danger text-sm">*</span>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 p-3">
-          <div className="grid grid-cols-3 gap-2">
-            {INVESTOR_SECTOR_OPTIONS.map(sector => (
-              <label
-                key={sector.value}
-                className={cn(
-                  'flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors text-xs',
-                  formData.sectorInterest?.includes(sector.value)
-                    ? 'text-primary font-medium'
-                    : 'text-gray-600 hover:text-primary'
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.sectorInterest?.includes(sector.value) || false}
-                  onChange={() => toggleSector(sector.value)}
-                  className="rounded border-gray-300 cursor-pointer accent-primary flex-shrink-0"
-                />
-                <span className="leading-tight">{sector.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-400">
-          Pilih minimal 3 sektor
-          {formData.sectorInterest?.length > 0 && (
-            <span className="ml-1 text-primary font-medium">
-              ({formData.sectorInterest.length} dipilih)
-            </span>
-          )}
+        <p className="text-xs text-gray-400 mt-2">
+          Lengkapi informasi berikut untuk meningkatkan visibilitas profil Anda. Semua field di
+          bagian ini bersifat opsional.
         </p>
-
-        {errors.sectorInterest && (
-          <p className="text-xs text-danger">{errors.sectorInterest}</p>
-        )}
       </div>
+
+      {/* Instrumen Investasi & Model Keterlibatan */}
+      <div className="grid grid-cols-2 gap-4">
+        <TextInput
+          id="preferredInvestmentInstrument"
+          label="Instrumen Investasi Pilihan"
+          placeholder="e.g. Equity, Loan, Guarantee"
+          value={formData.preferredInvestmentInstrument ?? ''}
+          onChange={e => handleChange('preferredInvestmentInstrument', e.target.value)}
+        />
+        <TextInput
+          id="engagementModel"
+          label="Model Keterlibatan"
+          placeholder="e.g. Direct Investment, PPP, JV"
+          value={formData.engagementModel ?? ''}
+          onChange={e => handleChange('engagementModel', e.target.value)}
+        />
+      </div>
+
+      {/* Stage Preferensi & Risk Appetite */}
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          id="stagePreference"
+          label="Stage Preferensi"
+          placeholder="Pilih stage"
+          options={STAGE_OPTIONS}
+          value={formData.stagePreference ?? ''}
+          onValueChange={v => handleChange('stagePreference', v)}
+        />
+        <Select
+          id="riskAppetite"
+          label="Risk Appetite"
+          placeholder="Pilih level risiko"
+          options={RISK_OPTIONS}
+          value={formData.riskAppetite ?? ''}
+          onValueChange={v => handleChange('riskAppetite', v)}
+        />
+      </div>
+
+      {/* AUM Size & Kehadiran Lokal */}
+      <div className="grid grid-cols-2 gap-4">
+        <TextInput
+          id="aumSize"
+          label="AUM Size"
+          placeholder="e.g. USD 100M"
+          value={formData.aumSize ?? ''}
+          onChange={e => handleChange('aumSize', e.target.value)}
+        />
+        <TextInput
+          id="localPresence"
+          label="Kehadiran Lokal"
+          placeholder="e.g. Jakarta Office"
+          value={formData.localPresence ?? ''}
+          onChange={e => handleChange('localPresence', e.target.value)}
+        />
+      </div>
+
+      {/* Standar ESG */}
+      <TextInput
+        id="esgStandards"
+        label="Standar ESG"
+        placeholder="e.g. IFC Performance Standards, GRI Standards"
+        value={formData.esgStandards ?? ''}
+        onChange={e => handleChange('esgStandards', e.target.value)}
+      />
 
       {/* Email Opt-in */}
       <label className="flex items-start gap-3 cursor-pointer group">
@@ -414,9 +606,7 @@ export default function RegisterInvestorForm({
         <span
           className={cn(
             'text-sm leading-snug transition-colors',
-            errors.agreePrivacy
-              ? 'text-danger'
-              : 'text-gray-600 group-hover:text-gray-800'
+            errors.agreePrivacy ? 'text-danger' : 'text-gray-600 group-hover:text-gray-800'
           )}
         >
           Saya menyatakan data yang diisi adalah benar dan menyetujui kebijakan privasi IPFO
@@ -432,7 +622,7 @@ export default function RegisterInvestorForm({
           type="button"
           variant="outlined"
           size="lg"
-          onClick={() => setStep(1)}
+          onClick={() => setStep(2)}
         >
           Kembali
         </Button>
