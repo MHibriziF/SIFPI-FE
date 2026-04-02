@@ -6,6 +6,7 @@ export interface CreateOwnerRequest {
   phone: string;
   password: string;
   confirmPassword: string;
+  turnstileToken?: string;
 }
 
 export interface CreateInvestorRequest {
@@ -34,6 +35,7 @@ export interface CreateInvestorRequest {
   // Komunikasi & Persetujuan
   optInEmail?: boolean;
   agreePrivacy: boolean;
+  turnstileToken?: string;
 }
 
 export interface OwnerDTO {
