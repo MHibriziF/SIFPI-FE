@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Eye, Edit, Trash2 } from 'lucide-react';
+import { ChevronLeft, Eye } from 'lucide-react';
 import { Button } from '@/shared/components/button';
 import { Pagination } from '@/shared/components/pagination';
 import { showNotification } from '@/shared/components/info-toast';
@@ -362,19 +362,13 @@ export default function PublicationManagementPage() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
                       <button
                         onClick={() => router.push(`/admin/projects/PRJ-${String(project.id).padStart(4, '0')}`)}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="View"
                       >
                         <Eye className="size-4" />
-                      </button>
-                      <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="Edit">
-                        <Edit className="size-4" />
-                      </button>
-                      <button className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete">
-                        <Trash2 className="size-4" />
                       </button>
                     </div>
                   </td>
